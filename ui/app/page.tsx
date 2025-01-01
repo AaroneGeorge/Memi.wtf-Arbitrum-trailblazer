@@ -1,7 +1,6 @@
 "use client";
 
 import { useState } from "react";
-import { Sidebar } from "@/components/sidebar";
 import { AgentCard } from "@/components/agent-card";
 import { WalletButton } from "@/components/wallet-button";
 import { Input } from "@/components/ui/input";
@@ -19,11 +18,8 @@ export default function Home() {
 
   return (
     <div className="h-full relative">
-      <div className="hidden h-full md:flex md:w-72 md:flex-col md:fixed md:inset-y-0 bg-zinc-950">
-        <Sidebar />
-      </div>
-      <main className="md:pl-72">
-        <div className="px-6 py-4 border-b border-zinc-800 flex items-center justify-between">
+      <main className="p-6">
+        <div className="px-6 py-4 border-b border-zinc-800 flex items-center justify-between mb-6">
           <div className="relative w-full max-w-md">
             <Search className="absolute left-3 top-3 h-4 w-4 text-zinc-400" />
             <Input
@@ -35,12 +31,17 @@ export default function Home() {
           </div>
           <WalletButton />
         </div>
-        <div className="p-6">
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-            {filteredAgents.map((agent) => (
-              <AgentCard key={agent.id} {...agent} />
-            ))}
-          </div>
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+          {filteredAgents.map((agent) => (
+            <AgentCard
+              key={agent.id}
+              id={agent.id}
+              name={agent.name}
+              description={agent.description}
+              image={agent.image}
+              bio={agent.bio}
+            />
+          ))}
         </div>
       </main>
     </div>

@@ -10,6 +10,13 @@ import Image from "next/image";
 
 export default function CreatePage() {
   const [image, setImage] = useState<string | null>(null);
+  const [name, setName] = useState("");
+  const [ticker, setTicker] = useState("");
+  const [bio, setBio] = useState("");
+  const [personality, setPersonality] = useState("");
+  const [startingDialogue, setStartingDialogue] = useState("");
+  const [contractAddress, setContractAddress] = useState("");
+  const [twitter, setTwitter] = useState("");
 
   const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -22,11 +29,25 @@ export default function CreatePage() {
     }
   };
 
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    // Handle form submission here
+    console.log({
+      name,
+      ticker,
+      bio,
+      personality,
+      startingDialogue,
+      contractAddress,
+      twitter,
+    });
+  };
+
   return (
     <div className="container mx-auto p-6 max-w-2xl">
       <Card className="bg-zinc-900 border-zinc-800 p-6">
         <h1 className="text-2xl font-bold text-white mb-6">Create AI Agent</h1>
-        <form className="space-y-6">
+        <form onSubmit={handleSubmit} className="space-y-6">
           <div className="flex justify-center">
             <div className="relative w-32 h-32">
               {image ? (
@@ -53,7 +74,11 @@ export default function CreatePage() {
           <div className="space-y-4">
             <div>
               <label className="text-sm font-medium text-zinc-200">Name</label>
-              <Input className="bg-zinc-800 border-zinc-700" />
+              <Input
+                className="bg-zinc-800 border-zinc-700"
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+              />
             </div>
             <div>
               <label className="text-sm font-medium text-zinc-200">
@@ -62,27 +87,66 @@ export default function CreatePage() {
               <Input
                 className="bg-zinc-800 border-zinc-700"
                 placeholder="$SYMBOL"
+                value={ticker}
+                onChange={(e) => setTicker(e.target.value)}
               />
             </div>
             <div>
               <label className="text-sm font-medium text-zinc-200">Bio</label>
-              <Textarea className="bg-zinc-800 border-zinc-700" />
+              <Textarea
+                className="bg-zinc-800 border-zinc-700"
+                value={bio}
+                onChange={(e) => setBio(e.target.value)}
+              />
             </div>
             <div>
               <label className="text-sm font-medium text-zinc-200">
                 Personality
               </label>
-              <Textarea className="bg-zinc-800 border-zinc-700" />
+              <Textarea
+                className="bg-zinc-800 border-zinc-700"
+                value={personality}
+                onChange={(e) => setPersonality(e.target.value)}
+              />
             </div>
             <div>
               <label className="text-sm font-medium text-zinc-200">
                 Starting Dialogue
               </label>
-              <Textarea className="bg-zinc-800 border-zinc-700" />
+              <Textarea
+                className="bg-zinc-800 border-zinc-700"
+                value={startingDialogue}
+                onChange={(e) => setStartingDialogue(e.target.value)}
+              />
+            </div>
+            <div>
+              <label className="text-sm font-medium text-zinc-200">
+                Contract Address
+              </label>
+              <Input
+                className="bg-zinc-800 border-zinc-700"
+                placeholder="0x..."
+                value={contractAddress}
+                onChange={(e) => setContractAddress(e.target.value)}
+              />
+            </div>
+            <div>
+              <label className="text-sm font-medium text-zinc-200">
+                Twitter
+              </label>
+              <Input
+                className="bg-zinc-800 border-zinc-700"
+                placeholder="@username"
+                value={twitter}
+                onChange={(e) => setTwitter(e.target.value)}
+              />
             </div>
           </div>
 
-          <Button className="w-full bg-pink-600 hover:bg-pink-700">
+          <Button
+            type="submit"
+            className="w-full bg-pink-600 hover:bg-pink-700"
+          >
             Create Agent
           </Button>
         </form>
