@@ -1,0 +1,92 @@
+"use client";
+
+import { useState } from "react";
+import { Card } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
+import { Textarea } from "@/components/ui/textarea";
+import { ImagePlus } from "lucide-react";
+import Image from "next/image";
+
+export default function CreatePage() {
+  const [image, setImage] = useState<string | null>(null);
+
+  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setImage(reader.result as string);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  return (
+    <div className="container mx-auto p-6 max-w-2xl">
+      <Card className="bg-zinc-900 border-zinc-800 p-6">
+        <h1 className="text-2xl font-bold text-white mb-6">Create AI Agent</h1>
+        <form className="space-y-6">
+          <div className="flex justify-center">
+            <div className="relative w-32 h-32">
+              {image ? (
+                <Image
+                  src={image}
+                  alt="Agent"
+                  fill
+                  className="rounded-full object-cover"
+                />
+              ) : (
+                <label className="flex items-center justify-center w-full h-full rounded-full border-2 border-dashed border-zinc-700 cursor-pointer hover:border-pink-500/50 transition-colors">
+                  <ImagePlus className="h-8 w-8 text-zinc-500" />
+                  <input
+                    type="file"
+                    accept="image/*"
+                    className="hidden"
+                    onChange={handleImageUpload}
+                  />
+                </label>
+              )}
+            </div>
+          </div>
+
+          <div className="space-y-4">
+            <div>
+              <label className="text-sm font-medium text-zinc-200">Name</label>
+              <Input className="bg-zinc-800 border-zinc-700" />
+            </div>
+            <div>
+              <label className="text-sm font-medium text-zinc-200">
+                Ticker
+              </label>
+              <Input
+                className="bg-zinc-800 border-zinc-700"
+                placeholder="$SYMBOL"
+              />
+            </div>
+            <div>
+              <label className="text-sm font-medium text-zinc-200">Bio</label>
+              <Textarea className="bg-zinc-800 border-zinc-700" />
+            </div>
+            <div>
+              <label className="text-sm font-medium text-zinc-200">
+                Personality
+              </label>
+              <Textarea className="bg-zinc-800 border-zinc-700" />
+            </div>
+            <div>
+              <label className="text-sm font-medium text-zinc-200">
+                Starting Dialogue
+              </label>
+              <Textarea className="bg-zinc-800 border-zinc-700" />
+            </div>
+          </div>
+
+          <Button className="w-full bg-pink-600 hover:bg-pink-700">
+            Create Agent
+          </Button>
+        </form>
+      </Card>
+    </div>
+  );
+}
