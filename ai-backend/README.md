@@ -5,18 +5,30 @@ A FastAPI-based backend service that allows creation and interaction with person
 ## Setup
 
 1. Clone the repository
-2. Install dependencies:
+2. Setup virtual environment:
+
 ```bash
-pip install fastapi uvicorn python-dotenv chromadb sqlite3 requests
+python3 -m venv venv # create virtual environment
+source venv/bin/activate # activate virtual environment
 ```
 
-3. Create a `.env` file in the root directory:
+3. Install dependencies
+
+```bash
+pip3 install -r requirements.txt
+```
+
+or
+
+4. Create a `.env` file in the root directory:
+
 ```
 TOGETHER_AI_KEY=your_together_ai_key
 ADMIN_KEY=your_secure_admin_key
 ```
 
-4. Run the server:
+5. Run the server:
+
 ```bash
 uvicorn api-server:app --reload
 ```
@@ -24,6 +36,7 @@ uvicorn api-server:app --reload
 ## API Documentation
 
 ### Health Check
+
 ```bash
 GET /health
 
@@ -34,6 +47,7 @@ Response:
 ```
 
 ### Create a New Bot
+
 ```bash
 POST /bots/create
 
@@ -52,6 +66,7 @@ Response:
 ```
 
 ### Get Bot's Starting Dialogue
+
 ```bash
 GET /bots/{bot_name}/dialogue
 
@@ -62,6 +77,7 @@ Response:
 ```
 
 ### Chat with Bot
+
 ```bash
 POST /chat
 
@@ -83,6 +99,7 @@ Response:
 ```
 
 ### Get Chat History
+
 ```bash
 GET /chats/{user_id}/{bot_name}
 
@@ -109,6 +126,7 @@ Response:
 ```
 
 ### Delete Chat History
+
 ```bash
 DELETE /chats/{user_id}/{bot_name}
 
@@ -120,6 +138,7 @@ Response:
 ```
 
 ### Clear Database (Admin Only)
+
 ```bash
 DELETE /db/clear?admin_key=your-secure-admin-key
 
@@ -134,6 +153,7 @@ Response:
 ```
 
 ### Get Database Status (Admin Only)
+
 ```bash
 GET /db/status?admin_key=your-secure-admin-key
 
@@ -165,6 +185,7 @@ Response:
 ## Testing Guide
 
 1. First, create a bot:
+
 ```bash
 curl -X POST "http://localhost:8000/bots/create" \
 -H "Content-Type: application/json" \
@@ -177,6 +198,7 @@ curl -X POST "http://localhost:8000/bots/create" \
 ```
 
 2. Start a conversation:
+
 ```bash
 curl -X POST "http://localhost:8000/chat" \
 -H "Content-Type: application/json" \
@@ -188,11 +210,13 @@ curl -X POST "http://localhost:8000/chat" \
 ```
 
 3. Check chat history:
+
 ```bash
 curl "http://localhost:8000/chats/user123/eliza"
 ```
 
 4. Delete conversation:
+
 ```bash
 curl -X DELETE "http://localhost:8000/chats/user123/eliza"
 ```
@@ -207,11 +231,12 @@ The API includes comprehensive error handling:
 - 500: Internal Server Error
 
 All errors return a JSON response with details:
+
 ```json
 {
-    "error": "Error message",
-    "type": "ErrorType",
-    "path": "/endpoint/path"
+  "error": "Error message",
+  "type": "ErrorType",
+  "path": "/endpoint/path"
 }
 ```
 
@@ -220,6 +245,7 @@ All errors return a JSON response with details:
 The system uses SQLite with two main tables:
 
 1. `bots`: Stores bot configurations
+
    - name (PRIMARY KEY)
    - bio
    - personality
