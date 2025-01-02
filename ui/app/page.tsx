@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { AgentCard } from "@/components/agent-card";
-import { WalletButton } from "@/components/wallet-button";
+import { WalletConnectButton } from "@/components/wallet-connect-button";
 import { Input } from "@/components/ui/input";
 import { Search } from "lucide-react";
 import { agents } from "@/lib/data";
@@ -26,10 +26,10 @@ export default function Home() {
               placeholder="Search agents..."
               className="pl-9 bg-zinc-900 border-zinc-800 focus-visible:ring-pink-500 text-zinc-100"
               value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
+              onChange={(e: React.ChangeEvent<HTMLInputElement>) => setSearchQuery(e.target.value)}
             />
           </div>
-          <WalletButton />
+          <WalletConnectButton />
         </div>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
           {filteredAgents.map((agent) => (
