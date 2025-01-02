@@ -30,7 +30,7 @@ export default function ProfilePage() {
 
         <div className="space-y-4">
           <div>
-            <label className="text-sm text-zinc-400">Name</label>
+            <label className="text-sm text-zinc-400">Username</label>
             <div className="text-lg font-medium text-white">{profile.name}</div>
           </div>
           <div>

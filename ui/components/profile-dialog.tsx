@@ -37,7 +37,7 @@ export function ProfileDialog({
         </DialogHeader>
         <div className="space-y-4 py-4">
           <div className="space-y-2">
-            <label className="text-sm font-medium text-zinc-200">Name</label>
+            <label className="text-sm font-medium text-zinc-200">Username</label>
             <Input
               value={name}
               onChange={(e) => setName(e.target.value)}

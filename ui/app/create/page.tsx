@@ -73,7 +73,7 @@ export default function CreatePage() {
 
           <div className="space-y-4">
             <div>
-              <label className="text-sm font-medium text-zinc-200">Name</label>
+              <label className="text-sm font-medium text-zinc-200">Agent Name</label>
               <Input
                 className="bg-zinc-800 border-zinc-700"
                 value={name}
