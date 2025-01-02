@@ -25,10 +25,7 @@ export default function AgentPage() {
   const [ethAmount, setEthAmount] = useState("0.0");
   const [tokenPercentage, setTokenPercentage] = useState("0.0");
   const [messages, setMessages] = useState<Message[]>([
-    { role: "assistant", content: "Hi..." },
     { role: "assistant", content: "How's your day going?" },
-    { role: "user", content: "Hey!" },
-    { role: "user", content: "Cool" },
   ]);
 
   const { isFavorite, toggleFavorite } = useFavorites();
@@ -250,15 +247,6 @@ export default function AgentPage() {
                 msg.role === "user" ? "justify-end" : ""
               }`}
             >
-              {msg.role === "assistant" && (
-                <Image
-                  src={agent.image}
-                  alt={agent.name}
-                  width={32}
-                  height={32}
-                  className="rounded-full"
-                />
-              )}
               <div
                 className={`rounded-lg p-3 text-sm max-w-[80%] ${
                   msg.role === "user"
@@ -268,15 +256,6 @@ export default function AgentPage() {
               >
                 {msg.content}
               </div>
-              {msg.role === "user" && (
-                <Image
-                  src="/placeholder.svg?height=32&width=32"
-                  alt="User"
-                  width={32}
-                  height={32}
-                  className="rounded-full"
-                />
-              )}
             </div>
           ))}
         </div>
