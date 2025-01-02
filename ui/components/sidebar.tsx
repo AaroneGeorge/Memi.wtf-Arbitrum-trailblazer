@@ -44,29 +44,33 @@ export function Sidebar() {
         <Link href="/" className="flex items-center pl-3 mb-14">
           <h1 className="text-2xl font-bold">M</h1>
         </Link>
-        <div className="space-y-1">
-          {routes.map((route) => (
-            <Button
-              key={route.href}
-              variant={pathname === route.href ? "secondary" : "ghost"}
-              className={cn(
-                "w-full justify-start pl-6 mb-1",
-                pathname === route.href &&
-                  "bg-pink-950 text-pink-50 hover:bg-pink-900"
-              )}
-              asChild
-            >
-              <Link href={route.href}>
-                <route.icon
-                  className={cn(
-                    "mr-2 h-5 w-5",
-                    pathname === route.href ? "text-pink-200" : "text-zinc-400"
-                  )}
-                />
-                {route.label}
-              </Link>
-            </Button>
-          ))}
+        <div className="space-y-4">
+          <div className="space-y-1">
+            {routes.map((route) => (
+              <Button
+                key={route.href}
+                variant={pathname === route.href ? "secondary" : "ghost"}
+                className={cn(
+                  "w-full justify-start pl-6 mb-1",
+                  pathname === route.href &&
+                    "bg-pink-950 text-pink-50 hover:bg-pink-900"
+                )}
+                asChild
+              >
+                <Link href={route.href}>
+                  <route.icon
+                    className={cn(
+                      "mr-2 h-5 w-5",
+                      pathname === route.href
+                        ? "text-pink-200"
+                        : "text-zinc-400"
+                    )}
+                  />
+                  {route.label}
+                </Link>
+              </Button>
+            ))}
+          </div>
         </div>
       </div>
     </div>
