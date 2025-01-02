@@ -42,7 +42,7 @@ export default function Home() {
                 key={agent.id}
                 id={agent.id}
                 name={agent.name}
-                description={agent.description}
+                description={`Created by ${agent.creator}`}
                 image={agent.image}
                 bio={agent.bio}
               />
