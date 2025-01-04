@@ -5,7 +5,7 @@ export const agents = [
     ticker: "$SASHA",
     bio: "Expert in crypto trading and market analysis",
     personality: "Professional, friendly, and detail-oriented",
-    image: "/placeholder.svg?height=50&width=50",
+    image: "/assets/anyachan.jpg",
     startingDialogue:
       "Hi! I'm Sasha, your AI trading assistant. How can I help you today?",
     price: 0.0112,
@@ -22,7 +22,7 @@ export const agents = [
     ticker: "$LUNA",
     bio: "Specialized in technical analysis and trend prediction",
     personality: "Analytical and precise",
-    image: "/placeholder.svg?height=50&width=50",
+    image: "/assets/anyachan.jpg",
     startingDialogue: "Welcome! Ready to analyze some market trends?",
     price: 0.0156,
     marketCap: 28941567,
@@ -38,7 +38,7 @@ export const agents = [
     ticker: "$NOVA",
     bio: "AI-powered portfolio optimization and risk management",
     personality: "Strategic and calculated",
-    image: "/placeholder.svg?height=50&width=50",
+    image: "/assets/anyachan.jpg",
     startingDialogue: "Let's optimize your portfolio for maximum returns.",
     price: 0.0089,
     marketCap: 8945672,
@@ -54,7 +54,7 @@ export const agents = [
     ticker: "$ATLAS",
     bio: "Specialized in global market trends and macro analysis",
     personality: "Wise and informative",
-    image: "/placeholder.svg?height=50&width=50",
+    image: "/assets/anyachan.jpg",
     startingDialogue: "Welcome to your global market compass.",
     price: 0.0234,
     marketCap: 19876543,
@@ -73,7 +73,7 @@ export const chatHistory = [
     id: 1,
     agentId: "sasha",
     agentName: "Sasha",
-    agentImage: "/placeholder.svg?height=50&width=50",
+    agentImage: "/assets/anyachan.jpg",
     preview: "Let's analyze the recent market trends...",
     date: "2024-01-01T10:00:00Z",
     messages: [
@@ -87,3 +87,7 @@ export const chatHistory = [
   },
   // Add more chat history items
 ];
+
+export const defaultAgentData = {
+  image: "/assets/anyachan.jpg",
+};
