@@ -6,7 +6,7 @@ import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Home, Plus, User, Heart, History } from "lucide-react";
+import { Home, Plus, User, Heart, History, User2 } from "lucide-react";
 
 const routes = [
   {
@@ -23,6 +23,11 @@ const routes = [
     label: "Profile",
     icon: User,
     href: "/profile",
+  },
+  {
+    label: "Your Agents",
+    icon: User2,
+    href: "/your-agents",
   },
   {
     label: "Favourites",
