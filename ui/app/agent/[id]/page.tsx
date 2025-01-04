@@ -99,6 +99,70 @@ export default function AgentPage() {
         </div>
 
         <div className="grid gap-6">
+          <Card className="bg-zinc-900 border-zinc-800">
+            <div className="p-4 border-b border-zinc-800">
+              <div className="flex items-center gap-2">
+                <Image
+                  src={agent.image}
+                  alt={agent.name}
+                  width={32}
+                  height={32}
+                  className="rounded-full"
+                />
+                <div>
+                  <h3 className="font-semibold text-white">
+                    Chat with {agent.name}
+                  </h3>
+                  <p className="text-xs text-zinc-400">
+                    Created by {agent.creator}
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            <div className="p-4 h-[400px] overflow-auto space-y-4">
+              {messages.map((msg, i) => (
+                <div
+                  key={i}
+                  className={`flex gap-2 ${
+                    msg.role === "user" ? "justify-end" : ""
+                  }`}
+                >
+                  <div
+                    className={`rounded-lg p-3 text-sm max-w-[80%] ${
+                      msg.role === "user"
+                        ? "bg-pink-600 text-white ml-12"
+                        : "bg-zinc-800 text-zinc-200"
+                    }`}
+                  >
+                    {msg.content}
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            <form
+              onSubmit={handleSendMessage}
+              className="p-4 border-t border-zinc-800"
+            >
+              <div className="flex gap-2">
+                <Input
+                  placeholder="Type a message..."
+                  value={message}
+                  onChange={(e) => setMessage(e.target.value)}
+                  className="bg-zinc-800 border-zinc-700"
+                />
+                <Button
+                  type="submit"
+                  size="icon"
+                  className="bg-pink-600 hover:bg-pink-700"
+                >
+                  <Send className="h-4 w-4" />
+                </Button>
+              </div>
+            </form>
+          </Card>
+
           <Card className="bg-zinc-950 border-zinc-800 p-4">
             <div className="grid grid-cols-2 gap-4 mb-4">
               <div>
@@ -216,70 +280,6 @@ export default function AgentPage() {
             </Card>
           </div>
         </div>
-      </Card>
-
-      <Card className="bg-zinc-900 border-zinc-800">
-        <div className="p-4 border-b border-zinc-800">
-          <div className="flex items-center gap-2">
-            <Image
-              src={agent.image}
-              alt={agent.name}
-              width={32}
-              height={32}
-              className="rounded-full"
-            />
-            <div>
-              <h3 className="font-semibold text-white">
-                Chat with {agent.name}
-              </h3>
-              <p className="text-xs text-zinc-400">
-                Created by {agent.creator}
-              </p>
-            </div>
-          </div>
-        </div>
-
-        <div className="p-4 h-[400px] overflow-auto space-y-4">
-          {messages.map((msg, i) => (
-            <div
-              key={i}
-              className={`flex gap-2 ${
-                msg.role === "user" ? "justify-end" : ""
-              }`}
-            >
-              <div
-                className={`rounded-lg p-3 text-sm max-w-[80%] ${
-                  msg.role === "user"
-                    ? "bg-pink-600 text-white ml-12"
-                    : "bg-zinc-800 text-zinc-200"
-                }`}
-              >
-                {msg.content}
-              </div>
-            </div>
-          ))}
-        </div>
-
-        <form
-          onSubmit={handleSendMessage}
-          className="p-4 border-t border-zinc-800"
-        >
-          <div className="flex gap-2">
-            <Input
-              placeholder="Type a message..."
-              value={message}
-              onChange={(e) => setMessage(e.target.value)}
-              className="bg-zinc-800 border-zinc-700"
-            />
-            <Button
-              type="submit"
-              size="icon"
-              className="bg-pink-600 hover:bg-pink-700"
-            >
-              <Send className="h-4 w-4" />
-            </Button>
-          </div>
-        </form>
       </Card>
     </div>
   );
