@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
 import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -41,8 +42,21 @@ export function Sidebar() {
   return (
     <div className="space-y-4 py-4 flex flex-col h-full bg-zinc-950 text-white">
       <div className="px-3 py-2 flex-1">
-        <Link href="/" className="flex items-center pl-3 mb-14">
-          <h1 className="text-2xl font-bold">M</h1>
+        <Link href="/" className="flex items-center pl-3 mb-5">
+          {/* similar gif urls; */}
+          {/* https://i.giphy.com/media/v1.Y2lkPTc5MGI3NjExbms0bmI5aTIxaGQ2bnFieDk4cDFmNWZuZXdtcjljZGsydjA1eDczZSZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9cw/d3QPCL3xEdTgc/giphy.gif
+              https://i.giphy.com/media/v1.Y2lkPTc5MGI3NjExaWNtbG96eGFzNDF2Mm05ZzA3czk5am8xMm4zOGxhZTdsOTNoYWZuciZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9cw/GwqWjjJsCV5NS/giphy.gif
+              https://i.giphy.com/media/v1.Y2lkPTc5MGI3NjExcXBhNjBkaDZqY2x0eGVjY2lyNzZiOXpldTN3dnEwb3YwbmgwaXgxZCZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9cw/WAyw8s7sq1v6U/giphy.gif
+              https://i.giphy.com/media/v1.Y2lkPTc5MGI3NjExcW5jbzcyMnhleHpteWt0ZWR1eXduNDhoMXB3Nnk4ZTZ3eXZxcm81ayZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9cw/SdvbTgJsHmsZa/giphy.gif
+              https://i.giphy.com/media/v1.Y2lkPTc5MGI3NjExYjZjdHdtNHkwMm9udmlrMWkwNXkwa2lsOWR3Nm10Z2kwaHF2ajF0ZiZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9cw/4QZK21zlzVIyc/giphy.gif
+              https://i.giphy.com/media/v1.Y2lkPTc5MGI3NjExMW5pNXF2OGdqbmM2dHJkbW5kOHY2cnJqY2o5Z2tjejF6bDBwMm1qMSZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9cw/Ok4B0vEAQItI4/giphy.gif 
+          */}
+          <Image
+            src="https://i.giphy.com/media/v1.Y2lkPTc5MGI3NjExcW5jbzcyMnhleHpteWt0ZWR1eXduNDhoMXB3Nnk4ZTZ3eXZxcm81ayZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9cw/SdvbTgJsHmsZa/giphy.gif"
+            alt="Logo"
+            width={100}
+            height={100}
+          />
         </Link>
         <div className="space-y-4">
           <div className="space-y-1">
