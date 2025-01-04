@@ -15,6 +15,8 @@ interface UserAgentCardProps {
   onEdit: () => void;
 }
 
+const DEFAULT_IMAGE = "/assets/anyachan.jpg"
+
 export function UserAgentCard({
   id,
   name,
@@ -30,7 +32,7 @@ export function UserAgentCard({
           <div className="flex items-center gap-4">
             <div className="relative w-12 h-12">
               <Image
-                src={image}
+                src={image || DEFAULT_IMAGE}
                 alt={name}
                 fill
                 className="rounded-full object-cover"
