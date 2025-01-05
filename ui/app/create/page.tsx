@@ -24,6 +24,18 @@ export default function CreatePage() {
   const [twitter, setTwitter] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
 
+  const validateName = (value: string) => {
+    return value.replace(/[^a-zA-Z0-9]/g, '');
+  };
+
+  const validateTicker = (value: string) => {
+    return value.replace(/[\$]/g, '');
+  };
+
+  const validateTwitter = (value: string) => {
+    return value.replace(/[@]/g, '');
+  };
+
   const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
@@ -75,9 +87,9 @@ export default function CreatePage() {
           bio: bio,
           personality: personality,
           starting_dialogue: startingDialogue,
-          ticker_symbol: ticker,
+          ticker_symbol: `$${ticker}`,
           contract_address: contractAddress,
-          ticker: ticker,
+          ticker: `$${ticker}`,
           creator: address,
           image: base64Image,
           twitter: twitter
@@ -86,6 +98,9 @@ export default function CreatePage() {
 
       if (!response.ok) {
         const error = await response.json();
+        if (error.detail?.includes('database is locked')) {
+          throw new Error('Server is busy, please try again in a few moments');
+        }
         throw new Error(error.detail || 'Failed to create AI agent');
       }
 
@@ -159,7 +174,8 @@ export default function CreatePage() {
               <Input
                 className="bg-zinc-800 border-zinc-700"
                 value={name}
-                onChange={(e) => setName(e.target.value)}
+                onChange={(e) => setName(validateName(e.target.value))}
+                placeholder="Use only letters and numbers"
               />
             </div>
             <div>
@@ -168,9 +184,9 @@ export default function CreatePage() {
               </label>
               <Input
                 className="bg-zinc-800 border-zinc-700"
-                placeholder="$SYMBOL"
+                placeholder="SYMBOL"
                 value={ticker}
-                onChange={(e) => setTicker(e.target.value)}
+                onChange={(e) => setTicker(validateTicker(e.target.value))}
               />
             </div>
             <div>
@@ -218,9 +234,9 @@ export default function CreatePage() {
               </label>
               <Input
                 className="bg-zinc-800 border-zinc-700"
-                placeholder="@username"
+                placeholder="username"
                 value={twitter}
-                onChange={(e) => setTwitter(e.target.value)}
+                onChange={(e) => setTwitter(validateTwitter(e.target.value))}
               />
             </div>
           </div>
