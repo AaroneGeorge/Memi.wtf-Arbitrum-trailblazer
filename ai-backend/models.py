@@ -7,6 +7,18 @@ class Bot(BaseModel):
     bio: str
     personality: str
     starting_dialogue: str
+    ticker_symbol: Optional[str] = None
+    contract_address: Optional[str] = None
+    ticker: Optional[str] = None
+    creator: str  # wallet address
+    image: Optional[bytes] = None
+    twitter: Optional[str] = None
+
+class User(BaseModel):
+    username: str
+    wallet_address: str
+    network: str
+    favourite_agents: List[str] = []
 
 class ChatMessage(BaseModel):
     content: str

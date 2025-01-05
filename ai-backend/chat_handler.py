@@ -6,12 +6,13 @@ from models import ChatMessage
 load_dotenv()
 
 def generate_bot_response(user_message: str, bot_name: str, bot_bio: str, bot_personality: str, chat_history: list) -> ChatMessage:
-    # Format chat history
+    # Only pass essential information to the AI
     formatted_history = "\n".join([
         f"{'User' if role == 'user' else bot_name}: {message}" + (f" `{expression}`" if expression else "")
-        for message, role, expression in chat_history[::-1]  # Reverse to get chronological order
+        for message, role, expression in chat_history[::-1]
     ])
     
+    # Simplified prompt with only necessary context
     prompt = f"""
     You are a chatbot with the following characteristics:
     Name: {bot_name}

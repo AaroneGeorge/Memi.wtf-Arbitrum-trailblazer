@@ -1,6 +1,6 @@
 # AI Chat Bot API
 
-A FastAPI-based backend service that allows creation and interaction with personalized chat bots. Each bot can have its own personality, bio, and starting dialogue.
+A FastAPI-based backend service that allows creation and interaction with personalized chat bots. Each bot can have its own personality, bio, starting dialogue, and blockchain-related information.
 
 ## Setup
 
@@ -8,17 +8,15 @@ A FastAPI-based backend service that allows creation and interaction with person
 2. Setup virtual environment:
 
 ```bash
-python3 -m venv venv # create virtual environment
-source venv/bin/activate # activate virtual environment
+python3 -m venv venv
+source venv/bin/activate
 ```
 
-3. Install dependencies
+3. Install dependencies:
 
 ```bash
 pip3 install -r requirements.txt
 ```
-
-or
 
 4. Create a `.env` file in the root directory:
 
@@ -56,7 +54,13 @@ Request Body:
     "name": "eliza",
     "bio": "loves taylor swift songs",
     "personality": "shy, smart",
-    "starting_dialogue": "hey sunshine!"
+    "starting_dialogue": "hey sunshine!",
+    "ticker_symbol": "ETH",
+    "contract_address": "0x123...",
+    "ticker": "ETH/USD",
+    "creator": "0xabc...", // wallet address
+    "image": "base64_encoded_image_string", // optional
+    "twitter": "@eliza_bot" // optional
 }
 
 Response:
@@ -65,14 +69,67 @@ Response:
 }
 ```
 
-### Get Bot's Starting Dialogue
+### Get All Bots
 
 ```bash
-GET /bots/{bot_name}/dialogue
+GET /bots
 
 Response:
 {
-    "starting_dialogue": "hey sunshine!"
+    "bots": [
+        {
+            "name": "eliza",
+            "bio": "loves taylor swift songs",
+            "personality": "shy, smart",
+            "starting_dialogue": "hey sunshine!",
+            "ticker_symbol": "ETH",
+            "contract_address": "0x123...",
+            "ticker": "ETH/USD",
+            "creator": "0xabc...",
+            "created_date": "2024-03-20T10:30:15",
+            "image": "hex_encoded_image_data",
+            "twitter": "@eliza_bot"
+        }
+    ]
+}
+```
+
+### Create a New User
+
+```bash
+POST /users
+
+Request Body:
+{
+    "username": "crypto_trader",
+    "wallet_address": "0xabc...",
+    "network": "ethereum",
+    "favourite_agents": [] // optional
+}
+
+Response:
+{
+    "message": "User crypto_trader created successfully"
+}
+```
+
+### Get User Information
+
+```bash
+GET /users/{wallet_address}
+
+Response:
+{
+    "wallet_address": "0xabc...",
+    "username": "crypto_trader",
+    "network": "ethereum",
+    "favourite_agents": ["eliza", "other_bot"],
+    "created_date": "2024-03-20T10:30:15",
+    "created_bots": ["bot1", "bot2"],
+    "chat_summary": {
+        "eliza": 10,
+        "other_bot": 5
+    }
 }
 ```
 
@@ -84,7 +141,7 @@ POST /chat
 Request Body:
 {
     "bot_name": "eliza",
-    "user_id": "user123",
+    "user_id": "0xabc...", // wallet address
     "message": "Hi Eliza! Do you like to dance?"
 }
 
@@ -105,23 +162,23 @@ GET /chats/{user_id}/{bot_name}
 
 Response:
 {
-    "user_id": "user123",
+    "user_id": "0xabc...",
     "bot_name": "eliza",
     "messages": [
         {
-            "message": "Hi Eliza! Do you like to dance?",
+            "message": "Hi Eliza!",
             "role": "user",
             "expression": null,
-            "timestamp": "2024-03-20 10:30:15"
+            "timestamp": "2024-03-20T10:30:15"
         },
         {
-            "message": "Yes, I absolutely love dancing to Taylor Swift songs!",
+            "message": "Hello! Nice to meet you!",
             "role": "assistant",
-            "expression": "blushes while swaying slightly to imaginary music",
-            "timestamp": "2024-03-20 10:30:16"
+            "expression": "smiles warmly",
+            "timestamp": "2024-03-20T10:30:16"
         }
     ],
-    "timestamp": "2024-03-20 10:30:20"
+    "timestamp": "2024-03-20T10:30:20"
 }
 ```
 
@@ -147,6 +204,7 @@ Response:
     "message": "Database cleared successfully",
     "deleted_counts": {
         "bots": 5,
+        "users": 10,
         "messages": 100
     }
 }
@@ -159,99 +217,70 @@ GET /db/status?admin_key=your-secure-admin-key
 
 Response:
 {
-    "bots": [
-        {
-            "name": "eliza",
-            "bio": "loves taylor swift songs",
-            "personality": "shy, smart",
-            "starting_dialogue": "hey sunshine!"
-        }
-    ],
+    "database_summary": {
+        "total_bots": 10,
+        "total_users": 50,
+        "total_messages": 1000,
+        "total_user_messages": 500,
+        "total_bot_messages": 500,
+        "active_conversations": 30
+    },
+    "bots": [...],
+    "users": [...],
     "chat_statistics": [
         {
             "bot_name": "eliza",
-            "user_id": "user123",
-            "message_count": 10,
-            "first_message": "2024-03-20 10:30:15",
-            "last_message": "2024-03-20 11:45:30"
+            "user_id": "0xabc...",
+            "message_count": 100,
+            "first_message": "2024-03-20T10:30:15",
+            "last_message": "2024-03-20T11:45:30",
+            "user_messages": 50,
+            "bot_messages": 50
         }
     ],
-    "total_messages": 10,
-    "total_bots": 1,
-    "active_conversations": 1
-}
-```
-
-## Testing Guide
-
-1. First, create a bot:
-
-```bash
-curl -X POST "http://localhost:8000/bots/create" \
--H "Content-Type: application/json" \
--d '{
-    "name": "eliza",
-    "bio": "loves taylor swift songs",
-    "personality": "shy, smart",
-    "starting_dialogue": "hey sunshine!"
-}'
-```
-
-2. Start a conversation:
-
-```bash
-curl -X POST "http://localhost:8000/chat" \
--H "Content-Type: application/json" \
--d '{
-    "bot_name": "eliza",
-    "user_id": "user123",
-    "message": "Hi Eliza! Do you like to dance?"
-}'
-```
-
-3. Check chat history:
-
-```bash
-curl "http://localhost:8000/chats/user123/eliza"
-```
-
-4. Delete conversation:
-
-```bash
-curl -X DELETE "http://localhost:8000/chats/user123/eliza"
-```
-
-## Error Handling
-
-The API includes comprehensive error handling:
-
-- 400: Bad Request (e.g., duplicate bot name)
-- 403: Forbidden (invalid admin key)
-- 404: Not Found (bot or chat history not found)
-- 500: Internal Server Error
-
-All errors return a JSON response with details:
-
-```json
-{
-  "error": "Error message",
-  "type": "ErrorType",
-  "path": "/endpoint/path"
+    "most_active": {
+        "bots": [
+            {
+                "bot_name": "eliza",
+                "message_count": 500
+            }
+        ],
+        "users": [
+            {
+                "user_id": "0xabc...",
+                "message_count": 300
+            }
+        ]
+    },
+    "timestamp": "2024-03-20T12:00:00.000Z"
 }
 ```
 
 ## Database Structure
 
-The system uses SQLite with two main tables:
+The system uses SQLite with three main tables:
 
 1. `bots`: Stores bot configurations
-
    - name (PRIMARY KEY)
    - bio
    - personality
    - starting_dialogue
+   - ticker_symbol
+   - contract_address
+   - ticker
+   - creator (wallet address)
+   - created_date
+   - image (BLOB)
+   - twitter
 
-2. `chat_history`: Stores conversations
+2. `users`: Stores user information
+   - wallet_address (PRIMARY KEY)
+   - username
+   - network
+   - favourite_agents (JSON string)
+   - created_date
+
+3. `chat_history`: Stores conversations
    - id (PRIMARY KEY)
    - user_id
    - bot_name
@@ -269,8 +298,26 @@ The system uses SQLite with two main tables:
 
 ## Best Practices
 
-1. Always use unique user_ids for different users
+1. Always use wallet addresses as user IDs
 2. Keep bot names unique
-3. Regularly backup the database
-4. Monitor the database size using the /db/status endpoint
-5. Use meaningful bot personalities and bios for better responses
+3. Store images as base64 strings when sending to API
+4. Regularly backup the database
+5. Monitor database size using /db/status endpoint
+6. Use meaningful bot personalities and bios for better responses
+
+## Error Handling
+
+All endpoints return appropriate HTTP status codes:
+
+- 200: Success
+- 400: Bad Request (e.g., duplicate bot/user)
+- 403: Forbidden (invalid admin key)
+- 404: Not Found (bot/user not found)
+- 500: Internal Server Error
+
+Error responses include detailed messages:
+```json
+{
+    "detail": "Error message"
+}
+```
