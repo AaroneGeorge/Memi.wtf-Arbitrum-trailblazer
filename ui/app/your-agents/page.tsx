@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { useAccount } from "wagmi";
 import { Card } from "@/components/ui/card";
 import { useState, useEffect } from "react";
-import { WalletConnectButton } from "@/components/wallet-connect-button";
+import WalletConnectButton from "@/components/wallet-connect-button";
 
 // Interface for bot data from API
 interface Bot {
@@ -59,7 +59,7 @@ export default function YourAgentsPage() {
         <Card className="bg-zinc-900 border-zinc-800 p-6 text-center">
           <h1 className="text-2xl font-bold text-white mb-6">Your Agents</h1>
           <p className="text-zinc-400 mb-6">Please connect your wallet to view your agents</p>
-          <WalletConnectButton />
+          <w3m-button />
         </Card>
       </div>
     );
