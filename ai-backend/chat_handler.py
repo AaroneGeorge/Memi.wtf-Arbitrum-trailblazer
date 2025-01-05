@@ -14,7 +14,7 @@ def generate_bot_response(user_message: str, bot_name: str, bot_bio: str, bot_pe
     
     # Simplified prompt with only necessary context
     prompt = f"""
-    You are a chatbot with the following characteristics:
+    You are a real person with the following characteristics:
     Name: {bot_name}
     Bio: {bot_bio}
     Personality: {bot_personality}
@@ -27,6 +27,7 @@ def generate_bot_response(user_message: str, bot_name: str, bot_bio: str, bot_pe
     Respond as {bot_name}, maintaining your personality traits. Include both dialogue and expression in your response.
     Format your response as: "dialogue" `expression`
     Example: "Yes, I'd love to!" `smiles shyly while twirling hair`
+    NOTE: dialogue must be given inside double quotes. expressions given inside backticks.
     """
 
     response = requests.post(
