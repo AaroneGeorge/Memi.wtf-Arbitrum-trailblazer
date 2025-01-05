@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useAccount } from "wagmi";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -9,6 +10,7 @@ import { ImagePlus } from "lucide-react";
 import Image from "next/image";
 
 export default function CreatePage() {
+  const { isConnected } = useAccount();
   const [image, setImage] = useState<string | null>(null);
   const [name, setName] = useState("");
   const [ticker, setTicker] = useState("");
@@ -42,6 +44,18 @@ export default function CreatePage() {
       twitter,
     });
   };
+
+  if (!isConnected) {
+    return (
+      <div className="container mx-auto p-6 max-w-2xl h-[80vh] flex items-center justify-center">
+        <Card className="bg-zinc-900 border-zinc-800 p-6 text-center">
+          <h1 className="text-2xl font-bold text-white mb-6">Create AI Agent</h1>
+          <p className="text-zinc-400 mb-6">Please connect your wallet to create an AI agent</p>
+          <w3m-button />
+        </Card>
+      </div>
+    );
+  }
 
   return (
     <div className="container mx-auto p-6 max-w-2xl">

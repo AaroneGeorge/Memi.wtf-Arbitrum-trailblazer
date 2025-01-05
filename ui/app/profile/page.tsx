@@ -42,6 +42,18 @@ export default function ProfilePage() {
     setIsEditing(false);
   };
 
+  if (!isConnected) {
+    return (
+      <div className="container mx-auto p-6 max-w-2xl h-[80vh] flex items-center justify-center">
+        <Card className="bg-zinc-900 border-zinc-800 p-6 text-center">
+          <h1 className="text-2xl font-bold text-white mb-6">Profile</h1>
+          <p className="text-zinc-400 mb-6">Please connect your wallet to view your profile</p>
+          <w3m-button />
+        </Card>
+      </div>
+    );
+  }
+
   return (
     <div className="h-full p-6 space-y-6">
       <h1 className="text-2xl font-bold text-zinc-100">Profile</h1>
