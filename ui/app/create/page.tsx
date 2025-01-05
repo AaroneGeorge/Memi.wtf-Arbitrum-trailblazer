@@ -77,7 +77,7 @@ export default function CreatePage() {
           starting_dialogue: startingDialogue,
           ticker_symbol: ticker,
           contract_address: contractAddress,
-          ticker: `${ticker}/USD`,
+          ticker: ticker,
           creator: address,
           image: base64Image,
           twitter: twitter
