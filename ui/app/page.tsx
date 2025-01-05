@@ -5,6 +5,7 @@ import { AgentCard } from "@/components/agent-card";
 import WalletConnectButton from "@/components/wallet-connect-button";
 import { Input } from "@/components/ui/input";
 import { Search } from "lucide-react";
+import { generateRandomUsername } from "@/lib/utils";
 
 type Bot = {
   name: string;
@@ -20,6 +21,66 @@ type User = {
   username: string;
   wallet_address: string;
 };
+
+type WalletInfo = {
+  address: string;
+  network: string;
+};
+
+async function checkUserExists(walletAddress: string): Promise<boolean> {
+  try {
+    const response = await fetch(`http://127.0.0.1:8000/users/${walletAddress}`, {
+      method: 'GET',
+      headers: {
+        'Accept': 'application/json',
+      }
+    });
+    
+    // If we get 404, user doesn't exist
+    if (response.status === 404) {
+      return false;
+    }
+    
+    // For any other error, log it and return false
+    if (!response.ok) {
+      console.error('Error checking user:', await response.text());
+      return false;
+    }
+
+    // If we get here, user exists
+    const data = await response.json();
+    return true;
+  } catch (error) {
+    console.error('Error checking user existence:', error);
+    return false;
+  }
+}
+
+async function createUser(walletInfo: WalletInfo) {
+  try {
+    const response = await fetch('http://127.0.0.1:8000/users', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        username: generateRandomUsername(),
+        wallet_address: walletInfo.address,
+        network: walletInfo.network,
+        favourite_agents: []
+      })
+    });
+    
+    if (!response.ok) {
+      throw new Error('Failed to create user');
+    }
+    
+    return await response.json();
+  } catch (error) {
+    console.error('Error creating user:', error);
+    throw error;
+  }
+}
 
 export default function Home() {
   const [searchQuery, setSearchQuery] = useState("");
@@ -51,6 +112,32 @@ export default function Home() {
     };
 
     fetchBots();
+  }, []);
+
+  useEffect(() => {
+    const handleWalletConnection = async (walletInfo: WalletInfo) => {
+      if (!walletInfo.address) return;
+      
+      const userExists = await checkUserExists(walletInfo.address);
+      if (!userExists) {
+        try {
+          await createUser(walletInfo);
+        } catch (error) {
+          console.error('Error in user creation:', error);
+        }
+      }
+    };
+
+    // Subscribe to wallet connection events
+    window.addEventListener('walletConnected', ((event: CustomEvent<WalletInfo>) => {
+      handleWalletConnection(event.detail);
+    }) as EventListener);
+
+    return () => {
+      window.removeEventListener('walletConnected', ((event: CustomEvent<WalletInfo>) => {
+        handleWalletConnection(event.detail);
+      }) as EventListener);
+    };
   }, []);
 
   const filteredAgents = agents.filter(
