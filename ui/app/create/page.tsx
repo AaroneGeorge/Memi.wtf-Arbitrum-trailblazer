@@ -8,9 +8,12 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { ImagePlus } from "lucide-react";
 import Image from "next/image";
+import { toast } from "sonner";
+import { useRouter } from "next/navigation";
 
 export default function CreatePage() {
-  const { isConnected } = useAccount();
+  const router = useRouter();
+  const { isConnected, address } = useAccount();
   const [image, setImage] = useState<string | null>(null);
   const [name, setName] = useState("");
   const [ticker, setTicker] = useState("");
@@ -19,6 +22,7 @@ export default function CreatePage() {
   const [startingDialogue, setStartingDialogue] = useState("");
   const [contractAddress, setContractAddress] = useState("");
   const [twitter, setTwitter] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -31,18 +35,82 @@ export default function CreatePage() {
     }
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    // Handle form submission here
-    console.log({
-      name,
-      ticker,
-      bio,
-      personality,
-      startingDialogue,
-      contractAddress,
-      twitter,
+  const convertImageToBase64 = (imageFile: File): Promise<string> => {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => {
+        const base64String = (reader.result as string).split(',')[1];
+        resolve(base64String);
+      };
+      reader.onerror = reject;
+      reader.readAsDataURL(imageFile);
     });
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    if (!address) {
+      toast.error('Please connect your wallet first');
+      return;
+    }
+    
+    try {
+      setIsSubmitting(true);
+
+      const imageFile = image ? await fetch(image).then(r => r.blob()) : null;
+      let base64Image = null;
+      
+      if (imageFile) {
+        base64Image = await convertImageToBase64(imageFile as File);
+      }
+
+      const response = await fetch('http://localhost:8000/bots/create', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          name: name,
+          bio: bio,
+          personality: personality,
+          starting_dialogue: startingDialogue,
+          ticker_symbol: ticker,
+          contract_address: contractAddress,
+          ticker: `${ticker}/USD`,
+          creator: address,
+          image: base64Image,
+          twitter: twitter
+        }),
+      });
+
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.detail || 'Failed to create AI agent');
+      }
+
+      const data = await response.json();
+      toast.success('AI agent created successfully!');
+      
+      setImage(null);
+      setName('');
+      setTicker('');
+      setBio('');
+      setPersonality('');
+      setStartingDialogue('');
+      setContractAddress('');
+      setTwitter('');
+
+      setTimeout(() => {
+        router.push('/');
+      }, 1000);
+
+    } catch (error) {
+      console.error('Error creating AI agent:', error);
+      toast.error(error.message || 'Failed to create AI agent');
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   if (!isConnected) {
@@ -160,8 +228,9 @@ export default function CreatePage() {
           <Button
             type="submit"
             className="w-full bg-pink-600 hover:bg-pink-700"
+            disabled={isSubmitting}
           >
-            Create Agent
+            {isSubmitting ? 'Creating...' : 'Create Agent'}
           </Button>
         </form>
       </Card>
