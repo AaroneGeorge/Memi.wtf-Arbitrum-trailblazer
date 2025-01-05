@@ -603,3 +603,142 @@ async def global_exception_handler(request, exc):
             "path": request.url.path
         }
     )
+
+@app.put("/users/{wallet_address}")
+async def update_user(wallet_address: str, user: User):
+    """Update an existing user's information"""
+    try:
+        conn = sqlite3.connect("databases/master/master.db")
+        cursor = conn.cursor()
+        
+        # First check if user exists
+        cursor.execute(
+            "SELECT wallet_address FROM users WHERE wallet_address = ?",
+            (wallet_address,)
+        )
+        if not cursor.fetchone():
+            raise HTTPException(status_code=404, detail="User not found")
+        
+        # Update user information
+        cursor.execute(
+            """
+            UPDATE users 
+            SET username = ?,
+                network = ?,
+                favourite_agents = ?
+            WHERE wallet_address = ?
+            """,
+            (
+                user.username,
+                user.network,
+                json.dumps(user.favourite_agents),
+                wallet_address
+            )
+        )
+        
+        conn.commit()
+        
+        # Get updated user data
+        cursor.execute(
+            "SELECT * FROM users WHERE wallet_address = ?",
+            (wallet_address,)
+        )
+        updated_user = cursor.fetchone()
+        
+        conn.close()
+        
+        return {
+            "message": "User updated successfully",
+            "user": {
+                "wallet_address": updated_user[0],
+                "username": updated_user[1],
+                "network": updated_user[2],
+                "favourite_agents": json.loads(updated_user[3]),
+                "created_date": updated_user[4]
+            }
+        }
+        
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.put("/bots/{bot_name}")
+async def update_bot(bot_name: str, bot: Bot):
+    """Update an existing bot's information"""
+    try:
+        conn = sqlite3.connect("databases/master/master.db")
+        cursor = conn.cursor()
+        
+        # First check if bot exists
+        cursor.execute(
+            "SELECT name FROM bots WHERE name = ?",
+            (bot_name,)
+        )
+        if not cursor.fetchone():
+            raise HTTPException(status_code=404, detail="Bot not found")
+        
+        # Convert image from base64 to blob if present
+        image_blob = b64decode(bot.image) if bot.image else None
+        
+        # Update bot information
+        cursor.execute(
+            """
+            UPDATE bots 
+            SET bio = ?,
+                personality = ?,
+                starting_dialogue = ?,
+                ticker_symbol = ?,
+                contract_address = ?,
+                ticker = ?,
+                image = ?,
+                twitter = ?
+            WHERE name = ?
+            """,
+            (
+                bot.bio,
+                bot.personality,
+                bot.starting_dialogue,
+                bot.ticker_symbol,
+                bot.contract_address,
+                bot.ticker,
+                image_blob,
+                bot.twitter,
+                bot_name
+            )
+        )
+        
+        conn.commit()
+        
+        # Get updated bot data
+        cursor.execute(
+            """
+            SELECT name, bio, personality, starting_dialogue,
+                   ticker_symbol, contract_address, ticker,
+                   creator, created_date, image, twitter
+            FROM bots 
+            WHERE name = ?
+            """,
+            (bot_name,)
+        )
+        updated_bot = cursor.fetchone()
+        
+        conn.close()
+        
+        return {
+            "message": "Bot updated successfully",
+            "bot": {
+                "name": updated_bot[0],
+                "bio": updated_bot[1],
+                "personality": updated_bot[2],
+                "starting_dialogue": updated_bot[3],
+                "ticker_symbol": updated_bot[4],
+                "contract_address": updated_bot[5],
+                "ticker": updated_bot[6],
+                "creator": updated_bot[7],
+                "created_date": updated_bot[8],
+                "image": updated_bot[9].hex() if updated_bot[9] else None,
+                "twitter": updated_bot[10]
+            }
+        }
+        
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))

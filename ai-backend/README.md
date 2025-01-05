@@ -256,6 +256,69 @@ Response:
 }
 ```
 
+### Update User Information
+
+```bash
+PUT /users/{wallet_address}
+
+Request Body:
+{
+    "username": "new_username",
+    "wallet_address": "0xabc...",
+    "network": "ethereum",
+    "favourite_agents": ["bot1", "bot2"]
+}
+
+Response:
+{
+    "message": "User updated successfully",
+    "user": {
+        "wallet_address": "0xabc...",
+        "username": "new_username",
+        "network": "ethereum",
+        "favourite_agents": ["bot1", "bot2"],
+        "created_date": "2024-03-20T10:30:15"
+    }
+}
+```
+
+### Update Bot Information
+
+```bash
+PUT /bots/{bot_name}
+
+Request Body:
+{
+    "name": "eliza",
+    "bio": "updated bio",
+    "personality": "updated personality",
+    "starting_dialogue": "new greeting",
+    "ticker_symbol": "ETH",
+    "contract_address": "0x123...",
+    "ticker": "ETH/USD",
+    "creator": "0xabc...",
+    "image": "base64_encoded_image_string",
+    "twitter": "@new_twitter"
+}
+
+Response:
+{
+    "message": "Bot updated successfully",
+    "bot": {
+        "name": "eliza",
+        "bio": "updated bio",
+        "personality": "updated personality",
+        "starting_dialogue": "new greeting",
+        "ticker_symbol": "ETH",
+        "contract_address": "0x123...",
+        "ticker": "ETH/USD",
+        "creator": "0xabc...",
+        "created_date": "2024-03-20T10:30:15",
+        "image": "hex_encoded_image_data",
+        "twitter": "@new_twitter"
+    }
+}
+
 ## Database Structure
 
 The system uses SQLite with three main tables:
