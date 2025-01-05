@@ -12,6 +12,7 @@ import { useFavorites } from "@/contexts/favorites-context";
 import Link from "next/link";
 import { useAccount } from "wagmi";
 import { Bot, ChatMessage, ChatHistory } from "./types";
+import WalletConnectButton from "@/components/wallet-connect-button";
 
 export default function AgentPage() {
   const { id } = useParams();
@@ -35,12 +36,12 @@ export default function AgentPage() {
   useEffect(() => {
     const fetchBot = async () => {
       try {
-        const response = await fetch('http://127.0.0.1:8000/bots');
+        const response = await fetch("http://127.0.0.1:8000/bots");
         const data = await response.json();
         const foundBot = data.bots.find((b: Bot) => b.name === id);
         if (foundBot) setBot(foundBot);
       } catch (error) {
-        console.error('Error fetching bot:', error);
+        console.error("Error fetching bot:", error);
       }
     };
     fetchBot();
@@ -50,28 +51,30 @@ export default function AgentPage() {
   useEffect(() => {
     const fetchChatHistory = async () => {
       if (!address || !bot) return;
-      
+
       // Set the starting dialogue as first message
       const startingMessage: ChatMessage = {
         message: bot.starting_dialogue,
         role: "assistant",
         expression: null,
-        timestamp: new Date().toISOString()
+        timestamp: new Date().toISOString(),
       };
-      
+
       try {
-        const response = await fetch(`http://127.0.0.1:8000/chats/${address}/${id}`);
+        const response = await fetch(
+          `http://127.0.0.1:8000/chats/${address}/${id}`
+        );
         const data: ChatHistory = await response.json();
-        
+
         // Combine starting dialogue with chat history
         setMessages([startingMessage, ...data.messages]);
       } catch (error) {
-        console.error('Error fetching chat history:', error);
+        console.error("Error fetching chat history:", error);
         // If error, at least show the starting dialogue
         setMessages([startingMessage]);
       }
     };
-    
+
     fetchChatHistory();
   }, [id, address, bot]); // Added bot as dependency
 
@@ -79,17 +82,19 @@ export default function AgentPage() {
   useEffect(() => {
     const fetchCreatorUsername = async () => {
       if (!bot?.creator) return;
-      
+
       try {
-        const response = await fetch(`http://127.0.0.1:8000/users/${bot.creator}`);
+        const response = await fetch(
+          `http://127.0.0.1:8000/users/${bot.creator}`
+        );
         const data = await response.json();
         setCreatorUsername(data.username || bot.creator); // fallback to address if no username
       } catch (error) {
-        console.error('Error fetching creator username:', error);
+        console.error("Error fetching creator username:", error);
         setCreatorUsername(bot.creator); // fallback to address on error
       }
     };
-    
+
     fetchCreatorUsername();
   }, [bot?.creator]);
 
@@ -102,37 +107,37 @@ export default function AgentPage() {
       message: message,
       role: "user",
       expression: null,
-      timestamp: new Date().toISOString()
+      timestamp: new Date().toISOString(),
     };
-    setMessages(prev => [...prev, userMessage]);
-    
+    setMessages((prev) => [...prev, userMessage]);
+
     try {
-      const response = await fetch('http://127.0.0.1:8000/chat', {
-        method: 'POST',
+      const response = await fetch("http://127.0.0.1:8000/chat", {
+        method: "POST",
         headers: {
-          'Content-Type': 'application/json',
+          "Content-Type": "application/json",
         },
         body: JSON.stringify({
           bot_name: id,
           user_id: address,
-          message: message
+          message: message,
         }),
       });
 
       const data = await response.json();
-      
+
       // Add bot response
       const botMessage: ChatMessage = {
         message: data.response.content,
         role: "assistant",
         expression: data.response.expression,
-        timestamp: new Date().toISOString()
+        timestamp: new Date().toISOString(),
       };
-      setMessages(prev => [...prev, botMessage]);
+      setMessages((prev) => [...prev, botMessage]);
     } catch (error) {
-      console.error('Error sending message:', error);
+      console.error("Error sending message:", error);
     }
-    
+
     setMessage("");
   };
 
@@ -140,9 +145,7 @@ export default function AgentPage() {
   const renderMessage = (msg: ChatMessage, index: number) => (
     <div
       key={index}
-      className={`flex gap-2 ${
-        msg.role === "user" ? "justify-end" : ""
-      }`}
+      className={`flex gap-2 ${msg.role === "user" ? "justify-end" : ""}`}
     >
       <div
         className={`rounded-lg p-3 text-sm max-w-[80%] ${
@@ -170,7 +173,7 @@ export default function AgentPage() {
           <div className="flex items-center gap-4">
             <Image
               // src={bot.image}
-              src='/assets/anyachan.jpg'
+              src="/assets/anyachan.jpg"
               alt={bot.name}
               width={64}
               height={64}
@@ -191,8 +194,8 @@ export default function AgentPage() {
                 >
                   <Twitter className="inline-block w-4 h-4 ml-1 mr-1" />
                   {bot.twitter}
-                </Link>
-                {" "}•
+                </Link>{" "}
+                •
                 <Link
                   href={`https://etherscan.io/address/${bot.contract_address}`}
                   target="_blank"
@@ -220,8 +223,7 @@ export default function AgentPage() {
             <div className="p-4 border-b border-zinc-800">
               <div className="flex items-center gap-2">
                 <Image
-                  // src={bot.image}
-                  src='/assets/anyachan.jpg'
+                  src="/assets/anyachan.jpg"
                   alt={bot.name}
                   width={32}
                   height={32}
@@ -238,30 +240,41 @@ export default function AgentPage() {
               </div>
             </div>
 
-            <div className="p-4 h-[400px] overflow-auto space-y-4">
-              {messages.map((msg, i) => renderMessage(msg, i))}
-            </div>
+            {address ? (
+              <>
+                <div className="p-4 h-[400px] overflow-auto space-y-4">
+                  {messages.map((msg, i) => renderMessage(msg, i))}
+                </div>
 
-            <form
-              onSubmit={handleSendMessage}
-              className="p-4 border-t border-zinc-800"
-            >
-              <div className="flex gap-2">
-                <Input
-                  placeholder="Type a message..."
-                  value={message}
-                  onChange={(e) => setMessage(e.target.value)}
-                  className="bg-zinc-800 border-zinc-700"
-                />
-                <Button
-                  type="submit"
-                  size="icon"
-                  className="bg-pink-600 hover:bg-pink-700"
+                <form
+                  onSubmit={handleSendMessage}
+                  className="p-4 border-t border-zinc-800"
                 >
-                  <Send className="h-4 w-4" />
-                </Button>
+                  <div className="flex gap-2">
+                    <Input
+                      placeholder="Type a message..."
+                      value={message}
+                      onChange={(e) => setMessage(e.target.value)}
+                      className="bg-zinc-800 border-zinc-700"
+                    />
+                    <Button
+                      type="submit"
+                      size="icon"
+                      className="bg-pink-600 hover:bg-pink-700"
+                    >
+                      <Send className="h-4 w-4" />
+                    </Button>
+                  </div>
+                </form>
+              </>
+            ) : (
+              <div className="p-8 flex flex-col items-center justify-center gap-4">
+                <p className="text-zinc-400 text-center">
+                  Connect your wallet to chat with {bot.name}
+                </p>
+                <WalletConnectButton />
               </div>
-            </form>
+            )}
           </Card>
 
           <Card className="bg-zinc-950 border-zinc-800 p-4">
@@ -269,25 +282,25 @@ export default function AgentPage() {
               <div>
                 <div className="text-sm text-zinc-400">Price</div>
                 <div className="text-xl font-bold text-white">
-                  ${staticData?.price || '0.00'}
+                  ${staticData?.price || "0.00"}
                 </div>
               </div>
               <div>
                 <div className="text-sm text-zinc-400">24h Change</div>
                 <div className="text-xl font-bold text-green-500">
-                  +{staticData?.change || '0.00'}%
+                  +{staticData?.change || "0.00"}%
                 </div>
               </div>
               <div>
                 <div className="text-sm text-zinc-400">Market Cap</div>
                 <div className="text-xl font-bold text-white">
-                  ${staticData?.marketCap.toLocaleString() || '0'}
+                  ${staticData?.marketCap.toLocaleString() || "0"}
                 </div>
               </div>
               <div>
                 <div className="text-sm text-zinc-400">Volume</div>
                 <div className="text-xl font-bold text-white">
-                  ${staticData?.volume.toLocaleString() || '0'}
+                  ${staticData?.volume.toLocaleString() || "0"}
                 </div>
               </div>
             </div>
