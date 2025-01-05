@@ -1,19 +1,62 @@
 "use client";
 
-import { useState, Suspense } from "react";
+import { useState, Suspense, useEffect } from "react";
 import { AgentCard } from "@/components/agent-card";
 import WalletConnectButton from "@/components/wallet-connect-button";
 import { Input } from "@/components/ui/input";
 import { Search } from "lucide-react";
-import { agents } from "@/lib/data";
+
+type Bot = {
+  name: string;
+  bio: string;
+  ticker_symbol: string;
+  creator: string;
+  image: string;
+  twitter: string;
+  contract_address: string;
+};
+
+type User = {
+  username: string;
+  wallet_address: string;
+};
 
 export default function Home() {
   const [searchQuery, setSearchQuery] = useState("");
+  const [agents, setAgents] = useState<Bot[]>([]);
+  const [creators, setCreators] = useState<Record<string, string>>({});
+
+  useEffect(() => {
+    const fetchBots = async () => {
+      try {
+        const response = await fetch('http://127.0.0.1:8000/bots');
+        const data = await response.json();
+        setAgents(data.bots);
+
+        const creatorMap: Record<string, string> = {};
+        for (const bot of data.bots) {
+          try {
+            const userResponse = await fetch(`http://127.0.0.1:8000/users/${bot.creator}`);
+            const userData = await userResponse.json();
+            creatorMap[bot.creator] = userData.username;
+          } catch (error) {
+            console.error(`Error fetching creator for ${bot.creator}:`, error);
+            creatorMap[bot.creator] = bot.creator.slice(0, 6) + '...' + bot.creator.slice(-4);
+          }
+        }
+        setCreators(creatorMap);
+      } catch (error) {
+        console.error('Error fetching bots:', error);
+      }
+    };
+
+    fetchBots();
+  }, []);
 
   const filteredAgents = agents.filter(
     (agent) =>
       agent.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      agent.description.toLowerCase().includes(searchQuery.toLowerCase())
+      agent.bio.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
   return (
@@ -39,11 +82,11 @@ export default function Home() {
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
             {filteredAgents.map((agent) => (
               <AgentCard
-                key={agent.id}
-                id={agent.id}
+                key={agent.name}
+                id={agent.name}
                 name={agent.name}
-                description={`Created by ${agent.creator}`}
-                image={agent.image}
+                description={`Created by ${creators[agent.creator] || 'Loading...'}`}
+                // image={agent.image || '/assets/anyachan.jpg'}
                 bio={agent.bio}
               />
             ))}
