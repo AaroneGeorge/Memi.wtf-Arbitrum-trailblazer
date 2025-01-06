@@ -11,7 +11,6 @@ from fastapi.responses import JSONResponse
 from datetime import datetime
 import json
 from base64 import b64decode
-import uvicorn
 
 app = FastAPI()
 
@@ -743,13 +742,3 @@ async def update_bot(bot_name: str, bot: Bot):
         
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
-
-# Add this at the bottom of the file, after all routes
-if __name__ == "__main__":
-    port = int(os.getenv("PORT", 10000))
-    uvicorn.run(
-        "api-server:app",
-        host="0.0.0.0",
-        port=port,
-        reload=True
-    )
