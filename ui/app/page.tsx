@@ -27,9 +27,11 @@ type WalletInfo = {
   network: string;
 };
 
+const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL
+
 async function checkUserExists(walletAddress: string): Promise<boolean> {
   try {
-    const response = await fetch(`http://127.0.0.1:8000/users/${walletAddress}`, {
+    const response = await fetch(`${backendUrl}/users/${walletAddress}`, {
       method: 'GET',
       headers: {
         'Accept': 'application/json',
@@ -58,7 +60,7 @@ async function checkUserExists(walletAddress: string): Promise<boolean> {
 
 async function createUser(walletInfo: WalletInfo) {
   try {
-    const response = await fetch('http://127.0.0.1:8000/users', {
+    const response = await fetch(`${backendUrl}/users`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -90,14 +92,14 @@ export default function Home() {
   useEffect(() => {
     const fetchBots = async () => {
       try {
-        const response = await fetch('http://127.0.0.1:8000/bots');
+        const response = await fetch(`${backendUrl}/bots`);
         const data = await response.json();
         setAgents(data.bots);
 
         const creatorMap: Record<string, string> = {};
         for (const bot of data.bots) {
           try {
-            const userResponse = await fetch(`http://127.0.0.1:8000/users/${bot.creator}`);
+            const userResponse = await fetch(`${backendUrl}/users/${bot.creator}`);
             const userData = await userResponse.json();
             creatorMap[bot.creator] = userData.username;
           } catch (error) {

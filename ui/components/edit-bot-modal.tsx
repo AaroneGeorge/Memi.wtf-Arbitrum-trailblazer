@@ -21,6 +21,8 @@ interface EditBotModalProps {
   onSuccess: () => void;
 }
 
+const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL;
+
 export function EditBotModal({ bot, isOpen, onClose, onSuccess }: EditBotModalProps) {
   const [isLoading, setIsLoading] = useState(false);
   const [formData, setFormData] = useState({
@@ -47,7 +49,7 @@ export function EditBotModal({ bot, isOpen, onClose, onSuccess }: EditBotModalPr
     setIsLoading(true);
 
     try {
-      const response = await fetch(`http://127.0.0.1:8000/bots/${bot.name}`, {
+      const response = await fetch(`${backendUrl}/bots/${bot.name}`, {
         method: "PUT",
         headers: {
           "Content-Type": "application/json",

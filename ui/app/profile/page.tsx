@@ -17,6 +17,8 @@ interface UserData {
   created_date?: string;
 }
 
+const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL;
+
 export default function ProfilePage() {
   const { address, isConnected } = useAccount();
   const [isEditing, setIsEditing] = useState(false);
@@ -29,7 +31,7 @@ export default function ProfilePage() {
     const fetchUserData = async () => {
       if (isConnected && address) {
         try {
-          const response = await fetch(`http://127.0.0.1:8000/users/${address}`);
+          const response = await fetch(`${backendUrl}/users/${address}`);
           if (response.ok) {
             const data = await response.json();
             setUserData(data);
@@ -51,7 +53,7 @@ export default function ProfilePage() {
     if (!address || !userData) return;
 
     try {
-      const response = await fetch(`http://127.0.0.1:8000/users/${address}`, {
+      const response = await fetch(`${backendUrl}/users/${address}`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',

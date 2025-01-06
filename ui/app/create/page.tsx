@@ -11,6 +11,8 @@ import Image from "next/image";
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
 
+const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL;
+
 export default function CreatePage() {
   const router = useRouter();
   const { isConnected, address } = useAccount();
@@ -86,7 +88,7 @@ export default function CreatePage() {
         base64Image = await convertImageToBase64(imageFile as File);
       }
 
-      const response = await fetch('http://localhost:8000/bots/create', {
+      const response = await fetch(`${backendUrl}/bots/create`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

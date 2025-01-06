@@ -15,6 +15,8 @@ import { Bot, ChatMessage, ChatHistory } from "./types";
 import WalletConnectButton from "@/components/wallet-connect-button";
 import { getImageSrc } from "@/lib/utils";
 
+const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL;
+
 export default function AgentPage() {
   const { id } = useParams();
   const { address } = useAccount();
@@ -37,7 +39,7 @@ export default function AgentPage() {
   useEffect(() => {
     const fetchBot = async () => {
       try {
-        const response = await fetch("http://127.0.0.1:8000/bots");
+        const response = await fetch(`${backendUrl}/bots`);
         const data = await response.json();
         const foundBot = data.bots.find((b: Bot) => b.name === id);
         if (foundBot) setBot(foundBot);
@@ -63,7 +65,7 @@ export default function AgentPage() {
 
       try {
         const response = await fetch(
-          `http://127.0.0.1:8000/chats/${address}/${id}`
+          `${backendUrl}/chats/${address}/${id}`
         );
         const data: ChatHistory = await response.json();
 
@@ -86,7 +88,7 @@ export default function AgentPage() {
 
       try {
         const response = await fetch(
-          `http://127.0.0.1:8000/users/${bot.creator}`
+          `${backendUrl}/users/${bot.creator}`
         );
         const data = await response.json();
         setCreatorUsername(data.username || bot.creator); // fallback to address if no username
@@ -113,7 +115,7 @@ export default function AgentPage() {
     setMessages((prev) => [...prev, userMessage]);
 
     try {
-      const response = await fetch("http://127.0.0.1:8000/chat", {
+      const response = await fetch(`${backendUrl}/chat`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

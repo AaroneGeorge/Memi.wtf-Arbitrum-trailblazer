@@ -23,6 +23,8 @@ interface Bot {
   twitter: string;
 }
 
+const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL;
+
 export default function YourAgentsPage() {
   const { address, isConnected } = useAccount();
   const router = useRouter();
@@ -35,7 +37,7 @@ export default function YourAgentsPage() {
       if (!isConnected || !address) return;
 
       try {
-        const response = await fetch('http://127.0.0.1:8000/bots');
+        const response = await fetch(`${backendUrl}/bots`);
         if (response.ok) {
           const data = await response.json();
           // Filter bots where creator matches wallet address

@@ -28,6 +28,8 @@ interface Bot {
   // ... other bot fields
 }
 
+const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL;
+
 export default function HistoryPage() {
   const { address, isConnected } = useAccount();
   const [chatHistories, setChatHistories] = useState<ChatHistory[]>([]);
@@ -39,11 +41,11 @@ export default function HistoryPage() {
 
       try {
         // Get user info to get list of bots they've chatted with
-        const userResponse = await fetch(`http://127.0.0.1:8000/users/${address}`);
+        const userResponse = await fetch(`${backendUrl}/users/${address}`);
         const userData = await userResponse.json();
 
         // Get all bots info
-        const botsResponse = await fetch('http://127.0.0.1:8000/bots');
+        const botsResponse = await fetch(`${backendUrl}/bots`);
         const botsData = await botsResponse.json();
         const botsMap = botsData.bots.reduce((acc: any, bot: Bot) => {
           acc[bot.name] = bot;
@@ -55,7 +57,7 @@ export default function HistoryPage() {
         const histories = await Promise.all(
           Object.keys(userData.chat_summary).map(async (botName) => {
             const chatResponse = await fetch(
-              `http://127.0.0.1:8000/chats/${address}/${botName}`
+              `${backendUrl}/chats/${address}/${botName}`
             );
             return chatResponse.json();
           })
