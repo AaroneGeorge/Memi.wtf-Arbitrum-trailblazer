@@ -39,6 +39,15 @@ export default function CreatePage() {
   const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
+      if (file.size > 50 * 1024) {
+        toast.error('Image size exceeds limit', {
+          description: 'Please upload an image smaller than 50KB. You may need to resize your image.',
+          duration: 5000
+        });
+        e.target.value = '';
+        return;
+      }
+
       const reader = new FileReader();
       reader.onloadend = () => {
         setImage(reader.result as string);
@@ -164,6 +173,11 @@ export default function CreatePage() {
                     onChange={handleImageUpload}
                   />
                 </label>
+              )}
+              {!image && (
+                <p className="text-xs text-zinc-500 text-center mt-2">
+                  Max image size: 50KB
+                </p>
               )}
             </div>
           </div>
