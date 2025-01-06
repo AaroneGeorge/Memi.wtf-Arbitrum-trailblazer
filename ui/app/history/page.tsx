@@ -6,7 +6,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { useAccount } from "wagmi";
 import { useEffect, useState } from "react";
-
+import { getImageSrc } from "@/lib/utils";
 interface ChatMessage {
   message: string;
   role: string;
@@ -97,8 +97,7 @@ export default function HistoryPage() {
               <Card className="bg-zinc-900 border-zinc-800 p-4 hover:border-pink-500/50 transition-colors">
                 <div className="flex items-start gap-4">
                   <Image
-                    // src={bot?.image || "/assets/anyachan.jpg"}
-                    src={"/assets/anyachan.jpg"}
+                    src={getImageSrc(bot?.image) || "/assets/anyachan.jpg"}
                     alt={chat.bot_name}
                     width={40}
                     height={40}

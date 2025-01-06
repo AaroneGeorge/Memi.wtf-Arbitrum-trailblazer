@@ -13,6 +13,7 @@ import Link from "next/link";
 import { useAccount } from "wagmi";
 import { Bot, ChatMessage, ChatHistory } from "./types";
 import WalletConnectButton from "@/components/wallet-connect-button";
+import { getImageSrc } from "@/lib/utils";
 
 export default function AgentPage() {
   const { id } = useParams();
@@ -172,8 +173,7 @@ export default function AgentPage() {
         <div className="flex items-start justify-between mb-8">
           <div className="flex items-center gap-4">
             <Image
-              // src={bot.image}
-              src="/assets/anyachan.jpg"
+              src={getImageSrc(bot.image) || "/assets/anyachan.jpg"}
               alt={bot.name}
               width={64}
               height={64}
@@ -223,7 +223,7 @@ export default function AgentPage() {
             <div className="p-4 border-b border-zinc-800">
               <div className="flex items-center gap-2">
                 <Image
-                  src="/assets/anyachan.jpg"
+                  src={getImageSrc(bot.image) || "/assets/anyachan.jpg"}
                   alt={bot.name}
                   width={32}
                   height={32}

@@ -5,7 +5,7 @@ import { AgentCard } from "@/components/agent-card";
 import WalletConnectButton from "@/components/wallet-connect-button";
 import { Input } from "@/components/ui/input";
 import { Search } from "lucide-react";
-import { generateRandomUsername } from "@/lib/utils";
+import { generateRandomUsername, getImageSrc } from "@/lib/utils";
 
 type Bot = {
   name: string;
@@ -173,7 +173,7 @@ export default function Home() {
                 id={agent.name}
                 name={agent.name}
                 description={`Created by ${creators[agent.creator] || 'Loading...'}`}
-                // image={agent.image || '/assets/anyachan.jpg'}
+                image={getImageSrc(agent.image) || '/assets/anyachan.jpg'}
                 bio={agent.bio}
               />
             ))}

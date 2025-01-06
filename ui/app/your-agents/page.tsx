@@ -6,6 +6,7 @@ import { useAccount } from "wagmi";
 import { Card } from "@/components/ui/card";
 import { useState, useEffect } from "react";
 import WalletConnectButton from "@/components/wallet-connect-button";
+import { getImageSrc } from "@/lib/utils";
 
 // Interface for bot data from API
 interface Bot {
@@ -105,8 +106,7 @@ export default function YourAgentsPage() {
               ticker={bot.ticker}
               bio={bot.bio}
               personality={bot.personality}
-              // image={bot.image}
-              image={"/assets/anyachan.jpg"}
+              image={getImageSrc(bot.image) || '/assets/anyachan.jpg'}
               startingDialogue={bot.starting_dialogue}
               price={0} // Add these if available from API
               marketCap={0}
