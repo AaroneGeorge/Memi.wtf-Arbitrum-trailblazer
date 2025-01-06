@@ -7,7 +7,7 @@ import { Button } from './ui/button'
 
 const WalletConnectButton = memo(() => {
   const { open } = useWeb3Modal()
-  const { address, isConnected } = useAccount()
+  const { address, isConnected, chain } = useAccount()
   const { disconnect } = useDisconnect()
   const [mounted, setMounted] = useState(false)
 
@@ -15,6 +15,23 @@ const WalletConnectButton = memo(() => {
   useEffect(() => {
     setMounted(true)
   }, [])
+
+  // When wallet is connected, dispatch the event
+  const dispatchWalletConnected = (address: string, network: string) => {
+    const event = new CustomEvent('walletConnected', {
+      detail: {
+        address,
+        network
+      }
+    });
+    window.dispatchEvent(event);
+  };
+
+  useEffect(() => {
+    if (isConnected && address && chain) {
+      dispatchWalletConnected(address, chain.name.toLowerCase() || 'ethereum');
+    }
+  }, [isConnected, address, chain]);
 
   if (!mounted) {
     return (

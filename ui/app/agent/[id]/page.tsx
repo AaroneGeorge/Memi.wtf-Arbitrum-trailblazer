@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useParams } from "next/navigation";
 import { agents } from "@/lib/data";
 import { Card } from "@/components/ui/card";
@@ -10,42 +10,162 @@ import { Heart, Send, Twitter, ExternalLink } from "lucide-react";
 import Image from "next/image";
 import { useFavorites } from "@/contexts/favorites-context";
 import Link from "next/link";
-
-type Message = {
-  role: "user" | "assistant";
-  content: string;
-};
+import { useAccount } from "wagmi";
+import { Bot, ChatMessage, ChatHistory } from "./types";
+import WalletConnectButton from "@/components/wallet-connect-button";
+import { getImageSrc } from "@/lib/utils";
 
 export default function AgentPage() {
   const { id } = useParams();
-  const agent = agents.find((a) => a.id === id);
+  const { address } = useAccount();
+  const [bot, setBot] = useState<Bot | null>(null);
+  const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [message, setMessage] = useState("");
   const [showBuyOptions, setShowBuyOptions] = useState(true);
   const [showSellOptions, setShowSellOptions] = useState(false);
   const [ethAmount, setEthAmount] = useState("0.0");
   const [tokenPercentage, setTokenPercentage] = useState("0.0");
-  const [messages, setMessages] = useState<Message[]>([
-    { role: "assistant", content: "How's your day going?" },
-  ]);
+  const [creatorUsername, setCreatorUsername] = useState<string>("");
 
   const { isFavorite, toggleFavorite } = useFavorites();
   const favorite = isFavorite(id as string);
 
-  if (!agent) return <div>Agent not found</div>;
+  // Get static market data
+  const staticData = agents.find((a) => a.id === id);
 
-  const handleSendMessage = (e: React.FormEvent) => {
+  // Fetch bot details
+  useEffect(() => {
+    const fetchBot = async () => {
+      try {
+        const response = await fetch("http://127.0.0.1:8000/bots");
+        const data = await response.json();
+        const foundBot = data.bots.find((b: Bot) => b.name === id);
+        if (foundBot) setBot(foundBot);
+      } catch (error) {
+        console.error("Error fetching bot:", error);
+      }
+    };
+    fetchBot();
+  }, [id]);
+
+  // Fetch chat history
+  useEffect(() => {
+    const fetchChatHistory = async () => {
+      if (!address || !bot) return;
+
+      // Set the starting dialogue as first message
+      const startingMessage: ChatMessage = {
+        message: bot.starting_dialogue,
+        role: "assistant",
+        expression: null,
+        timestamp: new Date().toISOString(),
+      };
+
+      try {
+        const response = await fetch(
+          `http://127.0.0.1:8000/chats/${address}/${id}`
+        );
+        const data: ChatHistory = await response.json();
+
+        // Combine starting dialogue with chat history
+        setMessages([startingMessage, ...data.messages]);
+      } catch (error) {
+        console.error("Error fetching chat history:", error);
+        // If error, at least show the starting dialogue
+        setMessages([startingMessage]);
+      }
+    };
+
+    fetchChatHistory();
+  }, [id, address, bot]); // Added bot as dependency
+
+  // Add new useEffect to fetch creator's username
+  useEffect(() => {
+    const fetchCreatorUsername = async () => {
+      if (!bot?.creator) return;
+
+      try {
+        const response = await fetch(
+          `http://127.0.0.1:8000/users/${bot.creator}`
+        );
+        const data = await response.json();
+        setCreatorUsername(data.username || bot.creator); // fallback to address if no username
+      } catch (error) {
+        console.error("Error fetching creator username:", error);
+        setCreatorUsername(bot.creator); // fallback to address on error
+      }
+    };
+
+    fetchCreatorUsername();
+  }, [bot?.creator]);
+
+  const handleSendMessage = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!message.trim()) return;
+    if (!message.trim() || !address) return;
 
-    setMessages((prev) => [...prev, { role: "user", content: message }]);
-    setTimeout(() => {
-      setMessages((prev) => [
-        ...prev,
-        { role: "assistant", content: "Thank you for your message!" },
-      ]);
-    }, 1000);
+    // Add user message immediately
+    const userMessage: ChatMessage = {
+      message: message,
+      role: "user",
+      expression: null,
+      timestamp: new Date().toISOString(),
+    };
+    setMessages((prev) => [...prev, userMessage]);
+
+    try {
+      const response = await fetch("http://127.0.0.1:8000/chat", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          bot_name: id,
+          user_id: address,
+          message: message,
+        }),
+      });
+
+      const data = await response.json();
+
+      // Add bot response
+      const botMessage: ChatMessage = {
+        message: data.response.content,
+        role: "assistant",
+        expression: data.response.expression,
+        timestamp: new Date().toISOString(),
+      };
+      setMessages((prev) => [...prev, botMessage]);
+    } catch (error) {
+      console.error("Error sending message:", error);
+    }
+
     setMessage("");
   };
+
+  // Update the message display in the chat
+  const renderMessage = (msg: ChatMessage, index: number) => (
+    <div
+      key={index}
+      className={`flex gap-2 ${msg.role === "user" ? "justify-end" : ""}`}
+    >
+      <div
+        className={`rounded-lg p-3 text-sm max-w-[80%] ${
+          msg.role === "user"
+            ? "bg-pink-600 text-white ml-12"
+            : "bg-zinc-800 text-zinc-200"
+        }`}
+      >
+        {msg.message}
+        {msg.expression && (
+          <div className="text-xs text-zinc-400 mt-1 italic">
+            *{msg.expression}*
+          </div>
+        )}
+      </div>
+    </div>
+  );
+
+  if (!bot) return <div>Agent not found</div>;
 
   return (
     <div className="container mx-auto p-6 max-w-6xl">
@@ -53,37 +173,37 @@ export default function AgentPage() {
         <div className="flex items-start justify-between mb-8">
           <div className="flex items-center gap-4">
             <Image
-              src={agent.image}
-              alt={agent.name}
+              src={getImageSrc(bot.image) || "/assets/anyachan.jpg"}
+              alt={bot.name}
               width={64}
               height={64}
               className="rounded-full"
             />
             <div>
               <div className="flex items-center gap-2">
-                <h1 className="text-2xl font-bold text-white">{agent.name}</h1>
-                <span className="text-pink-500">{agent.ticker}</span>
+                <h1 className="text-2xl font-bold text-white">{bot.name}</h1>
+                <span className="text-pink-500">{bot.ticker}</span>
               </div>
               <div className="text-zinc-400 text-sm">
-                Created by {agent.creator} •
+                Created by {creatorUsername} •
                 <Link
-                  href={`https://x.com/${agent.twitter.replace("@", "")}`}
+                  href={`https://x.com/${bot.twitter.replace("@", "")}`}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="text-blue-400 hover:text-pink-500 hover:underline"
                 >
                   <Twitter className="inline-block w-4 h-4 ml-1 mr-1" />
-                  {agent.twitter}
+                  {bot.twitter}
                 </Link>{" "}
                 •
                 <Link
-                  href={`https://etherscan.io/address/${agent.contract}`}
+                  href={`https://etherscan.io/address/${bot.contract_address}`}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="text-blue-400 hover:text-pink-500 hover:underline"
                 >
                   <ExternalLink className="inline-block w-4 h-4 ml-1 mr-1" />
-                  {agent.contract}
+                  {bot.contract_address}
                 </Link>
               </div>
             </div>
@@ -103,64 +223,58 @@ export default function AgentPage() {
             <div className="p-4 border-b border-zinc-800">
               <div className="flex items-center gap-2">
                 <Image
-                  src={agent.image}
-                  alt={agent.name}
+                  src={getImageSrc(bot.image) || "/assets/anyachan.jpg"}
+                  alt={bot.name}
                   width={32}
                   height={32}
                   className="rounded-full"
                 />
                 <div>
                   <h3 className="font-semibold text-white">
-                    Chat with {agent.name}
+                    Chat with {bot.name}
                   </h3>
                   <p className="text-xs text-zinc-400">
-                    Created by {agent.creator}
+                    Created by {creatorUsername}
                   </p>
                 </div>
               </div>
             </div>
 
-            <div className="p-4 h-[400px] overflow-auto space-y-4">
-              {messages.map((msg, i) => (
-                <div
-                  key={i}
-                  className={`flex gap-2 ${
-                    msg.role === "user" ? "justify-end" : ""
-                  }`}
-                >
-                  <div
-                    className={`rounded-lg p-3 text-sm max-w-[80%] ${
-                      msg.role === "user"
-                        ? "bg-pink-600 text-white ml-12"
-                        : "bg-zinc-800 text-zinc-200"
-                    }`}
-                  >
-                    {msg.content}
-                  </div>
+            {address ? (
+              <>
+                <div className="p-4 h-[400px] overflow-auto space-y-4">
+                  {messages.map((msg, i) => renderMessage(msg, i))}
                 </div>
-              ))}
-            </div>
 
-            <form
-              onSubmit={handleSendMessage}
-              className="p-4 border-t border-zinc-800"
-            >
-              <div className="flex gap-2">
-                <Input
-                  placeholder="Type a message..."
-                  value={message}
-                  onChange={(e) => setMessage(e.target.value)}
-                  className="bg-zinc-800 border-zinc-700"
-                />
-                <Button
-                  type="submit"
-                  size="icon"
-                  className="bg-pink-600 hover:bg-pink-700"
+                <form
+                  onSubmit={handleSendMessage}
+                  className="p-4 border-t border-zinc-800"
                 >
-                  <Send className="h-4 w-4" />
-                </Button>
+                  <div className="flex gap-2">
+                    <Input
+                      placeholder="Type a message..."
+                      value={message}
+                      onChange={(e) => setMessage(e.target.value)}
+                      className="bg-zinc-800 border-zinc-700"
+                    />
+                    <Button
+                      type="submit"
+                      size="icon"
+                      className="bg-pink-600 hover:bg-pink-700"
+                    >
+                      <Send className="h-4 w-4" />
+                    </Button>
+                  </div>
+                </form>
+              </>
+            ) : (
+              <div className="p-8 flex flex-col items-center justify-center gap-4">
+                <p className="text-zinc-400 text-center">
+                  Connect your wallet to chat with {bot.name}
+                </p>
+                <WalletConnectButton />
               </div>
-            </form>
+            )}
           </Card>
 
           <Card className="bg-zinc-950 border-zinc-800 p-4">
@@ -168,25 +282,25 @@ export default function AgentPage() {
               <div>
                 <div className="text-sm text-zinc-400">Price</div>
                 <div className="text-xl font-bold text-white">
-                  ${agent.price}
+                  ${staticData?.price || "0.00"}
                 </div>
               </div>
               <div>
                 <div className="text-sm text-zinc-400">24h Change</div>
                 <div className="text-xl font-bold text-green-500">
-                  +{agent.change}%
+                  +{staticData?.change || "0.00"}%
                 </div>
               </div>
               <div>
                 <div className="text-sm text-zinc-400">Market Cap</div>
                 <div className="text-xl font-bold text-white">
-                  ${agent.marketCap.toLocaleString()}
+                  ${staticData?.marketCap.toLocaleString() || "0"}
                 </div>
               </div>
               <div>
                 <div className="text-sm text-zinc-400">Volume</div>
                 <div className="text-xl font-bold text-white">
-                  ${agent.volume.toLocaleString()}
+                  ${staticData?.volume.toLocaleString() || "0"}
                 </div>
               </div>
             </div>

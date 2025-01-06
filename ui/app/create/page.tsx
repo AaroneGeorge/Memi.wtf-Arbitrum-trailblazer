@@ -1,14 +1,19 @@
 "use client";
 
 import { useState } from "react";
+import { useAccount } from "wagmi";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { ImagePlus } from "lucide-react";
 import Image from "next/image";
+import { toast } from "sonner";
+import { useRouter } from "next/navigation";
 
 export default function CreatePage() {
+  const router = useRouter();
+  const { isConnected, address } = useAccount();
   const [image, setImage] = useState<string | null>(null);
   const [name, setName] = useState("");
   const [ticker, setTicker] = useState("");
@@ -17,10 +22,32 @@ export default function CreatePage() {
   const [startingDialogue, setStartingDialogue] = useState("");
   const [contractAddress, setContractAddress] = useState("");
   const [twitter, setTwitter] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const validateName = (value: string) => {
+    return value.replace(/[^a-zA-Z0-9]/g, '');
+  };
+
+  const validateTicker = (value: string) => {
+    return value.replace(/[\$]/g, '');
+  };
+
+  const validateTwitter = (value: string) => {
+    return value.replace(/[@]/g, '');
+  };
 
   const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
+      if (file.size > 50 * 1024) {
+        toast.error('Image size exceeds limit', {
+          description: 'Please upload an image smaller than 50KB. You may need to resize your image.',
+          duration: 5000
+        });
+        e.target.value = '';
+        return;
+      }
+
       const reader = new FileReader();
       reader.onloadend = () => {
         setImage(reader.result as string);
@@ -29,19 +56,98 @@ export default function CreatePage() {
     }
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    // Handle form submission here
-    console.log({
-      name,
-      ticker,
-      bio,
-      personality,
-      startingDialogue,
-      contractAddress,
-      twitter,
+  const convertImageToBase64 = (imageFile: File): Promise<string> => {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => {
+        const base64String = (reader.result as string).split(',')[1];
+        resolve(base64String);
+      };
+      reader.onerror = reject;
+      reader.readAsDataURL(imageFile);
     });
   };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    if (!address) {
+      toast.error('Please connect your wallet first');
+      return;
+    }
+    
+    try {
+      setIsSubmitting(true);
+
+      const imageFile = image ? await fetch(image).then(r => r.blob()) : null;
+      let base64Image = null;
+      
+      if (imageFile) {
+        base64Image = await convertImageToBase64(imageFile as File);
+      }
+
+      const response = await fetch('http://localhost:8000/bots/create', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          name: name,
+          bio: bio,
+          personality: personality,
+          starting_dialogue: startingDialogue,
+          ticker_symbol: `$${ticker}`,
+          contract_address: contractAddress,
+          ticker: `$${ticker}`,
+          creator: address,
+          image: base64Image,
+          twitter: twitter
+        }),
+      });
+
+      if (!response.ok) {
+        const error = await response.json();
+        if (error.detail?.includes('database is locked')) {
+          throw new Error('Server is busy, please try again in a few moments');
+        }
+        throw new Error(error.detail || 'Failed to create AI agent');
+      }
+
+      const data = await response.json();
+      toast.success('AI agent created successfully!');
+      
+      setImage(null);
+      setName('');
+      setTicker('');
+      setBio('');
+      setPersonality('');
+      setStartingDialogue('');
+      setContractAddress('');
+      setTwitter('');
+
+      setTimeout(() => {
+        router.push('/');
+      }, 1000);
+
+    } catch (error) {
+      console.error('Error creating AI agent:', error);
+      toast.error(error.message || 'Failed to create AI agent');
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  if (!isConnected) {
+    return (
+      <div className="container mx-auto p-6 max-w-2xl h-[80vh] flex items-center justify-center">
+        <Card className="bg-zinc-900 border-zinc-800 p-6 text-center">
+          <h1 className="text-2xl font-bold text-white mb-6">Create AI Agent</h1>
+          <p className="text-zinc-400 mb-6">Please connect your wallet to create an AI agent</p>
+          <w3m-button />
+        </Card>
+      </div>
+    );
+  }
 
   return (
     <div className="container mx-auto p-6 max-w-2xl">
@@ -68,6 +174,11 @@ export default function CreatePage() {
                   />
                 </label>
               )}
+              {!image && (
+                <p className="text-xs text-zinc-500 text-center mt-2">
+                  Max image size: 50KB
+                </p>
+              )}
             </div>
           </div>
 
@@ -77,7 +188,8 @@ export default function CreatePage() {
               <Input
                 className="bg-zinc-800 border-zinc-700"
                 value={name}
-                onChange={(e) => setName(e.target.value)}
+                onChange={(e) => setName(validateName(e.target.value))}
+                placeholder="Use only letters and numbers"
               />
             </div>
             <div>
@@ -86,9 +198,9 @@ export default function CreatePage() {
               </label>
               <Input
                 className="bg-zinc-800 border-zinc-700"
-                placeholder="$SYMBOL"
+                placeholder="SYMBOL"
                 value={ticker}
-                onChange={(e) => setTicker(e.target.value)}
+                onChange={(e) => setTicker(validateTicker(e.target.value))}
               />
             </div>
             <div>
@@ -136,9 +248,9 @@ export default function CreatePage() {
               </label>
               <Input
                 className="bg-zinc-800 border-zinc-700"
-                placeholder="@username"
+                placeholder="username"
                 value={twitter}
-                onChange={(e) => setTwitter(e.target.value)}
+                onChange={(e) => setTwitter(validateTwitter(e.target.value))}
               />
             </div>
           </div>
@@ -146,8 +258,9 @@ export default function CreatePage() {
           <Button
             type="submit"
             className="w-full bg-pink-600 hover:bg-pink-700"
+            disabled={isSubmitting}
           >
-            Create Agent
+            {isSubmitting ? 'Creating...' : 'Create Agent'}
           </Button>
         </form>
       </Card>

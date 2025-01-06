@@ -8,18 +8,71 @@ import { Copy, Edit2, Check, X } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { generateRandomUsername } from '@/lib/utils';
 
+// Add new interface for user data
+interface UserData {
+  username: string;
+  wallet_address: string;
+  network: string;
+  favourite_agents: string[];
+  created_date?: string;
+}
+
 export default function ProfilePage() {
   const { address, isConnected } = useAccount();
   const [isEditing, setIsEditing] = useState(false);
-  const [username, setUsername] = useState('');
+  const [userData, setUserData] = useState<UserData | null>(null);
   const [editingUsername, setEditingUsername] = useState('');
+  const [isLoading, setIsLoading] = useState(true);
 
-  // Generate random username on first load or when wallet connects
+  // Fetch user data when wallet is connected
   useEffect(() => {
-    if (isConnected && !username) {
-      setUsername(generateRandomUsername());
+    const fetchUserData = async () => {
+      if (isConnected && address) {
+        try {
+          const response = await fetch(`http://127.0.0.1:8000/users/${address}`);
+          if (response.ok) {
+            const data = await response.json();
+            setUserData(data);
+            setEditingUsername(data.username);
+          }
+        } catch (error) {
+          console.error('Error fetching user data:', error);
+        } finally {
+          setIsLoading(false);
+        }
+      }
+    };
+
+    fetchUserData();
+  }, [isConnected, address]);
+
+  // Update the saveUsername function to call the API
+  const saveUsername = async () => {
+    if (!address || !userData) return;
+
+    try {
+      const response = await fetch(`http://127.0.0.1:8000/users/${address}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          ...userData,
+          username: editingUsername,
+        }),
+      });
+
+      if (response.ok) {
+        const updatedData = await response.json();
+        setUserData(updatedData.user);
+        setIsEditing(false);
+      } else {
+        console.error('Failed to update username');
+      }
+    } catch (error) {
+      console.error('Error updating username:', error);
     }
-  }, [isConnected]);
+  };
 
   const copyAddress = () => {
     if (address) {
@@ -28,19 +81,36 @@ export default function ProfilePage() {
   };
 
   const startEditing = () => {
-    setEditingUsername(username);
+    setEditingUsername(userData?.username || '');
     setIsEditing(true);
   };
 
-  const saveUsername = () => {
-    setUsername(editingUsername);
+  const cancelEditing = () => {
+    setEditingUsername(userData?.username || '');
     setIsEditing(false);
   };
 
-  const cancelEditing = () => {
-    setEditingUsername(username);
-    setIsEditing(false);
-  };
+  if (!isConnected) {
+    return (
+      <div className="container mx-auto p-6 max-w-2xl h-[80vh] flex items-center justify-center">
+        <Card className="bg-zinc-900 border-zinc-800 p-6 text-center">
+          <h1 className="text-2xl font-bold text-white mb-6">Profile</h1>
+          <p className="text-zinc-400 mb-6">Please connect your wallet to view your profile</p>
+          <w3m-button />
+        </Card>
+      </div>
+    );
+  }
+
+  if (isLoading) {
+    return (
+      <div className="container mx-auto p-6 max-w-2xl h-[80vh] flex items-center justify-center">
+        <Card className="bg-zinc-900 border-zinc-800 p-6 text-center">
+          <p className="text-zinc-400">Loading...</p>
+        </Card>
+      </div>
+    );
+  }
 
   return (
     <div className="h-full p-6 space-y-6">
@@ -90,8 +160,28 @@ export default function ProfilePage() {
                   </Button>
                 </div>
               ) : (
-                <p className="text-lg font-medium text-zinc-100">{username}</p>
+                <p className="text-lg font-medium text-zinc-100">
+                  {userData?.username || 'No username set'}
+                </p>
               )}
+            </div>
+            
+            <div className="space-y-2">
+              <label className="text-sm text-zinc-400">Member Since</label>
+              <p className="text-zinc-100">
+                {userData?.created_date 
+                  ? new Date(userData.created_date).toLocaleDateString()
+                  : 'N/A'}
+              </p>
+            </div>
+            
+            <div className="space-y-2">
+              <label className="text-sm text-zinc-400">Favorite Agents</label>
+              <p className="text-zinc-100">
+                {userData?.favourite_agents?.length 
+                  ? userData.favourite_agents.join(', ')
+                  : 'No favorite agents yet'}
+              </p>
             </div>
           </CardContent>
         </Card>
