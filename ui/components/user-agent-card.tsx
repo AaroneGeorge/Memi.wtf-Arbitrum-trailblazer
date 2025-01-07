@@ -41,7 +41,6 @@ export function UserAgentCard({
   creator,
   contract,
   twitter,
-  ticker_symbol,
   onEdit,
 }: UserAgentCardProps) {
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
@@ -89,7 +88,7 @@ export function UserAgentCard({
           bio,
           personality,
           starting_dialogue: startingDialogue,
-          ticker_symbol,
+          ticker_symbol: ticker,
           contract_address: contract,
           ticker,
           creator,

@@ -32,7 +32,7 @@ const config = createConfig({
 createWeb3Modal({
   wagmiConfig: config,
   projectId: process.env.NEXT_PUBLIC_WALLET_CONNECT_PROJECT_ID || '',
-  chains: [mainnet, arbitrum],
+  defaultChain: mainnet,
   themeMode: 'dark'
 })
 
