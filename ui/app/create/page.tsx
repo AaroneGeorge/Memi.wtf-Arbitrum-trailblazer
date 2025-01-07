@@ -14,7 +14,7 @@ import {
 } from "@/components/ui/tooltip";
 import { ImagePlus } from "lucide-react";
 import Image from "next/image";
-import { toast } from "sonner";
+import toast, { Toaster } from "react-hot-toast";
 import { useRouter } from "next/navigation";
 import WalletConnectButton from "@/components/wallet-connect-button";
 
@@ -49,11 +49,12 @@ export default function CreatePage() {
     const file = e.target.files?.[0];
     if (file) {
       if (file.size > 50 * 1024) {
-        toast.error("Image size exceeds limit", {
-          description:
-            "Please upload an image smaller than 50KB. You may need to resize your image.",
-          duration: 5000,
-        });
+        toast.error(
+          "Image size exceeds 50KB limit. Please upload a smaller image.",
+          {
+            duration: 2500,
+          }
+        );
         e.target.value = "";
         return;
       }
@@ -142,7 +143,9 @@ export default function CreatePage() {
       }
 
       const data = await response.json();
-      toast.success("AI agent created successfully!");
+      toast.success("AI agent created successfully!", {
+        duration: 5000,
+      });
 
       setImage(null);
       setName("");
@@ -329,6 +332,7 @@ export default function CreatePage() {
           </Button>
         </form>
       </Card>
+      <Toaster position="top-right" />
     </div>
   );
 }
