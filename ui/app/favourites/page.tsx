@@ -6,6 +6,7 @@ import { useFavorites } from "@/contexts/favorites-context";
 import { useAccount } from "wagmi";
 import WalletConnectButton from "@/components/wallet-connect-button";
 import { getImageSrc } from "@/lib/utils";
+import { Card } from "@/components/ui/card";
 
 const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL;
 
@@ -60,13 +61,14 @@ export default function FavoritesPage() {
 
   if (!address) {
     return (
-      <div className="h-full flex items-center justify-center">
-        <div className="text-center">
-          <h2 className="text-xl font-semibold text-white mb-4">
-            Connect your wallet to view favorites
-          </h2>
-          <WalletConnectButton />
-        </div>
+      <div className="container mx-auto p-6 max-w-2xl h-[80vh] flex items-center justify-center">
+        <Card className="bg-zinc-900 border-zinc-800 p-6 text-center">
+          <h1 className="text-2xl font-bold text-white mb-6">Favorite Agents</h1>
+          <p className="text-zinc-400 mb-6">
+            Please connect your wallet to view your favorite agents
+          </p>
+          <w3m-button />
+        </Card>
       </div>
     );
   }
