@@ -1,39 +1,92 @@
 "use client";
 
-import { agents } from "@/lib/data";
+import { useState, useEffect } from "react";
 import { AgentCard } from "@/components/agent-card";
 import { useFavorites } from "@/contexts/favorites-context";
 import { useAccount } from "wagmi";
-import { Card } from "@/components/ui/card";
+import WalletConnectButton from "@/components/wallet-connect-button";
+import { getImageSrc } from "@/lib/utils";
 
-export default function FavouritesPage() {
-  const { isConnected } = useAccount();
+const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL;
+
+type Bot = {
+  name: string;
+  bio: string;
+  creator: string;
+  image: string;
+};
+
+export default function FavoritesPage() {
+  const [favoriteAgents, setFavoriteAgents] = useState<Bot[]>([]);
+  const [creators, setCreators] = useState<Record<string, string>>({});
   const { favorites } = useFavorites();
-  const favouriteAgents = agents.filter((agent) =>
-    favorites.includes(agent.id)
-  );
+  const { address } = useAccount();
 
-  if (!isConnected) {
+  useEffect(() => {
+    const fetchFavoriteAgents = async () => {
+      if (!favorites.length) {
+        setFavoriteAgents([]);
+        return;
+      }
+
+      try {
+        const response = await fetch(`${backendUrl}/bots`);
+        const data = await response.json();
+        const filteredBots = data.bots.filter((bot: Bot) => 
+          favorites.includes(bot.name)
+        );
+        setFavoriteAgents(filteredBots);
+
+        // Fetch creator usernames
+        const creatorMap: Record<string, string> = {};
+        for (const bot of filteredBots) {
+          try {
+            const userResponse = await fetch(`${backendUrl}/users/${bot.creator}`);
+            const userData = await userResponse.json();
+            creatorMap[bot.creator] = userData.username;
+          } catch (error) {
+            console.error(`Error fetching creator for ${bot.creator}:`, error);
+            creatorMap[bot.creator] = bot.creator.slice(0, 6) + '...' + bot.creator.slice(-4);
+          }
+        }
+        setCreators(creatorMap);
+      } catch (error) {
+        console.error('Error fetching favorite agents:', error);
+      }
+    };
+
+    fetchFavoriteAgents();
+  }, [favorites]);
+
+  if (!address) {
     return (
-      <div className="container mx-auto p-6 max-w-2xl h-[80vh] flex items-center justify-center">
-        <Card className="bg-zinc-900 border-zinc-800 p-6 text-center">
-          <h1 className="text-2xl font-bold text-white mb-6">Favourite Agents</h1>
-          <p className="text-zinc-400 mb-6">Please connect your wallet to view your favourite agents</p>
-          <w3m-button />
-        </Card>
+      <div className="h-full flex items-center justify-center">
+        <div className="text-center">
+          <h2 className="text-xl font-semibold text-white mb-4">
+            Connect your wallet to view favorites
+          </h2>
+          <WalletConnectButton />
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="p-6">
-      <h1 className="text-2xl font-bold text-white mb-6">Favourite Agents</h1>
-      {favouriteAgents.length === 0 ? (
-        <p className="text-zinc-400">No favourite agents yet.</p>
+    <div className="container mx-auto p-6">
+      <h1 className="text-2xl font-bold text-white mb-6">Your Favorite Agents</h1>
+      {favoriteAgents.length === 0 ? (
+        <p className="text-zinc-400">No favorite agents yet.</p>
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-          {favouriteAgents.map((agent) => (
-            <AgentCard key={agent.id} {...agent} />
+          {favoriteAgents.map((agent) => (
+            <AgentCard
+              key={agent.name}
+              id={agent.name}
+              name={agent.name}
+              description={`Created by ${creators[agent.creator] || 'Loading...'}`}
+              image={getImageSrc(agent.image) || '/assets/anyachan.jpg'}
+              bio={agent.bio}
+            />
           ))}
         </div>
       )}
