@@ -10,7 +10,7 @@ import { ImagePlus } from "lucide-react";
 import Image from "next/image";
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
-import { w3mButton } from '@web3modal/react';
+import WalletConnectButton from "@/components/wallet-connect-button";
 
 const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL;
 
@@ -156,7 +156,7 @@ export default function CreatePage() {
         <Card className="bg-zinc-900 border-zinc-800 p-6 text-center">
           <h1 className="text-2xl font-bold text-white mb-6">Create AI Agent</h1>
           <p className="text-zinc-400 mb-6">Please connect your wallet to create an AI agent</p>
-          <w3m-button />
+          <WalletConnectButton />
         </Card>
       </div>
     );

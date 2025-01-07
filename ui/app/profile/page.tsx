@@ -6,6 +6,7 @@ import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Copy, Edit2, Check, X } from "lucide-react";
 import { Input } from "@/components/ui/input";
+import WalletConnectButton from "@/components/wallet-connect-button";
 
 // Add new interface for user data
 interface UserData {
@@ -99,7 +100,7 @@ export default function ProfilePage() {
           <p className="text-zinc-400 mb-6">
             Please connect your wallet to view your profile
           </p>
-          <w3m-button />
+          <WalletConnectButton />
         </Card>
       </div>
     );

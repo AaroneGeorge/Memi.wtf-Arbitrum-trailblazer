@@ -62,7 +62,7 @@ export default function YourAgentsPage() {
         <Card className="bg-zinc-900 border-zinc-800 p-6 text-center">
           <h1 className="text-2xl font-bold text-white mb-6">Your Agents</h1>
           <p className="text-zinc-400 mb-6">Please connect your wallet to view your agents</p>
-          <w3m-button />
+          <WalletConnectButton />
         </Card>
       </div>
     );

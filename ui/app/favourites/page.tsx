@@ -67,7 +67,7 @@ export default function FavoritesPage() {
           <p className="text-zinc-400 mb-6">
             Please connect your wallet to view your favorite agents
           </p>
-          <w3m-button />
+          <WalletConnectButton />
         </Card>
       </div>
     );

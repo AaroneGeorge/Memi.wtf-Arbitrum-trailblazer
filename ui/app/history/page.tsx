@@ -7,6 +7,7 @@ import Link from "next/link";
 import { useAccount } from "wagmi";
 import { useEffect, useState } from "react";
 import { getImageSrc } from "@/lib/utils";
+import WalletConnectButton from "@/components/wallet-connect-button";
 interface ChatMessage {
   message: string;
   role: string;
@@ -80,7 +81,7 @@ export default function HistoryPage() {
           <p className="text-zinc-400 mb-6">
             Please connect your wallet to view your chat history
           </p>
-          <w3m-button />
+          <WalletConnectButton />
         </Card>
       </div>
     );
