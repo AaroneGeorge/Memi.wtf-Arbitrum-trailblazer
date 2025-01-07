@@ -64,9 +64,7 @@ export default function AgentPage() {
       };
 
       try {
-        const response = await fetch(
-          `${backendUrl}/chats/${address}/${id}`
-        );
+        const response = await fetch(`${backendUrl}/chats/${address}/${id}`);
         const data: ChatHistory = await response.json();
 
         // Combine starting dialogue with chat history
@@ -87,9 +85,7 @@ export default function AgentPage() {
       if (!bot?.creator) return;
 
       try {
-        const response = await fetch(
-          `${backendUrl}/users/${bot.creator}`
-        );
+        const response = await fetch(`${backendUrl}/users/${bot.creator}`);
         const data = await response.json();
         setCreatorUsername(data.username || bot.creator); // fallback to address if no username
       } catch (error) {
@@ -168,6 +164,9 @@ export default function AgentPage() {
   );
 
   if (!bot) return <div>Agent not found</div>;
+
+  const overlayClass =
+    "relative after:content-['Coming_soon...'] after:absolute after:inset-0 after:bg-black/50 after:flex after:items-center after:justify-center after:text-white after:font-bold after:text-xl";
 
   return (
     <div className="container mx-auto p-6 max-w-6xl">
@@ -282,7 +281,7 @@ export default function AgentPage() {
             )}
           </Card>
 
-          <Card className="bg-zinc-950 border-zinc-800 p-4">
+          <Card className={`bg-zinc-950 border-zinc-800 p-4 ${overlayClass}`}>
             <div className="grid grid-cols-2 gap-4 mb-4">
               <div>
                 <div className="text-sm text-zinc-400">Price</div>
@@ -312,12 +311,14 @@ export default function AgentPage() {
           </Card>
 
           <div className="grid md:grid-cols-2 gap-6">
-            <Card className="bg-zinc-950 border-zinc-800 p-4 h-64">
+            <Card
+              className={`bg-zinc-950 border-zinc-800 p-4 h-64 ${overlayClass}`}
+            >
               <div className="text-sm text-zinc-400 mb-2">Price Chart</div>
               {/* Integrate your preferred chart library here */}
             </Card>
 
-            <Card className="bg-zinc-950 border-zinc-800 p-4">
+            <Card className={`bg-zinc-950 border-zinc-800 p-4 ${overlayClass}`}>
               <div className="flex gap-2 mb-4">
                 <Button
                   className="flex-1 bg-green-600 hover:bg-green-700"
@@ -350,14 +351,14 @@ export default function AgentPage() {
                       {ethAmount}
                     </div>
                     <div className="grid grid-cols-3 gap-2">
-                      {[...Array(6)].map((_, i) => (
+                      {["0.1", "0.5", "1"].map((ethAmount) => (
                         <Button
-                          key={i}
+                          key={ethAmount}
                           variant="outline"
                           className="text-sm"
-                          onClick={() => setEthAmount((0.01).toString())}
+                          onClick={() => setEthAmount(ethAmount)}
                         >
-                          0.01 eth
+                          {ethAmount} eth
                         </Button>
                       ))}
                     </div>
