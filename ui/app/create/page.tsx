@@ -1,11 +1,3 @@
-declare global {
-  namespace JSX {
-    interface IntrinsicElements {
-      'w3m-button': React.DetailedHTMLProps<React.HTMLAttributes<HTMLElement>, HTMLElement>;
-    }
-  }
-}
-
 "use client";
 
 import { useState } from "react";
@@ -18,6 +10,7 @@ import { ImagePlus } from "lucide-react";
 import Image from "next/image";
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
+import { w3mButton } from '@web3modal/react';
 
 const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL;
 
