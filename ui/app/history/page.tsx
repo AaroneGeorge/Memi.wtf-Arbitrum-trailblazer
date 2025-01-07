@@ -98,13 +98,14 @@ export default function HistoryPage() {
             <Link key={chat.bot_name} href={`/agent/${chat.bot_name}`}>
               <Card className="bg-zinc-900 border-zinc-800 p-4 hover:border-pink-500/50 transition-colors">
                 <div className="flex items-start gap-4">
-                  <Image
-                    src={getImageSrc(bot?.image) || "/assets/anyachan.jpg"}
-                    alt={chat.bot_name}
-                    width={40}
-                    height={40}
-                    className="rounded-full"
-                  />
+                  <div className="relative aspect-square h-10 overflow-hidden rounded-full">
+                    <Image
+                      src={getImageSrc(bot?.image) || "/assets/anyachan.jpg"}
+                      alt={chat.bot_name}
+                      fill
+                      className="object-cover"
+                    />
+                  </div>
                   <div className="flex-1">
                     <div className="flex items-center justify-between">
                       <h3 className="font-semibold text-white">

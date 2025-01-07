@@ -1,12 +1,12 @@
 "use client";
 
-import { useState, useEffect } from 'react';
-import { useAccount } from 'wagmi';
-import { Card, CardContent, CardHeader } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Copy, Edit2, Check, X } from 'lucide-react';
-import { Input } from '@/components/ui/input';
-import { generateRandomUsername } from '@/lib/utils';
+import { useState, useEffect } from "react";
+import { useAccount } from "wagmi";
+import { Card, CardContent, CardHeader } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Copy, Edit2, Check, X } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import { generateRandomUsername } from "@/lib/utils";
 
 // Add new interface for user data
 interface UserData {
@@ -23,7 +23,7 @@ export default function ProfilePage() {
   const { address, isConnected } = useAccount();
   const [isEditing, setIsEditing] = useState(false);
   const [userData, setUserData] = useState<UserData | null>(null);
-  const [editingUsername, setEditingUsername] = useState('');
+  const [editingUsername, setEditingUsername] = useState("");
   const [isLoading, setIsLoading] = useState(true);
 
   // Fetch user data when wallet is connected
@@ -38,7 +38,7 @@ export default function ProfilePage() {
             setEditingUsername(data.username);
           }
         } catch (error) {
-          console.error('Error fetching user data:', error);
+          console.error("Error fetching user data:", error);
         } finally {
           setIsLoading(false);
         }
@@ -54,9 +54,9 @@ export default function ProfilePage() {
 
     try {
       const response = await fetch(`${backendUrl}/users/${address}`, {
-        method: 'PUT',
+        method: "PUT",
         headers: {
-          'Content-Type': 'application/json',
+          "Content-Type": "application/json",
         },
         body: JSON.stringify({
           ...userData,
@@ -69,10 +69,10 @@ export default function ProfilePage() {
         setUserData(updatedData.user);
         setIsEditing(false);
       } else {
-        console.error('Failed to update username');
+        console.error("Failed to update username");
       }
     } catch (error) {
-      console.error('Error updating username:', error);
+      console.error("Error updating username:", error);
     }
   };
 
@@ -83,12 +83,12 @@ export default function ProfilePage() {
   };
 
   const startEditing = () => {
-    setEditingUsername(userData?.username || '');
+    setEditingUsername(userData?.username || "");
     setIsEditing(true);
   };
 
   const cancelEditing = () => {
-    setEditingUsername(userData?.username || '');
+    setEditingUsername(userData?.username || "");
     setIsEditing(false);
   };
 
@@ -97,7 +97,9 @@ export default function ProfilePage() {
       <div className="container mx-auto p-6 max-w-2xl h-[80vh] flex items-center justify-center">
         <Card className="bg-zinc-900 border-zinc-800 p-6 text-center">
           <h1 className="text-2xl font-bold text-white mb-6">Profile</h1>
-          <p className="text-zinc-400 mb-6">Please connect your wallet to view your profile</p>
+          <p className="text-zinc-400 mb-6">
+            Please connect your wallet to view your profile
+          </p>
           <w3m-button />
         </Card>
       </div>
@@ -117,7 +119,7 @@ export default function ProfilePage() {
   return (
     <div className="h-full p-6 space-y-6">
       <h1 className="text-2xl font-bold text-zinc-100">Profile</h1>
-      
+
       <div className="space-y-4 max-w-3xl">
         <Card className="bg-zinc-950 border-zinc-800">
           <CardHeader className="text-zinc-100 font-semibold flex flex-row items-center justify-between">
@@ -163,26 +165,26 @@ export default function ProfilePage() {
                 </div>
               ) : (
                 <p className="text-lg font-medium text-zinc-100">
-                  {userData?.username || 'No username set'}
+                  {userData?.username || "No username set"}
                 </p>
               )}
             </div>
-            
+
             <div className="space-y-2">
               <label className="text-sm text-zinc-400">Member Since</label>
               <p className="text-zinc-100">
-                {userData?.created_date 
+                {userData?.created_date
                   ? new Date(userData.created_date).toLocaleDateString()
-                  : 'N/A'}
+                  : "N/A"}
               </p>
             </div>
-            
+
             <div className="space-y-2">
               <label className="text-sm text-zinc-400">Favorite Agents</label>
               <p className="text-zinc-100">
-                {userData?.favourite_agents?.length 
-                  ? userData.favourite_agents.join(', ')
-                  : 'No favorite agents yet'}
+                {userData?.favourite_agents?.length
+                  ? userData.favourite_agents.join(", ")
+                  : "No favorite agents yet"}
               </p>
             </div>
           </CardContent>
@@ -199,9 +201,7 @@ export default function ProfilePage() {
               </p>
             ) : (
               <div className="flex items-center justify-between">
-                <p className="text-zinc-100 font-mono">
-                  {address}
-                </p>
+                <p className="text-zinc-100 font-mono">{address}</p>
                 <Button
                   variant="ghost"
                   size="icon"
@@ -215,7 +215,7 @@ export default function ProfilePage() {
           </CardContent>
         </Card>
 
-        <Card className="bg-zinc-950 border-zinc-800">
+        {/* <Card className="bg-zinc-950 border-zinc-800">
           <CardHeader className="text-zinc-100 font-semibold">
             Network Information
           </CardHeader>
@@ -225,7 +225,7 @@ export default function ProfilePage() {
               <span className="text-zinc-100">Arbitrum</span>
             </div>
           </CardContent>
-        </Card>
+        </Card> */}
       </div>
     </div>
   );

@@ -174,13 +174,14 @@ export default function AgentPage() {
       <Card className="bg-zinc-900 border-zinc-800 p-6 mb-6">
         <div className="flex items-start justify-between mb-8">
           <div className="flex items-center gap-4">
-            <Image
-              src={getImageSrc(bot.image) || "/assets/anyachan.jpg"}
-              alt={bot.name}
-              width={64}
-              height={64}
-              className="rounded-full"
-            />
+            <div className="relative aspect-square h-16 overflow-hidden rounded-full">
+              <Image
+                src={getImageSrc(bot.image) || "/assets/anyachan.jpg"}
+                alt={bot.name}
+                fill
+                className="object-cover"
+              />
+            </div>
             <div>
               <div className="flex items-center gap-2">
                 <h1 className="text-2xl font-bold text-white">{bot.name}</h1>
@@ -224,13 +225,15 @@ export default function AgentPage() {
           <Card className="bg-zinc-900 border-zinc-800">
             <div className="p-4 border-b border-zinc-800">
               <div className="flex items-center gap-2">
-                <Image
-                  src={getImageSrc(bot.image) || "/assets/anyachan.jpg"}
-                  alt={bot.name}
-                  width={32}
-                  height={32}
-                  className="rounded-full"
-                />
+                <div className="w-8 h-8 rounded-full overflow-hidden relative flex items-center justify-center">
+                  <Image
+                    src={getImageSrc(bot.image) || "/assets/anyachan.jpg"}
+                    alt={bot.name}
+                    width={32}
+                    height={32}
+                    className="object-cover w-full h-full"
+                  />
+                </div>
                 <div>
                   <h3 className="font-semibold text-white">
                     Chat with {bot.name}

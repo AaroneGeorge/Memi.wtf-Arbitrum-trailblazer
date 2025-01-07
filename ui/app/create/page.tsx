@@ -1,3 +1,11 @@
+declare global {
+  namespace JSX {
+    interface IntrinsicElements {
+      'w3m-button': React.DetailedHTMLProps<React.HTMLAttributes<HTMLElement>, HTMLElement>;
+    }
+  }
+}
+
 "use client";
 
 import { useState } from "react";
@@ -77,6 +85,16 @@ export default function CreatePage() {
       toast.error('Please connect your wallet first');
       return;
     }
+
+    if (!name || !ticker || !bio || !personality || !startingDialogue || !contractAddress || !twitter) {
+      toast.error('Please fill in all required fields');
+      return;
+    }
+
+    if (!image) {
+      toast.error('Please upload an agent image');
+      return;
+    }
     
     try {
       setIsSubmitting(true);
@@ -131,7 +149,7 @@ export default function CreatePage() {
         router.push('/');
       }, 1000);
 
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error creating AI agent:', error);
       toast.error(error.message || 'Failed to create AI agent');
     } finally {
@@ -186,8 +204,11 @@ export default function CreatePage() {
 
           <div className="space-y-4">
             <div>
-              <label className="text-sm font-medium text-zinc-200">Agent Name</label>
+              <label className="text-sm font-medium text-zinc-200">
+                Agent Name <span className="text-red-500">*</span>
+              </label>
               <Input
+                required
                 className="bg-zinc-800 border-zinc-700"
                 value={name}
                 onChange={(e) => setName(validateName(e.target.value))}
@@ -196,9 +217,10 @@ export default function CreatePage() {
             </div>
             <div>
               <label className="text-sm font-medium text-zinc-200">
-                Ticker
+                Ticker <span className="text-red-500">*</span>
               </label>
               <Input
+                required
                 className="bg-zinc-800 border-zinc-700"
                 placeholder="SYMBOL"
                 value={ticker}
@@ -206,8 +228,11 @@ export default function CreatePage() {
               />
             </div>
             <div>
-              <label className="text-sm font-medium text-zinc-200">Bio</label>
+              <label className="text-sm font-medium text-zinc-200">
+                Bio <span className="text-red-500">*</span>
+              </label>
               <Textarea
+                required
                 className="bg-zinc-800 border-zinc-700"
                 value={bio}
                 onChange={(e) => setBio(e.target.value)}
@@ -215,9 +240,10 @@ export default function CreatePage() {
             </div>
             <div>
               <label className="text-sm font-medium text-zinc-200">
-                Personality
+                Personality <span className="text-red-500">*</span>
               </label>
               <Textarea
+                required
                 className="bg-zinc-800 border-zinc-700"
                 value={personality}
                 onChange={(e) => setPersonality(e.target.value)}
@@ -225,9 +251,10 @@ export default function CreatePage() {
             </div>
             <div>
               <label className="text-sm font-medium text-zinc-200">
-                Starting Dialogue
+                Starting Dialogue <span className="text-red-500">*</span>
               </label>
               <Textarea
+                required
                 className="bg-zinc-800 border-zinc-700"
                 value={startingDialogue}
                 onChange={(e) => setStartingDialogue(e.target.value)}
@@ -235,9 +262,10 @@ export default function CreatePage() {
             </div>
             <div>
               <label className="text-sm font-medium text-zinc-200">
-                Contract Address
+                Contract Address <span className="text-red-500">*</span>
               </label>
               <Input
+                required
                 className="bg-zinc-800 border-zinc-700"
                 placeholder="0x..."
                 value={contractAddress}
@@ -246,9 +274,10 @@ export default function CreatePage() {
             </div>
             <div>
               <label className="text-sm font-medium text-zinc-200">
-                Twitter
+                Twitter <span className="text-red-500">*</span>
               </label>
               <Input
+                required
                 className="bg-zinc-800 border-zinc-700"
                 placeholder="username"
                 value={twitter}
