@@ -25,11 +25,6 @@ const routes = [
     href: "/profile",
   },
   {
-    label: "Your Agents",
-    icon: User2,
-    href: "/your-agents",
-  },
-  {
     label: "Favourites",
     icon: Heart,
     href: "/favourites",
