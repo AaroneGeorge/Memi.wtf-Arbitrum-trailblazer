@@ -184,7 +184,7 @@ export default function AgentPage() {
             <div>
               <div className="flex items-center gap-2">
                 <h1 className="text-2xl font-bold text-white">{bot.name}</h1>
-                <span className="text-pink-500">{bot.ticker}</span>
+                <span className="text-pink-500">{bot.ticker.toUpperCase()}</span>
               </div>
               <div className="text-zinc-400 text-sm">
                 Created by {creatorUsername} •

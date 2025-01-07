@@ -6,6 +6,12 @@ import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 import { ImagePlus } from "lucide-react";
 import Image from "next/image";
 import { toast } from "sonner";
@@ -28,26 +34,27 @@ export default function CreatePage() {
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const validateName = (value: string) => {
-    return value.replace(/[^a-zA-Z0-9]/g, '');
+    return value.replace(/[^a-zA-Z0-9]/g, "");
   };
 
   const validateTicker = (value: string) => {
-    return value.replace(/[\$]/g, '');
+    return value.replace(/[\$]/g, "");
   };
 
   const validateTwitter = (value: string) => {
-    return value.replace(/[@]/g, '');
+    return value.replace(/[@]/g, "");
   };
 
   const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
       if (file.size > 50 * 1024) {
-        toast.error('Image size exceeds limit', {
-          description: 'Please upload an image smaller than 50KB. You may need to resize your image.',
-          duration: 5000
+        toast.error("Image size exceeds limit", {
+          description:
+            "Please upload an image smaller than 50KB. You may need to resize your image.",
+          duration: 5000,
         });
-        e.target.value = '';
+        e.target.value = "";
         return;
       }
 
@@ -63,7 +70,7 @@ export default function CreatePage() {
     return new Promise((resolve, reject) => {
       const reader = new FileReader();
       reader.onload = () => {
-        const base64String = (reader.result as string).split(',')[1];
+        const base64String = (reader.result as string).split(",")[1];
         resolve(base64String);
       };
       reader.onerror = reject;
@@ -73,36 +80,44 @@ export default function CreatePage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (!address) {
-      toast.error('Please connect your wallet first');
+      toast.error("Please connect your wallet first");
       return;
     }
 
-    if (!name || !ticker || !bio || !personality || !startingDialogue || !contractAddress || !twitter) {
-      toast.error('Please fill in all required fields');
+    if (
+      !name ||
+      !ticker ||
+      !bio ||
+      !personality ||
+      !startingDialogue ||
+      !contractAddress ||
+      !twitter
+    ) {
+      toast.error("Please fill in all required fields");
       return;
     }
 
     if (!image) {
-      toast.error('Please upload an agent image');
+      toast.error("Please upload an agent image");
       return;
     }
-    
+
     try {
       setIsSubmitting(true);
 
-      const imageFile = image ? await fetch(image).then(r => r.blob()) : null;
+      const imageFile = image ? await fetch(image).then((r) => r.blob()) : null;
       let base64Image = null;
-      
+
       if (imageFile) {
         base64Image = await convertImageToBase64(imageFile as File);
       }
 
       const response = await fetch(`${backendUrl}/bots/create`, {
-        method: 'POST',
+        method: "POST",
         headers: {
-          'Content-Type': 'application/json',
+          "Content-Type": "application/json",
         },
         body: JSON.stringify({
           name: name,
@@ -114,37 +129,36 @@ export default function CreatePage() {
           ticker: `$${ticker}`,
           creator: address,
           image: base64Image,
-          twitter: twitter
+          twitter: twitter,
         }),
       });
 
       if (!response.ok) {
         const error = await response.json();
-        if (error.detail?.includes('database is locked')) {
-          throw new Error('Server is busy, please try again in a few moments');
+        if (error.detail?.includes("database is locked")) {
+          throw new Error("Server is busy, please try again in a few moments");
         }
-        throw new Error(error.detail || 'Failed to create AI agent');
+        throw new Error(error.detail || "Failed to create AI agent");
       }
 
       const data = await response.json();
-      toast.success('AI agent created successfully!');
-      
+      toast.success("AI agent created successfully!");
+
       setImage(null);
-      setName('');
-      setTicker('');
-      setBio('');
-      setPersonality('');
-      setStartingDialogue('');
-      setContractAddress('');
-      setTwitter('');
+      setName("");
+      setTicker("");
+      setBio("");
+      setPersonality("");
+      setStartingDialogue("");
+      setContractAddress("");
+      setTwitter("");
 
       setTimeout(() => {
-        router.push('/');
+        router.push("/");
       }, 1000);
-
     } catch (error: any) {
-      console.error('Error creating AI agent:', error);
-      toast.error(error.message || 'Failed to create AI agent');
+      console.error("Error creating AI agent:", error);
+      toast.error(error.message || "Failed to create AI agent");
     } finally {
       setIsSubmitting(false);
     }
@@ -154,8 +168,12 @@ export default function CreatePage() {
     return (
       <div className="container mx-auto p-6 max-w-2xl h-[80vh] flex items-center justify-center">
         <Card className="bg-zinc-900 border-zinc-800 p-6 text-center">
-          <h1 className="text-2xl font-bold text-white mb-6">Create AI Agent</h1>
-          <p className="text-zinc-400 mb-6">Please connect your wallet to create an AI agent</p>
+          <h1 className="text-2xl font-bold text-white mb-6">
+            Create AI Agent
+          </h1>
+          <p className="text-zinc-400 mb-6">
+            Please connect your wallet to create an AI agent
+          </p>
           <WalletConnectButton />
         </Card>
       </div>
@@ -257,25 +275,48 @@ export default function CreatePage() {
               <label className="text-sm font-medium text-zinc-200">
                 Contract Address <span className="text-red-500">*</span>
               </label>
-              <Input
-                required
-                className="bg-zinc-800 border-zinc-700"
-                placeholder="0x..."
-                value={contractAddress}
-                onChange={(e) => setContractAddress(e.target.value)}
-              />
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Input
+                      required
+                      className="bg-zinc-800 border-zinc-700"
+                      placeholder="0x..."
+                      value={contractAddress}
+                      onChange={(e) => setContractAddress(e.target.value)}
+                    />
+                  </TooltipTrigger>
+                  <TooltipContent side="right">
+                    <p>
+                      Paste the contract address of the agent after deploying it
+                      as a token to arbitrum
+                    </p>
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
             </div>
             <div>
               <label className="text-sm font-medium text-zinc-200">
                 Twitter <span className="text-red-500">*</span>
               </label>
-              <Input
-                required
-                className="bg-zinc-800 border-zinc-700"
-                placeholder="username"
-                value={twitter}
-                onChange={(e) => setTwitter(validateTwitter(e.target.value))}
-              />
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Input
+                      required
+                      className="bg-zinc-800 border-zinc-700"
+                      placeholder="username"
+                      value={twitter}
+                      onChange={(e) =>
+                        setTwitter(validateTwitter(e.target.value))
+                      }
+                    />
+                  </TooltipTrigger>
+                  <TooltipContent side="left">
+                    <p>Twitter username of the agent</p>
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
             </div>
           </div>
 
@@ -284,7 +325,7 @@ export default function CreatePage() {
             className="w-full bg-pink-600 hover:bg-pink-700"
             disabled={isSubmitting}
           >
-            {isSubmitting ? 'Creating...' : 'Create Agent'}
+            {isSubmitting ? "Creating..." : "Create Agent"}
           </Button>
         </form>
       </Card>
