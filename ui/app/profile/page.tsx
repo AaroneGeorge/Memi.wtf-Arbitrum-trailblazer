@@ -6,7 +6,6 @@ import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Copy, Edit2, Check, X } from "lucide-react";
 import { Input } from "@/components/ui/input";
-import { generateRandomUsername } from "@/lib/utils";
 
 // Add new interface for user data
 interface UserData {
