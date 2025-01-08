@@ -32,20 +32,9 @@ export default function AgentPage() {
   const { isFavorite, toggleFavorite } = useFavorites();
   const favorite = isFavorite(id as string);
 
-  // Get static market data
   const staticData = agents.find((a) => a.id === id);
 
-  // Scroll to bottom of chat
-  const messagesEndRef = useRef<HTMLDivElement>(null);
-  const chatContainerRef = useRef<HTMLDivElement>(null);
-  useEffect(() => {
-    if (chatContainerRef.current) {
-      chatContainerRef.current.scrollTop =
-        chatContainerRef.current.scrollHeight;
-    }
-  }, [messages]);
-
-  // Fetch bot details
+  // Fetch bot data
   useEffect(() => {
     const fetchBot = async () => {
       try {
@@ -81,13 +70,12 @@ export default function AgentPage() {
         setMessages([startingMessage, ...data.messages]);
       } catch (error) {
         console.error("Error fetching chat history:", error);
-        // If error, at least show the starting dialogue
         setMessages([startingMessage]);
       }
     };
 
     fetchChatHistory();
-  }, [id, address, bot]); // Added bot as dependency
+  }, [id, address, bot]);
 
   // Add new useEffect to fetch creator's username
   useEffect(() => {
@@ -107,6 +95,15 @@ export default function AgentPage() {
     fetchCreatorUsername();
   }, [bot?.creator]);
 
+  const messagesEndRef = useRef<HTMLDivElement>(null);
+  const chatContainerRef = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    if (chatContainerRef.current) {
+      chatContainerRef.current.scrollTop =
+        chatContainerRef.current.scrollHeight;
+    }
+  }, [messages]);
+
   const handleSendMessage = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!message.trim() || !address) return;
@@ -120,6 +117,9 @@ export default function AgentPage() {
     };
     setMessages((prev) => [...prev, userMessage]);
 
+    // Clear the input field immediately
+    setMessage("");
+
     try {
       const response = await fetch(`${backendUrl}/chat`, {
         method: "POST",
@@ -129,7 +129,7 @@ export default function AgentPage() {
         body: JSON.stringify({
           bot_name: id,
           user_id: address,
-          message: message,
+          message: userMessage.message,
         }),
       });
 
@@ -146,8 +146,6 @@ export default function AgentPage() {
     } catch (error) {
       console.error("Error sending message:", error);
     }
-
-    setMessage("");
   };
 
   // Update the message display in the chat
