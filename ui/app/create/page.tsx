@@ -23,7 +23,7 @@ const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL;
 export default function CreatePage() {
   const router = useRouter();
   const { isConnected, address } = useAccount();
-  const [image, setImage] = useState<string | null>(null);
+  const [image, setImage] = useState<string>("/assets/anyachan.jpg");
   const [name, setName] = useState("");
   const [ticker, setTicker] = useState("");
   const [bio, setBio] = useState("");
@@ -190,24 +190,22 @@ export default function CreatePage() {
         <form onSubmit={handleSubmit} className="space-y-6">
           <div className="flex justify-center">
             <div className="relative w-32 h-32">
-              {image ? (
-                <Image
-                  src={image}
-                  alt="Agent"
-                  fill
-                  className="rounded-full object-cover"
+              <Image
+                src={image}
+                alt="Agent"
+                fill
+                className="rounded-full object-cover"
+              />
+              <label className="absolute bottom-0 right-0 bg-zinc-800 rounded-full p-2 cursor-pointer hover:bg-pink-500/50 transition-colors">
+                <ImagePlus className="h-4 w-4 text-zinc-200" />
+                <input
+                  type="file"
+                  accept="image/*"
+                  className="hidden"
+                  onChange={handleImageUpload}
                 />
-              ) : (
-                <label className="flex items-center justify-center w-full h-full rounded-full border-2 border-dashed border-zinc-700 cursor-pointer hover:border-pink-500/50 transition-colors">
-                  <ImagePlus className="h-8 w-8 text-zinc-500" />
-                  <input
-                    type="file"
-                    accept="image/*"
-                    className="hidden"
-                    onChange={handleImageUpload}
-                  />
-                </label>
-              )}
+              </label>
+
               {!image && (
                 <p className="text-xs text-zinc-500 text-center mt-2">
                   Max image size: 50KB
