@@ -270,7 +270,7 @@ export default function CreatePage() {
             <div>
               <label className="text-sm font-medium text-zinc-200 flex items-center">
                 Contract Address <span className="text-red-500">*</span>
-                <HoverTooltip content="Paste the contract address of the agent after deploying it as a token to arbitrum." />
+                <HoverTooltip content={"Paste the contract address of the agent after deploying it as a token to arbitrum. \nFor testing agents, you can give something by default."} />
               </label>
               <Input
                 required
