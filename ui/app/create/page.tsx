@@ -6,17 +6,12 @@ import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from "@/components/ui/tooltip";
 import { ImagePlus } from "lucide-react";
 import Image from "next/image";
 import toast, { Toaster } from "react-hot-toast";
 import { useRouter } from "next/navigation";
 import WalletConnectButton from "@/components/wallet-connect-button";
+import { HoverTooltip } from "@/components/hover-tooltip";
 
 const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL;
 
@@ -273,51 +268,30 @@ export default function CreatePage() {
               />
             </div>
             <div>
-              <label className="text-sm font-medium text-zinc-200">
+              <label className="text-sm font-medium text-zinc-200 flex items-center">
                 Contract Address <span className="text-red-500">*</span>
+                <HoverTooltip content="Paste the contract address of the agent after deploying it as a token to arbitrum." />
               </label>
-              <TooltipProvider>
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <Input
-                      required
-                      className="bg-zinc-800 border-zinc-700"
-                      placeholder="0x..."
-                      value={contractAddress}
-                      onChange={(e) => setContractAddress(e.target.value)}
-                    />
-                  </TooltipTrigger>
-                  <TooltipContent side="right">
-                    <p>
-                      Paste the contract address of the agent after deploying it
-                      as a token to arbitrum
-                    </p>
-                  </TooltipContent>
-                </Tooltip>
-              </TooltipProvider>
+              <Input
+                required
+                className="bg-zinc-800 border-zinc-700"
+                placeholder="0x..."
+                value={contractAddress}
+                onChange={(e) => setContractAddress(e.target.value)}
+              />
             </div>
             <div>
-              <label className="text-sm font-medium text-zinc-200">
+              <label className="text-sm font-medium text-zinc-200 flex items-center">
                 Twitter <span className="text-red-500">*</span>
+                <HoverTooltip content="Twitter username of the agent" />
               </label>
-              <TooltipProvider>
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <Input
-                      required
-                      className="bg-zinc-800 border-zinc-700"
-                      placeholder="username"
-                      value={twitter}
-                      onChange={(e) =>
-                        setTwitter(validateTwitter(e.target.value))
-                      }
-                    />
-                  </TooltipTrigger>
-                  <TooltipContent side="left">
-                    <p>Twitter username of the agent</p>
-                  </TooltipContent>
-                </Tooltip>
-              </TooltipProvider>
+              <Input
+                required
+                className="bg-zinc-800 border-zinc-700"
+                placeholder="username"
+                value={twitter}
+                onChange={(e) => setTwitter(validateTwitter(e.target.value))}
+              />
             </div>
           </div>
 
