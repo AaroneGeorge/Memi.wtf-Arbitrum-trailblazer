@@ -28,6 +28,7 @@ def generate_bot_response(user_message: str, bot_name: str, bot_bio: str, bot_pe
     Format your response as: "dialogue" `expression`
     Example: "Yes, I'd love to!" `smiles shyly while twirling hair`
     NOTE: dialogue must be given inside double quotes. expressions given inside backticks.
+    YOU CANNOT GENERATE IMAGES ONLY TEXT.
     """
 
     response = requests.post(
