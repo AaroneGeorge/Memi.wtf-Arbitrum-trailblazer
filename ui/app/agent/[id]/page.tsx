@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useParams } from "next/navigation";
 import { agents } from "@/lib/data";
 import { Card } from "@/components/ui/card";
@@ -34,6 +34,16 @@ export default function AgentPage() {
 
   // Get static market data
   const staticData = agents.find((a) => a.id === id);
+
+  // Scroll to bottom of chat
+  const messagesEndRef = useRef<HTMLDivElement>(null);
+  const chatContainerRef = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    if (chatContainerRef.current) {
+      chatContainerRef.current.scrollTop =
+        chatContainerRef.current.scrollHeight;
+    }
+  }, [messages]);
 
   // Fetch bot details
   useEffect(() => {
@@ -184,7 +194,9 @@ export default function AgentPage() {
             <div>
               <div className="flex items-center gap-2">
                 <h1 className="text-2xl font-bold text-white">{bot.name}</h1>
-                <span className="text-pink-500">{bot.ticker.toUpperCase()}</span>
+                <span className="text-pink-500">
+                  {bot.ticker.toUpperCase()}
+                </span>
               </div>
               <div className="text-zinc-400 text-sm">
                 Created by {creatorUsername} •
@@ -246,8 +258,12 @@ export default function AgentPage() {
 
             {address ? (
               <>
-                <div className="p-4 h-[400px] overflow-auto space-y-4">
+                <div
+                  className="p-4 h-[400px] overflow-y-auto space-y-4"
+                  ref={chatContainerRef}
+                >
                   {messages.map((msg, i) => renderMessage(msg, i))}
+                  <div ref={messagesEndRef} />
                 </div>
 
                 <form
