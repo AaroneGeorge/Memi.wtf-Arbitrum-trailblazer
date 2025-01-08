@@ -8,7 +8,7 @@ interface HoverTooltipProps {
 export function HoverTooltip({ content }: HoverTooltipProps) {
   const [isVisible, setIsVisible] = useState(false);
   const tooltipRef = useRef<HTMLDivElement>(null);
-  const timerRef = useRef<NodeJS.Timeout>();
+  const timerRef = useRef<NodeJS.Timeout | undefined>(undefined);
 
   const showTooltip = () => {
     clearTimeout(timerRef.current);
