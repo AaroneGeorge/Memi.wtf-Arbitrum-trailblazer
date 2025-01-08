@@ -8,8 +8,8 @@ import { Providers } from './providers'
 const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
-  title: "Mimi.fun",
-  description: "AI Agent Platform",
+  title: "Memi.wtf",
+  description: "AI Agent Token generation platform for arbitrum",
 };
 
 export default function RootLayout({
