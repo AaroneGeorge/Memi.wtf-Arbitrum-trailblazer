@@ -209,7 +209,7 @@ export default function AgentPage() {
                 </Link>{" "}
                 •
                 <Link
-                  href={`https://etherscan.io/address/${bot.contract_address}`}
+                  href={`https://sepolia.etherscan.io/token/${bot.contract_address}`}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="text-blue-400 hover:text-pink-500 hover:underline"

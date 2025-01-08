@@ -21,11 +21,17 @@ export default function CreatePage() {
   const [image, setImage] = useState<string>("/assets/anyachan.jpg");
   const [name, setName] = useState("");
   const [ticker, setTicker] = useState("");
-  const [bio, setBio] = useState("");
-  const [personality, setPersonality] = useState("");
-  const [startingDialogue, setStartingDialogue] = useState("");
-  const [contractAddress, setContractAddress] = useState("");
-  const [twitter, setTwitter] = useState("");
+  const [bio, setBio] = useState("A friendly AI agent ready to assist you.");
+  const [personality, setPersonality] = useState(
+    "Helpful, curious, and always eager to learn."
+  );
+  const [startingDialogue, setStartingDialogue] = useState(
+    "Hello! How can I assist you today?"
+  );
+  const [contractAddress, setContractAddress] = useState(
+    "0x1234567890123456789"
+  );
+  const [twitter, setTwitter] = useState("memi");
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const validateName = (value: string) => {
