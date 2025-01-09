@@ -6,10 +6,7 @@ import WalletConnectButton from "@/components/wallet-connect-button";
 import { Input } from "@/components/ui/input";
 import { Search } from "lucide-react";
 import { generateRandomUsername, getImageSrc } from "@/lib/utils";
-import SplitText from "@/components/SplitText";
-
 import Squares from "@/components/Squares";
-import DecryptedText from "@/components/DecryptedText";
 import TrueFocus from "@/components/TrueFocus";
 
 type Bot = {
