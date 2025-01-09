@@ -8,6 +8,7 @@ import { useAccount } from "wagmi";
 import { useEffect, useState } from "react";
 import { getImageSrc } from "@/lib/utils";
 import WalletConnectButton from "@/components/wallet-connect-button";
+import Squares from "@/components/Squares";
 interface ChatMessage {
   message: string;
   role: string;
@@ -76,6 +77,15 @@ export default function HistoryPage() {
   if (!isConnected) {
     return (
       <div className="container mx-auto p-6 max-w-2xl h-[80vh] flex items-center justify-center">
+        <div className="fixed inset-0 z-0">
+        <Squares
+          speed={0.5}
+          squareSize={40}
+          direction="diagonal"
+          borderColor="#fff"
+          // hoverFillColor="#222"
+        />
+      </div>
         <Card className="bg-zinc-900 border-zinc-800 p-6 text-center">
           <h1 className="text-2xl font-bold text-white mb-6">Chat History</h1>
           <p className="text-zinc-400 mb-6">
