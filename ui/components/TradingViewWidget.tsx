@@ -45,18 +45,9 @@ function TradingViewWidget() {
           className="tradingview-widget-container__widget"
           style={{ height: "calc(100% - 32px)", width: "100%" }}
         ></div>
-        <div className="tradingview-widget-copyright">
-          <a
-            href="https://www.tradingview.com/"
-            rel="noopener nofollow"
-            target="_blank"
-          >
-            <span className="blue-text">Track all markets on TradingView</span>
-          </a>
-        </div>
       </div>
-      <div className="absolute inset-0 flex items-center justify-center">
-        <DecryptedText animateOn="hover" text="Trading Coming Soon!" />
+      <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+        <DecryptedText animateOn="hover" text="Trading Coming Soon!" className="opacity-90" />
       </div>
     </div>
   );
