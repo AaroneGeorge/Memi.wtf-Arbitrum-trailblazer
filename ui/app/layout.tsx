@@ -10,7 +10,7 @@ const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
   title: "Memi.wtf",
-  description: "AI Agent Token generation platform for arbitrum",
+  description: "AI Agent Token generation platform for Arbitrum",
 };
 
 export default function RootLayout({
