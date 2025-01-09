@@ -155,11 +155,10 @@ export default function AgentPage() {
       className={`flex gap-2 ${msg.role === "user" ? "justify-end" : ""}`}
     >
       <div
-        className={`rounded-lg p-3 text-sm max-w-[80%] ${
-          msg.role === "user"
+        className={`rounded-lg p-3 text-sm max-w-[80%] ${msg.role === "user"
             ? "bg-pink-600 text-white ml-12"
             : "bg-zinc-800 text-zinc-200"
-        }`}
+          }`}
       >
         {msg.message}
         {msg.expression && (
@@ -209,7 +208,7 @@ export default function AgentPage() {
                 </Link>{" "}
                 •
                 <Link
-                  href={`https://sepolia.etherscan.io/token/${bot.contract_address}`}
+                  href={`https://sepolia.arbiscan.io/token/${bot.contract_address}`}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="text-blue-400 hover:text-pink-500 hover:underline"

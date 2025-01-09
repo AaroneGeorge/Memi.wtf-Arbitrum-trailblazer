@@ -1,7 +1,14 @@
 "use client";
 
-import { useState } from "react";
-import { useAccount } from "wagmi";
+import { useEffect, useState } from "react";
+import {
+  useAccount,
+  useWriteContract,
+  useWaitForTransactionReceipt,
+} from "wagmi";
+import { getTransactionReceipt } from "@wagmi/core";
+import { abi } from "../../contract/abi";
+import { config } from "../../contract/config";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -23,16 +30,20 @@ export default function CreatePage() {
   const [ticker, setTicker] = useState("");
   const [bio, setBio] = useState("A friendly AI agent ready to assist you.");
   const [personality, setPersonality] = useState(
-    "Helpful, curious, and always eager to learn."
+    "Helpful, curious, and always eager to learn.",
   );
   const [startingDialogue, setStartingDialogue] = useState(
-    "Hello! How can I assist you today?"
+    "Hello! How can I assist you today?",
   );
   const [contractAddress, setContractAddress] = useState(
-    "0x1234567890123456789"
+    "0x1234567890123456789",
   );
   const [twitter, setTwitter] = useState("memi");
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  // contract
+  const { data: hash, isPending, writeContract } = useWriteContract();
+  // const { data: receipt } = useWaitForTransactionReceipt({ hash });
 
   const validateName = (value: string) => {
     return value.replace(/[^a-zA-Z0-9]/g, "");
@@ -54,7 +65,7 @@ export default function CreatePage() {
           "Image size exceeds 50KB limit. Please upload a smaller image.",
           {
             duration: 2500,
-          }
+          },
         );
         e.target.value = "";
         return;
@@ -94,7 +105,6 @@ export default function CreatePage() {
       !bio ||
       !personality ||
       !startingDialogue ||
-      !contractAddress ||
       !twitter
     ) {
       toast.error("Please fill in all required fields");
@@ -108,6 +118,52 @@ export default function CreatePage() {
 
     try {
       setIsSubmitting(true);
+
+      // Writing Contract
+      writeContract({
+        //address: "0xf66Caf08e7205654F666364554e7376BC1C704B1", // sepolia
+        address: "0x77aDfAe2d4639de469dDD47ea6ed1C3Abc2CeD33", // arbitrum sepolia
+        abi,
+        functionName: "createToken",
+        args: [name, ticker],
+      });
+
+      // Create a promise to wait for hash
+      const waitForHash = new Promise((resolve, reject) => {
+        const timeout = setTimeout(() => {
+          reject(new Error("Transaction hash timeout"));
+        }, 30000);
+
+        const checkHash = async () => {
+          if (hash) {
+            clearTimeout(timeout);
+            resolve(hash);
+          } else if (!isPending) {
+            clearTimeout(timeout);
+            reject(new Error("Transaction failed"));
+          } else {
+            setTimeout(checkHash, 30000);
+          }
+        };
+
+        checkHash();
+      });
+
+      // Wait for hash
+      const txHash = await waitForHash;
+      console.log("Transaction hash:", txHash);
+
+      // Wait for transaction receipt
+      const receipt = await getTransactionReceipt(config, {
+        hash: txHash as `0x${string}`,
+      });
+
+      // Extract token ID from receipt
+      const tokenId = receipt.logs[0].address; // Assuming this is where the token ID is stored
+      const contractAddress = `${tokenId}`; // Format contract address with token ID
+
+      console.log("Transaction receipt:", receipt);
+      console.log("Token ID:", tokenId);
 
       const imageFile = image ? await fetch(image).then((r) => r.blob()) : null;
       let base64Image = null;
@@ -273,6 +329,7 @@ export default function CreatePage() {
                 onChange={(e) => setStartingDialogue(e.target.value)}
               />
             </div>
+            {/*
             <div>
               <label className="text-sm font-medium text-zinc-200 flex items-center">
                 Contract Address <span className="text-red-500">*</span>
@@ -289,7 +346,7 @@ export default function CreatePage() {
                 value={contractAddress}
                 onChange={(e) => setContractAddress(e.target.value)}
               />
-            </div>
+            </div>*/}
             <div>
               <label className="text-sm font-medium text-zinc-200 flex items-center">
                 Twitter <span className="text-red-500">*</span>
