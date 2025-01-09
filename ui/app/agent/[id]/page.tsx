@@ -14,6 +14,7 @@ import { useAccount } from "wagmi";
 import { Bot, ChatMessage, ChatHistory } from "./types";
 import WalletConnectButton from "@/components/wallet-connect-button";
 import { getImageSrc } from "@/lib/utils";
+import TradingViewWidget from "@/components/TradingViewWidget";
 
 const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL;
 
@@ -170,7 +171,11 @@ export default function AgentPage() {
     </div>
   );
 
-  if (!bot) return <div>Agent not found</div>;
+  if (!bot) return (
+    <div className="h-screen flex items-center justify-center text-xl font-medium text-zinc-400">
+      Agent not found
+    </div>
+  );
 
   const overlayClass =
     "relative after:content-['Coming_soon...'] after:absolute after:inset-0 after:bg-black/50 after:flex after:items-center after:justify-center after:text-white after:font-bold after:text-xl";
@@ -294,7 +299,7 @@ export default function AgentPage() {
             )}
           </Card>
 
-          <Card className={`bg-zinc-950 border-zinc-800 p-4 ${overlayClass}`}>
+          {/* <Card className={`bg-zinc-950 border-zinc-800 p-4 ${overlayClass}`}>
             <div className="grid grid-cols-2 gap-4 mb-4">
               <div>
                 <div className="text-sm text-zinc-400">Price</div>
@@ -321,97 +326,13 @@ export default function AgentPage() {
                 </div>
               </div>
             </div>
-          </Card>
+          </Card> */}
 
-          <div className="grid md:grid-cols-2 gap-6">
-            <Card
-              className={`bg-zinc-950 border-zinc-800 p-4 h-64 ${overlayClass}`}
-            >
-              <div className="text-sm text-zinc-400 mb-2">Price Chart</div>
-              {/* Integrate your preferred chart library here */}
-            </Card>
+          <TradingViewWidget />
 
-            <Card className={`bg-zinc-950 border-zinc-800 p-4 ${overlayClass}`}>
-              <div className="flex gap-2 mb-4">
-                <Button
-                  className="flex-1 bg-green-600 hover:bg-green-700"
-                  onClick={() => {
-                    setShowBuyOptions(true);
-                    setShowSellOptions(false);
-                  }}
-                >
-                  Buy
-                </Button>
-                <Button
-                  className="flex-1 bg-red-600 hover:bg-red-700"
-                  onClick={() => {
-                    setShowBuyOptions(false);
-                    setShowSellOptions(true);
-                  }}
-                >
-                  Sell
-                </Button>
-              </div>
 
-              {showBuyOptions && (
-                <div>
-                  <div className="mb-4">
-                    <div className="flex justify-between items-center mb-2">
-                      <span className="text-sm text-zinc-400">Amount</span>
-                      <span className="text-sm text-zinc-400">ETH</span>
-                    </div>
-                    <div className="text-xl font-bold text-white mb-4">
-                      {ethAmount}
-                    </div>
-                    <div className="grid grid-cols-3 gap-2">
-                      {["0.1", "0.5", "1"].map((ethAmount) => (
-                        <Button
-                          key={ethAmount}
-                          variant="outline"
-                          className="text-sm"
-                          onClick={() => setEthAmount(ethAmount)}
-                        >
-                          {ethAmount} eth
-                        </Button>
-                      ))}
-                    </div>
-                  </div>
-                  <Button className="w-full bg-green-600 hover:bg-green-700">
-                    Buy Tokens
-                  </Button>
-                </div>
-              )}
 
-              {showSellOptions && (
-                <div>
-                  <div className="mb-4">
-                    <div className="flex justify-between items-center mb-2">
-                      <span className="text-sm text-zinc-400">Amount</span>
-                      <span className="text-sm text-zinc-400">MIMI</span>
-                    </div>
-                    <div className="text-xl font-bold text-white mb-4">
-                      {tokenPercentage}
-                    </div>
-                    <div className="grid grid-cols-3 gap-2">
-                      {["25%", "50%", "100%"].map((percent) => (
-                        <Button
-                          key={percent}
-                          variant="outline"
-                          className="text-sm"
-                          onClick={() => setTokenPercentage(percent)}
-                        >
-                          {percent}
-                        </Button>
-                      ))}
-                    </div>
-                  </div>
-                  <Button className="w-full bg-red-600 hover:bg-red-700">
-                    Sell Tokens
-                  </Button>
-                </div>
-              )}
-            </Card>
-          </div>
+
         </div>
       </Card>
     </div>
