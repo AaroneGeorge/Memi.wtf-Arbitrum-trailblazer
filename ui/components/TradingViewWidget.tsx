@@ -3,7 +3,7 @@ import React, { useEffect, useRef, memo } from "react";
 import DecryptedText from "./DecryptedText";
 
 function TradingViewWidget() {
-  const container = useRef();
+  const container = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     const script = document.createElement("script");
@@ -29,7 +29,9 @@ function TradingViewWidget() {
           "hide_volume": true,
           "support_host": "https://www.tradingview.com"
         }`;
-    container.current.appendChild(script);
+    if (container.current) {
+      container.current.appendChild(script);
+    }
   }, []);
 
   return (
