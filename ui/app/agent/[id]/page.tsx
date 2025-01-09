@@ -172,7 +172,11 @@ export default function AgentPage() {
     </div>
   );
 
-  if (!bot) return <div>Agent not found</div>;
+  if (!bot) return (
+    <div className="h-screen flex items-center justify-center text-xl font-medium text-zinc-400">
+      Agent not found
+    </div>
+  );
 
   const overlayClass =
     "relative after:content-['Coming_soon...'] after:absolute after:inset-0 after:bg-black/50 after:flex after:items-center after:justify-center after:text-white after:font-bold after:text-xl";

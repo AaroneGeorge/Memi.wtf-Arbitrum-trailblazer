@@ -188,7 +188,7 @@ export default function Home() {
             <div className="relative w-full max-w-md">
               <Search className="absolute left-3 top-3 h-4 w-4 text-zinc-400" />
               <Input
-                placeholder="Search agents..."
+                placeholder="Search agents...!"
                 className="pl-9 bg-zinc-900 border-zinc-800 focus-visible:ring-pink-500 text-zinc-100"
                 value={searchQuery}
                 onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
@@ -199,7 +199,7 @@ export default function Home() {
             <WalletConnectButton />
           </div>
           <TrueFocus
-            sentence="Deploy AI agents on arbitrum"
+            sentence="Deploy AI agents on Arbitrum"
             manualMode={false}
             blurAmount={5}
             borderColor="pink"
