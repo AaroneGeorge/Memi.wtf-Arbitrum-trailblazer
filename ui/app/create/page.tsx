@@ -32,7 +32,7 @@ const waitForReceipt = async (hash: `0x${string}`, maxAttempts = 20) => {
       if (i === maxAttempts - 1) throw error;
     }
     // Wait 2 seconds before next attempt
-    await new Promise(resolve => setTimeout(resolve, 2000));
+    await new Promise((resolve) => setTimeout(resolve, 2000));
   }
   throw new Error("Transaction receipt not found after maximum attempts");
 };
@@ -113,7 +113,14 @@ export default function CreatePage() {
       return;
     }
 
-    if (!name || !ticker || !bio || !personality || !startingDialogue || !twitter) {
+    if (
+      !name ||
+      !ticker ||
+      !bio ||
+      !personality ||
+      !startingDialogue ||
+      !twitter
+    ) {
       toast.error("Please fill in all required fields");
       return;
     }
@@ -128,7 +135,7 @@ export default function CreatePage() {
 
       // Use writeContractAsync instead of writeContract
       const hash = await writeContractAsync({
-        address: "0x77aDfAe2d4639de469dDD47ea6ed1C3Abc2CeD33", // arbitrum sepolia
+        address: "0x37cDe6A40b5627c22F66A1E832292f3FFF1f1B2E", //  arbitrumSepolia
         abi,
         functionName: "createToken",
         args: [name, ticker],
@@ -200,7 +207,6 @@ export default function CreatePage() {
       setTimeout(() => {
         router.push("/");
       }, 1000);
-
     } catch (error: any) {
       console.error("Error creating AI agent:", error);
       toast.error(error.message || "Failed to create AI agent");
