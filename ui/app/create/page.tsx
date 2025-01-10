@@ -135,7 +135,8 @@ export default function CreatePage() {
 
       // Use writeContractAsync instead of writeContract
       const hash = await writeContractAsync({
-        address: "0x37cDe6A40b5627c22F66A1E832292f3FFF1f1B2E", //  arbitrumSepolia
+        address: "0x77aDfAe2d4639de469dDD47ea6ed1C3Abc2CeD33", // arbitrum sepolia
+        //address : "0x37cDe6A40b5627c22F66A1E832292f3FFF1f1B2E", // arbitrum sepolia with token to signer
         abi,
         functionName: "createToken",
         args: [name, ticker],
