@@ -17,6 +17,7 @@ type Bot = {
   image: string;
   twitter: string;
   contract_address: string;
+  created_date: string;
 };
 
 type User = {
@@ -151,11 +152,20 @@ export default function Home() {
     };
   }, []);
 
-  const filteredAgents = agents.filter(
-    (agent) =>
-      agent.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      agent.bio.toLowerCase().includes(searchQuery.toLowerCase())
-  );
+  const filteredAgents = agents
+    .filter(
+      (agent) =>
+        agent.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        agent.bio.toLowerCase().includes(searchQuery.toLowerCase())
+    )
+    .sort((a, b) => {
+      // First, pin the specified bot
+      if (a.contract_address === "0x73660006490Fa2d5d4f0cb7C828eC5A25cF524D1") return -1;
+      if (b.contract_address === "0x73660006490Fa2d5d4f0cb7C828eC5A25cF524D1") return 1;
+      
+      // Then sort by creation date (newest first)
+      return new Date(b.created_date).getTime() - new Date(a.created_date).getTime();
+    });
 
   const handleAnimationComplete = () => {
     console.log("All letters have animated!");
