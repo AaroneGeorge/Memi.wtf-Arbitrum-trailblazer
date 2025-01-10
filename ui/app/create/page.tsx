@@ -53,7 +53,7 @@ export default function CreatePage() {
   const [contractAddress, setContractAddress] = useState(
     "0x1234567890123456789",
   );
-  const [twitter, setTwitter] = useState("memi");
+  const [twitter, setTwitter] = useState("memionarb");
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   // contract
