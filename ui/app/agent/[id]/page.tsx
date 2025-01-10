@@ -29,6 +29,7 @@ export default function AgentPage() {
   const [ethAmount, setEthAmount] = useState("0.0");
   const [tokenPercentage, setTokenPercentage] = useState("0.0");
   const [creatorUsername, setCreatorUsername] = useState<string>("");
+  const [loadingText, setLoadingText] = useState("Agent Loading...");
 
   const { isFavorite, toggleFavorite } = useFavorites();
   const favorite = isFavorite(id as string);
@@ -171,9 +172,19 @@ export default function AgentPage() {
     </div>
   );
 
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      if (!bot) {
+        setLoadingText("Agent Not Found");
+      }
+    }, 3000);
+
+    return () => clearTimeout(timer);
+  }, [bot]);
+
   if (!bot) return (
     <div className="h-screen flex items-center justify-center text-xl font-medium text-zinc-400">
-      Agent not found
+      {loadingText}
     </div>
   );
 
