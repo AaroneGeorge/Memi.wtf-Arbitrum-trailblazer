@@ -6,8 +6,8 @@ import "@openzeppelin/contracts/access/Ownable.sol";
 
 // Token contract that will be deployed
 contract CustomToken is ERC20 {
-    constructor(string memory name, string memory symbol, uint256 initialSupply) ERC20(name, symbol) {
-        _mint(msg.sender, initialSupply * 10 ** decimals());
+    constructor(string memory name, string memory symbol, uint256 initialSupply, address recipient) ERC20(name, symbol) {
+        _mint(recipient, initialSupply * 10 ** decimals());
     }
 }
 
@@ -18,7 +18,7 @@ contract TokenFactory is Ownable {
     }
 
     // Event emitted when a new token is created
-    event TokenCreated(address tokenAddress, string name, string symbol);
+    event TokenCreated(address tokenAddress, string name, string symbol, address recipient);
     
     // Array to store all deployed token addresses
     address[] public deployedTokens;
@@ -37,14 +37,15 @@ contract TokenFactory is Ownable {
         CustomToken newToken = new CustomToken(
             tokenName,
             tokenSymbol,
-            1000000
+            1000000,
+            msg.sender
         );
         
         // Store the token address
         deployedTokens.push(address(newToken));
         
         // Emit event
-        emit TokenCreated(address(newToken), tokenName, tokenSymbol);
+        emit TokenCreated(address(newToken), tokenName, tokenSymbol, msg.sender);
         
         return address(newToken);
     }
