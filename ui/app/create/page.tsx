@@ -23,6 +23,20 @@ import Squares from "@/components/Squares";
 
 const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL;
 
+const waitForReceipt = async (hash: `0x${string}`, maxAttempts = 20) => {
+  for (let i = 0; i < maxAttempts; i++) {
+    try {
+      const receipt = await getTransactionReceipt(config, { hash });
+      if (receipt) return receipt;
+    } catch (error) {
+      if (i === maxAttempts - 1) throw error;
+    }
+    // Wait 2 seconds before next attempt
+    await new Promise(resolve => setTimeout(resolve, 2000));
+  }
+  throw new Error("Transaction receipt not found after maximum attempts");
+};
+
 export default function CreatePage() {
   const router = useRouter();
   const { isConnected, address } = useAccount();
@@ -43,8 +57,7 @@ export default function CreatePage() {
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   // contract
-  const { data: hash, isPending, writeContract } = useWriteContract();
-  // const { data: receipt } = useWaitForTransactionReceipt({ hash });
+  const { writeContractAsync } = useWriteContract();
 
   const validateName = (value: string) => {
     return value.replace(/[^a-zA-Z0-9]/g, "");
@@ -100,14 +113,7 @@ export default function CreatePage() {
       return;
     }
 
-    if (
-      !name ||
-      !ticker ||
-      !bio ||
-      !personality ||
-      !startingDialogue ||
-      !twitter
-    ) {
+    if (!name || !ticker || !bio || !personality || !startingDialogue || !twitter) {
       toast.error("Please fill in all required fields");
       return;
     }
@@ -120,59 +126,35 @@ export default function CreatePage() {
     try {
       setIsSubmitting(true);
 
-      // Writing Contract
-      writeContract({
-        //address: "0xf66Caf08e7205654F666364554e7376BC1C704B1", // sepolia
+      // Use writeContractAsync instead of writeContract
+      const hash = await writeContractAsync({
         address: "0x77aDfAe2d4639de469dDD47ea6ed1C3Abc2CeD33", // arbitrum sepolia
         abi,
         functionName: "createToken",
         args: [name, ticker],
       });
 
-      // Create a promise to wait for hash
-      const waitForHash = new Promise((resolve, reject) => {
-        const timeout = setTimeout(() => {
-          reject(new Error("Transaction hash timeout"));
-        }, 30000);
+      console.log("Transaction hash:", hash);
 
-        const checkHash = async () => {
-          if (hash) {
-            clearTimeout(timeout);
-            resolve(hash);
-          } else if (!isPending) {
-            clearTimeout(timeout);
-            reject(new Error("Transaction failed"));
-          } else {
-            setTimeout(checkHash, 30000);
-          }
-        };
-
-        checkHash();
-      });
-
-      // Wait for hash
-      const txHash = await waitForHash;
-      console.log("Transaction hash:", txHash);
-
-      // Wait for transaction receipt
-      const receipt = await getTransactionReceipt(config, {
-        hash: txHash as `0x${string}`,
-      });
+      toast.loading("Waiting for transaction confirmation...");
+      const receipt = await waitForReceipt(hash);
+      toast.dismiss();
 
       // Extract token ID from receipt
-      const tokenId = receipt.logs[0].address; // Assuming this is where the token ID is stored
-      const contractAddress = `${tokenId}`; // Format contract address with token ID
+      const tokenId = receipt.logs[0].address;
+      const contractAddress = `${tokenId}`;
 
       console.log("Transaction receipt:", receipt);
       console.log("Token ID:", tokenId);
 
+      // Prepare image
       const imageFile = image ? await fetch(image).then((r) => r.blob()) : null;
       let base64Image = null;
-
       if (imageFile) {
         base64Image = await convertImageToBase64(imageFile as File);
       }
 
+      // Create bot on backend
       const response = await fetch(`${backendUrl}/bots/create`, {
         method: "POST",
         headers: {
@@ -205,6 +187,7 @@ export default function CreatePage() {
         duration: 5000,
       });
 
+      // Reset form
       setImage("/assets/anyachan.jpg");
       setName("");
       setTicker("");
@@ -217,6 +200,7 @@ export default function CreatePage() {
       setTimeout(() => {
         router.push("/");
       }, 1000);
+
     } catch (error: any) {
       console.error("Error creating AI agent:", error);
       toast.error(error.message || "Failed to create AI agent");
