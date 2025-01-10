@@ -160,8 +160,8 @@ export default function Home() {
     )
     .sort((a, b) => {
       // First, pin the specified bot
-      if (a.contract_address === "0x73660006490Fa2d5d4f0cb7C828eC5A25cF524D1") return -1;
-      if (b.contract_address === "0x73660006490Fa2d5d4f0cb7C828eC5A25cF524D1") return 1;
+      if (a.contract_address === "0x36fc8adf3f639f42e30a7e3e5e72905a2f9c346f") return -1;
+      if (b.contract_address === "0x36fc8adf3f639f42e30a7e3e5e72905a2f9c346f") return 1;
       
       // Then sort by creation date (newest first)
       return new Date(b.created_date).getTime() - new Date(a.created_date).getTime();
