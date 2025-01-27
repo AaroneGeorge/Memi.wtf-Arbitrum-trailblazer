@@ -8,6 +8,7 @@ import {
 } from "wagmi";
 import { getTransactionReceipt } from "@wagmi/core";
 import { abi } from "../../contract/abi";
+import { guABI } from "../../contract/guABI";
 import { config } from "../../contract/config";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -42,6 +43,9 @@ export default function CreatePage() {
   const { isConnected, address } = useAccount();
   const [image, setImage] = useState<string>("/assets/anyachan.jpg");
   const [name, setName] = useState("");
+  const [imageBase64, setImageBase64] = useState<string>("");
+  const [imageName, setImageName] = useState<string>("");
+  const [ipfsImage, setIpfsImage] = useState<string>("");
   const [ticker, setTicker] = useState("");
   const [bio, setBio] = useState("A friendly AI agent ready to assist you.");
   const [personality, setPersonality] = useState(
@@ -71,26 +75,50 @@ export default function CreatePage() {
     return value.replace(/[@]/g, "");
   };
 
+  //const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+  //  const file = e.target.files?.[0];
+  //  if (file) {
+  //    if (file.size > 50 * 1024) {
+  //      toast.error(
+  //        "Image size exceeds 50KB limit. Please upload a smaller image.",
+  //        {
+  //          duration: 2500,
+  //        },
+  //      );
+  //      e.target.value = "";
+  //      return;
+  //    }
+  //
+  //    const reader = new FileReader();
+  //    reader.onload = () => {
+  //      setImage(reader.result as string);
+  //    };
+  //    reader.readAsDataURL(file);
+  //  }
+  //};
+
   const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
-    if (file) {
-      if (file.size > 50 * 1024) {
-        toast.error(
-          "Image size exceeds 50KB limit. Please upload a smaller image.",
-          {
-            duration: 2500,
-          },
-        );
-        e.target.value = "";
-        return;
-      }
+    if (!file) return;
 
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        setImage(reader.result as string);
-      };
-      reader.readAsDataURL(file);
+    const imageName = file.name;
+    setImageName(imageName); // Assuming you have a state for imageName
+
+    if (file.size > 50 * 1024) {
+      toast.error("Image size exceeds 50KB limit. Please upload a smaller image.", {
+        duration: 2500,
+      });
+      e.target.value = "";
+      return;
     }
+
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      const result = e.target?.result as string;
+      setImageBase64(result);
+      setImage(result); // Set the image state to display the uploaded image
+    };
+    reader.readAsDataURL(file);
   };
 
   const convertImageToBase64 = (imageFile: File): Promise<string> => {
@@ -126,27 +154,6 @@ export default function CreatePage() {
     try {
       setIsSubmitting(true);
 
-      // Use writeContractAsync instead of writeContract
-      const hash = await writeContractAsync({
-        address: "0x77aDfAe2d4639de469dDD47ea6ed1C3Abc2CeD33", // arbitrum sepolia
-        abi,
-        functionName: "createToken",
-        args: [name, ticker],
-      });
-
-      console.log("Transaction hash:", hash);
-
-      toast.loading("Waiting for transaction confirmation...");
-      const receipt = await waitForReceipt(hash);
-      toast.dismiss();
-
-      // Extract token ID from receipt
-      const tokenId = receipt.logs[0].address;
-      const contractAddress = `${tokenId}`;
-
-      console.log("Transaction receipt:", receipt);
-      console.log("Token ID:", tokenId);
-
       // Prepare image
       const imageFile = image ? await fetch(image).then((r) => r.blob()) : null;
       let base64Image = null;
@@ -154,7 +161,85 @@ export default function CreatePage() {
         base64Image = await convertImageToBase64(imageFile as File);
       }
 
-      // Create bot on backend
+      // Use writeContractAsync instead of writeContract
+      // const hash = await writeContractAsync({
+      //   address: "0x77aDfAe2d4639de469dDD47ea6ed1C3Abc2CeD33", // arbitrum sepolia
+      //   abi,
+      //   functionName: "createToken",
+      //   args: [name, ticker],
+      // });
+
+      // const guHash = await writeContractAsync({
+      //  address: "0x4b76208FdC0eeafA8635021b3BF1cd692a9b8B14",
+      //  guABI,
+      //  functionName: "deploy",
+      //  args: [name, ticker, bio, base64Image]
+      // })
+
+      // console.log("guHash Transaction hash:", guHash);
+
+      // toast.loading("Waiting for transaction confirmation...");
+      // const receipt = await waitForReceipt(hash);
+      // toast.dismiss();
+
+      // // Extract token ID from receipt
+      // const tokenId = receipt.logs[0].address;
+      // const contractAddress = `${tokenId}`;
+
+      // console.log("Transaction receipt:", receipt);
+      // console.log("Token ID:", tokenId);
+
+
+      // Uploading image in Gu Factory
+      const guResponse = await fetch('https://api.gu.exchange/upload', {
+        method: 'POST',
+        body: JSON.stringify({
+          name: imageName,
+          image: imageBase64
+        })
+      });
+
+      if (!guResponse.ok) {
+        const error = await guResponse.json();
+        throw new Error(error.detail || "Failed to create AI agent");
+      }
+
+      const guData = await guResponse.json();
+      console.log("guData", guData, "ipfsHash", guData.ipfsHash);
+      setIpfsImage(guData.ipfsHash);
+
+      const imageHash = `ipfs://${guData.ipfsHash}`;
+      const guHash = await writeContractAsync({
+        address: "0x4b76208FdC0eeafA8635021b3BF1cd692a9b8B14",
+        abi: guABI,
+        functionName: "deploy",
+        args: [name, ticker, bio, imageHash],
+        value: BigInt("6000000000000000") // 0.006 ETH
+
+      });
+
+      console.log("guHash Transaction hash:", guHash);
+
+      // Wait for transaction receipt
+      toast.loading("Waiting for transaction confirmation...");
+      const receipt = await waitForReceipt(guHash);
+      toast.dismiss();
+
+      // Get the deployed contract address from the event logs
+      const deployedEvent = receipt.logs.find(log => {
+        // Assuming GuCoinDeployed is the first event in the contract
+        return log.topics[0] === guABI.find(x => x.type === 'event' && x.name === 'GuCoinDeployed')?.id;
+      });
+
+      if (!deployedEvent) {
+        throw new Error("Could not find deployed contract address in transaction logs");
+      }
+
+      // Parse the contract address from the event
+      const contractAddress = deployedEvent.address;
+      setContractAddress(contractAddress);
+
+      // Create bot on backend with the new contract address
       const response = await fetch(`${backendUrl}/bots/create`, {
         method: "POST",
         headers: {
@@ -262,7 +347,7 @@ export default function CreatePage() {
                   type="file"
                   accept="image/*"
                   className="hidden"
-                  onChange={handleImageUpload}
+                  onChange={(e) => handleImageUpload(e)}
                 />
               </label>
 
