@@ -1,0 +1,93 @@
+export const agents = [
+  {
+    id: "sasha",
+    name: "Sasha",
+    ticker: "$SASHA",
+    bio: "Expert in crypto trading and market analysis",
+    personality: "Professional, friendly, and detail-oriented",
+    image: "/assets/anyachan.jpg",
+    startingDialogue:
+      "Hi! I'm Sasha, your AI trading assistant. How can I help you today?",
+    price: 0.0112,
+    marketCap: 14682124,
+    volume: 1324231,
+    change: 7.1232,
+    creator: "@alpha_kid69",
+    contract: "F92uei..94e",
+    twitter: "@sasha_terminal",
+  },
+  {
+    id: "luna",
+    name: "Luna",
+    ticker: "$LUNA",
+    bio: "Specialized in technical analysis and trend prediction",
+    personality: "Analytical and precise",
+    image: "/assets/anyachan.jpg",
+    startingDialogue: "Welcome! Ready to analyze some market trends?",
+    price: 0.0156,
+    marketCap: 28941567,
+    volume: 2456123,
+    change: 3.45,
+    creator: "@crypto_wizard",
+    contract: "A73bcd..1fe",
+    twitter: "@luna_markets",
+  },
+  {
+    id: "nova",
+    name: "Nova",
+    ticker: "$NOVA",
+    bio: "AI-powered portfolio optimization and risk management",
+    personality: "Strategic and calculated",
+    image: "/assets/anyachan.jpg",
+    startingDialogue: "Let's optimize your portfolio for maximum returns.",
+    price: 0.0089,
+    marketCap: 8945672,
+    volume: 567890,
+    change: -2.34,
+    creator: "@nova_labs",
+    contract: "D45fgh..8ij",
+    twitter: "@nova_ai",
+  },
+  {
+    id: "atlas",
+    name: "Atlas",
+    ticker: "$ATLAS",
+    bio: "Specialized in global market trends and macro analysis",
+    personality: "Wise and informative",
+    image: "/assets/anyachan.jpg",
+    startingDialogue: "Welcome to your global market compass.",
+    price: 0.0234,
+    marketCap: 19876543,
+    volume: 789012,
+    change: 5.67,
+    creator: "@atlas_team",
+    contract: "B89klm..2no",
+    twitter: "@atlas_markets",
+  },
+];
+
+export type Agent = (typeof agents)[0];
+
+export const chatHistory = [
+  {
+    id: 1,
+    agentId: "sasha",
+    agentName: "Sasha",
+    agentImage: "/assets/anyachan.jpg",
+    preview: "Let's analyze the recent market trends...",
+    date: "2024-01-01T10:00:00Z",
+    messages: [
+      { role: "assistant", content: "Hi! Ready to look at today's market?" },
+      { role: "user", content: "Yes, what's your take on ETH?" },
+      {
+        role: "assistant",
+        content: "Let's analyze the recent market trends...",
+      },
+    ],
+  },
+  // Add more chat history items
+];
+
+export const defaultAgentData = {
+  image: "/assets/anyachan.jpg",
+};
