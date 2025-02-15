@@ -225,9 +225,9 @@ export default function CreatePage() {
   const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
-      if (file.size > 50 * 1024) {
+      if (file.size > 1024 * 1024) {
         toast.error(
-          "Image size exceeds 50KB limit. Please upload a smaller image.",
+          "Image size exceeds 1MB limit. Please upload an image less than 1MB.",
           {
             duration: 2500,
           },
@@ -590,14 +590,6 @@ export default function CreatePage() {
               onClick={() => applyTemplate(template)}
             >
               <div className="flex items-center gap-3">
-                <div className="relative w-12 h-12 rounded-full overflow-hidden">
-                  <Image
-                    src={template.image}
-                    alt={template.name}
-                    fill
-                    className="object-cover"
-                  />
-                </div>
                 <div>
                   <h3 className="font-medium text-white">{template.name}</h3>
                   <p className="text-sm text-zinc-400">
