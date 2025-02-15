@@ -16,14 +16,7 @@ import Squares from "@/components/Squares";
 import { generateRandomUsername } from "@/lib/utils";
 import { createAgent } from "@/lib/firebase/firestore";
 import constants from "@/lib/constants";
-
-// Define MessageExample type to avoid repetition
-type MessageExample = {
-  user: string;
-  content: {
-    text: string;
-  };
-};
+import type { Agent, MessageExample } from "../types";
 
 // First, let's define an interface for our template structure
 interface Template {
@@ -399,7 +392,7 @@ export default function CreatePage() {
         cloudinaryUrl = previewImage;
       }
 
-      const agentData = {
+      const agentData: Omit<Agent, 'createdAt'> = {
         name,
         ticker,
         bio: bios.filter((b) => b.trim() !== ""),
@@ -411,7 +404,6 @@ export default function CreatePage() {
         twitter,
         profileImage: cloudinaryUrl,
         owner: address,
-        createdAt: new Date().toISOString(),
       };
 
       await createAgent(

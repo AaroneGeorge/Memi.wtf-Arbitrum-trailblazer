@@ -91,18 +91,27 @@ export const listDocuments = async (collectionName: string) => {
     const querySnapshot = await getDocs(collection(db, collectionName));
     const documents: any[] = [];
     querySnapshot.forEach((doc) => {
-      // Convert the map back to arrays when retrieving
       const data = doc.data();
-      if (data.data) {
-        Object.keys(data.data).forEach(key => {
-          if (typeof data.data[key] === 'object' && !Array.isArray(data.data[key])) {
-            data.data[key] = Object.values(data.data[key]);
+      
+      // Convert the nested data structure and handle arrays
+      const processedData = data.data ? Object.entries(data.data).reduce((acc: any, [key, value]) => {
+        // Convert object-like arrays back to actual arrays
+        if (value && typeof value === 'object' && !Array.isArray(value)) {
+          if (Object.keys(value).every(k => !isNaN(Number(k)))) {
+            acc[key] = Object.values(value);
+          } else {
+            acc[key] = value;
           }
-        });
-      }
+        } else {
+          acc[key] = value;
+        }
+        return acc;
+      }, {}) : {};
+
       documents.push({
         id: doc.id,
-        ...data
+        ...processedData,
+        createdAt: data.createdAt
       });
     });
     return documents;

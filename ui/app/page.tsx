@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, Suspense } from "react";
+import { useState, Suspense, useEffect } from "react";
 import { AgentCard } from "@/components/agent-card";
 import WalletConnectButton from "@/components/wallet-connect-button";
 import { Input } from "@/components/ui/input";
@@ -8,15 +8,49 @@ import { Search } from "lucide-react";
 import { getImageSrc } from "@/lib/utils";
 import Squares from "@/components/Squares";
 import TrueFocus from "@/components/TrueFocus";
-import { testBots } from "@/lib/test-data";
+import { listDocuments } from "@/lib/firebase/firestore";
+import constants from "@/lib/constants";
+import type { Agent } from "./types";
+
+const truncateAddress = (address: string) => {
+  if (!address) return '';
+  return `${address.slice(0, 6)}...${address.slice(-4)}`;
+};
 
 export default function Home() {
   const [searchQuery, setSearchQuery] = useState("");
+  const [agents, setAgents] = useState<Agent[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
 
-  const filteredAgents = testBots.filter(
+  useEffect(() => {
+    const fetchAgents = async () => {
+      try {
+        const documents = await listDocuments(constants.AGENTS_COLLECTION);
+        // Sort by createdAt in descending order (latest first)
+        const sortedAgents = documents
+          .filter(doc => doc && doc.name) // Filter out any invalid documents
+          .sort((a, b) => {
+            const dateA = new Date(a.createdAt || 0).getTime();
+            const dateB = new Date(b.createdAt || 0).getTime();
+            return dateB - dateA;
+          });
+        setAgents(sortedAgents);
+      } catch (error) {
+        console.error("Error fetching agents:", error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchAgents();
+  }, []);
+
+  const filteredAgents = agents.filter(
     (agent) =>
-      agent.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      agent.bio.toLowerCase().includes(searchQuery.toLowerCase())
+      agent.name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      (Array.isArray(agent.bio) && agent.bio.some(b => 
+        b?.toLowerCase().includes(searchQuery.toLowerCase())
+      ))
   );
 
   return (
@@ -59,18 +93,32 @@ export default function Home() {
             pauseBetweenAnimations={1}
           />
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-            {filteredAgents.map((agent) => (
-              <AgentCard
-                key={agent.name}
-                id={agent.name}
-                name={agent.name}
-                description={`Created by ${agent.creator}`}
-                image={getImageSrc(agent.image) || "/assets/anyachan.jpg"}
-                bio={agent.bio}
-              />
-            ))}
-          </div>
+          {isLoading ? (
+            <div className="flex justify-center items-center min-h-[200px]">
+              <p className="text-zinc-400">Loading agents...</p>
+            </div>
+          ) : filteredAgents.length === 0 ? (
+            <div className="flex justify-center items-center min-h-[200px]">
+              <p className="text-zinc-400">
+                {searchQuery ? "No agents found matching your search" : "No agents available"}
+              </p>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+              {filteredAgents.map((agent) => (
+                <AgentCard
+                  key={agent.name}
+                  id={agent.name}
+                  name={agent.name}
+                  description={`Created by ${truncateAddress(agent.owner)}`}
+                  image={getImageSrc(agent.profileImage)}
+                  bio={Array.isArray(agent.bio) ? agent.bio[0] : agent.bio}
+                  className="h-[200px]"
+                  imageClassName="rounded-full"
+                />
+              ))}
+            </div>
+          )}
         </main>
       </Suspense>
     </div>
