@@ -29,11 +29,6 @@ const routes = [
     icon: Heart,
     href: "/favourites",
   },
-  {
-    label: "Chat History",
-    icon: History,
-    href: "/history",
-  },
 ];
 
 export function Sidebar() {
