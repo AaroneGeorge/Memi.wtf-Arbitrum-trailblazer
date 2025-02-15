@@ -14,6 +14,8 @@ import WalletConnectButton from "@/components/wallet-connect-button";
 import { HoverTooltip } from "@/components/hover-tooltip";
 import Squares from "@/components/Squares";
 import { generateRandomUsername } from "@/lib/utils";
+import { createAgent } from '@/lib/firebase/firestore';
+import constants from '@/lib/constants';
 
 // Define MessageExample type to avoid repetition
 type MessageExample = {
@@ -289,40 +291,38 @@ export default function CreatePage() {
       topics: topics.filter(t => t.trim() !== ""),
       adjectives: adjectives.filter(a => a.trim() !== ""),
       twitter,
-      image
+      image,
+      owner: address
     };
-
-    // Log the complete agent data
-    console.log("Creating Agent with data:", JSON.stringify(agentData, null, 2));
 
     try {
       setIsSubmitting(true);
       toast.loading("Creating your AI agent...");
       
-      // Simulate success after 2 seconds
+      // Create document in Firestore
+      await createAgent(constants.AGENTS_COLLECTION, name.toLowerCase(), agentData);
+      
+      toast.dismiss();
+      toast.success("AI agent created successfully!", {
+        duration: 5000,
+      });
+
+      // Reset form
+      setImage("/assets/anyachan.jpg");
+      setName("");
+      setTicker("");
+      setBios([""]);
+      setLore([""]);
+      setKnowledge([""]);
+      setMessageExamples([]);
+      setTopics([""]);
+      setAdjectives([""]);
+      setTwitter("");
+
+      // Redirect to home
       setTimeout(() => {
-        toast.dismiss();
-        toast.success("AI agent created successfully!", {
-          duration: 5000,
-        });
-
-        // Reset form
-        setImage("/assets/anyachan.jpg");
-        setName("");
-        setTicker("");
-        setBios([""]);
-        setLore([""]);
-        setKnowledge([""]);
-        setMessageExamples([]);
-        setTopics([""]);
-        setAdjectives([""]);
-        setTwitter("");
-
-        // Redirect to home
-        setTimeout(() => {
-          router.push("/");
-        }, 1000);
-      }, 2000);
+        router.push("/");
+      }, 1000);
 
     } catch (error: any) {
       console.error("Error creating AI agent:", error);
@@ -416,8 +416,8 @@ export default function CreatePage() {
                 required
                 className="bg-zinc-800 border-zinc-700"
                 value={name}
-                onChange={(e) => setName(validateName(e.target.value))}
-                placeholder="Use only letters and numbers"
+                onChange={(e) => setName(e.target.value)}
+                placeholder="Name your agent"
               />
             </div>
             <div>
