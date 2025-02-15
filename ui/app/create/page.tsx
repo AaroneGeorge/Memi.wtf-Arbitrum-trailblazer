@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, Dispatch, SetStateAction } from "react";
+import { useState, Dispatch, SetStateAction, useCallback } from "react";
 import { useAccount } from "wagmi";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -14,8 +14,8 @@ import WalletConnectButton from "@/components/wallet-connect-button";
 import { HoverTooltip } from "@/components/hover-tooltip";
 import Squares from "@/components/Squares";
 import { generateRandomUsername } from "@/lib/utils";
-import { createAgent } from '@/lib/firebase/firestore';
-import constants from '@/lib/constants';
+import { createAgent } from "@/lib/firebase/firestore";
+import constants from "@/lib/constants";
 
 // Define MessageExample type to avoid repetition
 type MessageExample = {
@@ -45,72 +45,105 @@ const botTemplates: Template[] = [
     bio: [
       "Expert software developer with full-stack experience",
       "Passionate about clean code and best practices",
-      "Always learning and staying up-to-date with latest technologies"
+      "Always learning and staying up-to-date with latest technologies",
     ],
     lore: [
       "Started coding at age 12",
       "Built multiple successful open source projects",
-      "Helped countless developers debug their code"
+      "Helped countless developers debug their code",
     ],
-    knowledge: ["Programming languages", "Software architecture", "DevOps", "Testing"],
+    knowledge: [
+      "Programming languages",
+      "Software architecture",
+      "DevOps",
+      "Testing",
+    ],
     messageExamples: [
       [
         { user: "user", content: { text: "How do I center a div?" } },
-        { user: "developer", content: { text: "Ah, the eternal question! You can use 'display: flex' and 'justify-content: center' on the parent element. Here's an example..." } }
-      ]
+        {
+          user: "developer",
+          content: {
+            text: "Ah, the eternal question! You can use 'display: flex' and 'justify-content: center' on the parent element. Here's an example...",
+          },
+        },
+      ],
     ],
     topics: ["coding", "debugging", "architecture", "best practices"],
     adjectives: ["logical", "precise", "analytical", "helpful"],
     image: "/assets/developer-template.jpg",
-    starting_dialogue: "Hello! How can I assist you today?"
+    starting_dialogue: "Hello! How can I assist you today?",
   },
   {
     name: "Girlfriend",
     bio: [
       "Your caring and supportive virtual companion",
       "Always there to listen and provide emotional support",
-      "Loves sharing cute moments and creating memories"
+      "Loves sharing cute moments and creating memories",
     ],
     lore: [
       "Met through a mutual friend",
       "Enjoys romantic walks and cozy movie nights",
-      "Has a great sense of humor and loves making you smile"
+      "Has a great sense of humor and loves making you smile",
     ],
-    knowledge: ["Relationships", "Emotional support", "Dating advice", "Self-care"],
+    knowledge: [
+      "Relationships",
+      "Emotional support",
+      "Dating advice",
+      "Self-care",
+    ],
     messageExamples: [
       [
         { user: "user", content: { text: "Had a rough day at work..." } },
-        { user: "girlfriend", content: { text: "Aww baby, I'm sorry to hear that! Want to talk about it? I'm here to listen and support you! 🤗" } }
-      ]
+        {
+          user: "girlfriend",
+          content: {
+            text: "Aww baby, I'm sorry to hear that! Want to talk about it? I'm here to listen and support you! 🤗",
+          },
+        },
+      ],
     ],
     topics: ["relationships", "emotions", "daily life", "self-improvement"],
     adjectives: ["caring", "sweet", "understanding", "playful"],
     image: "/assets/girlfriend-template.jpg",
-    starting_dialogue: "Hello! How can I assist you today?"
+    starting_dialogue: "Hello! How can I assist you today?",
   },
   {
     name: "Trading Assistant",
     bio: [
       "Expert in crypto trading and market analysis",
       "Provides detailed market insights and trading strategies",
-      "Helps you make informed trading decisions"
+      "Helps you make informed trading decisions",
     ],
     lore: [
       "Started trading in the early days of crypto",
       "Has analyzed thousands of market patterns",
-      "Developed successful trading strategies"
+      "Developed successful trading strategies",
     ],
-    knowledge: ["Technical analysis", "Market psychology", "Risk management", "Crypto fundamentals"],
+    knowledge: [
+      "Technical analysis",
+      "Market psychology",
+      "Risk management",
+      "Crypto fundamentals",
+    ],
     messageExamples: [
       [
-        { user: "user", content: { text: "What's your take on BTC right now?" } },
-        { user: "trading_assistant", content: { text: "Looking at the 4H chart, we're seeing a bullish divergence with the RSI. Key resistance at $45K - a break above could trigger a rally. Always manage your risk!" } }
-      ]
+        {
+          user: "user",
+          content: { text: "What's your take on BTC right now?" },
+        },
+        {
+          user: "trading_assistant",
+          content: {
+            text: "Looking at the 4H chart, we're seeing a bullish divergence with the RSI. Key resistance at $45K - a break above could trigger a rally. Always manage your risk!",
+          },
+        },
+      ],
     ],
     topics: ["trading", "market analysis", "risk management", "crypto"],
     adjectives: ["analytical", "precise", "strategic", "cautious"],
     image: "/assets/trading-template.jpg",
-    starting_dialogue: "Hello! Ready to analyze the markets together?"
+    starting_dialogue: "Hello! Ready to analyze the markets together?",
   },
   {
     name: "DeFi Guide",
@@ -121,39 +154,52 @@ const botTemplates: Template[] = [
     lore: [
       "Started in traditional finance",
       "Discovered crypto in 2015",
-      "Has been teaching DeFi since 2020"
+      "Has been teaching DeFi since 2020",
     ],
     knowledge: ["DeFi protocols", "Yield farming", "Liquidity provision"],
     messageExamples: [
       [
         { user: "user", content: { text: "What is yield farming?" } },
-        { user: "defi_guide", content: { text: "Yield farming is a way to earn rewards by providing liquidity to DeFi protocols..." } }
-      ]
+        {
+          user: "defi_guide",
+          content: {
+            text: "Yield farming is a way to earn rewards by providing liquidity to DeFi protocols...",
+          },
+        },
+      ],
     ],
     topics: ["defi", "yield", "protocols", "blockchain"],
     adjectives: ["educational", "patient", "thorough"],
     image: "/assets/defi-template.jpg",
-    starting_dialogue: "Welcome! What would you like to learn about DeFi today?"
-  }
+    starting_dialogue:
+      "Welcome! What would you like to learn about DeFi today?",
+  },
 ];
 
 // Update the MessageExampleInput component with proper typing
-const MessageExampleInput = ({ 
+const MessageExampleInput = ({
   examples,
-  setExamples
+  setExamples,
 }: {
   examples: MessageExample[][];
   setExamples: Dispatch<SetStateAction<MessageExample[][]>>;
 }) => {
   const addNewExample = () => {
-    setExamples(prev => [...prev, [
-      { user: "user", content: { text: "" } },
-      { user: "agent", content: { text: "" } }
-    ]]);
+    setExamples((prev) => [
+      ...prev,
+      [
+        { user: "user", content: { text: "" } },
+        { user: "agent", content: { text: "" } },
+      ],
+    ]);
   };
 
-  const updateExample = (exampleIndex: number, messageIndex: number, value: string) => {
-    setExamples(prev => {
+  const updateExample = (
+    exampleIndex: number,
+    messageIndex: number,
+    value: string
+  ) => {
+    setExamples((prev) => {
       const newExamples = [...prev];
       newExamples[exampleIndex][messageIndex].content.text = value;
       return newExamples;
@@ -166,7 +212,10 @@ const MessageExampleInput = ({
         Message Examples <span className="text-red-500">*</span>
       </label>
       {examples.map((example, exampleIndex) => (
-        <div key={exampleIndex} className="p-4 bg-zinc-800 rounded-lg space-y-2">
+        <div
+          key={exampleIndex}
+          className="p-4 bg-zinc-800 rounded-lg space-y-2"
+        >
           {example.map((message, messageIndex) => (
             <div key={messageIndex} className="flex gap-2">
               <div className="w-24 flex-shrink-0">
@@ -179,8 +228,12 @@ const MessageExampleInput = ({
               <Input
                 className="bg-zinc-700 border-zinc-600 flex-grow"
                 value={message.content.text}
-                onChange={(e) => updateExample(exampleIndex, messageIndex, e.target.value)}
-                placeholder={messageIndex === 0 ? "User message" : "Agent response"}
+                onChange={(e) =>
+                  updateExample(exampleIndex, messageIndex, e.target.value)
+                }
+                placeholder={
+                  messageIndex === 0 ? "User message" : "Agent response"
+                }
               />
             </div>
           ))}
@@ -200,13 +253,18 @@ const MessageExampleInput = ({
 export default function CreatePage() {
   const router = useRouter();
   const { isConnected, address } = useAccount();
-  const [image, setImage] = useState<string>("/assets/anyachan.jpg");
+  const [previewImage, setPreviewImage] = useState<string>(
+    "/assets/anyachan.jpg"
+  );
+  const [imageFile, setImageFile] = useState<File | null>(null);
   const [name, setName] = useState("");
   const [ticker, setTicker] = useState("");
   const [bios, setBios] = useState<string[]>([""]);
   const [lore, setLore] = useState<string[]>([""]);
   const [knowledge, setKnowledge] = useState<string[]>([""]);
-  const [messageExamples, setMessageExamples] = useState<MessageExample[][]>([]);
+  const [messageExamples, setMessageExamples] = useState<MessageExample[][]>(
+    []
+  );
   const [topics, setTopics] = useState<string[]>([""]);
   const [adjectives, setAdjectives] = useState<string[]>([""]);
   const [twitter, setTwitter] = useState("memionarb");
@@ -224,42 +282,51 @@ export default function CreatePage() {
     return value.replace(/[@]/g, "");
   };
 
-  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) {
-      if (file.size > 1024 * 1024) {
-        toast.error(
-          "Image size exceeds 1MB limit. Please upload an image less than 1MB.",
-          {
-            duration: 2500,
-          },
-        );
-        e.target.value = "";
-        return;
-      }
+  const handleImageUpload = useCallback(
+    (e: React.ChangeEvent<HTMLInputElement>) => {
+      const file = e.target.files?.[0];
+      if (file) {
+        if (file.size > 2 * 1024 * 1024) {
+          toast.error(
+            "Image size exceeds 2MB limit. Please upload a smaller image."
+          );
+          return;
+        }
 
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        setImage(reader.result as string);
-      };
-      reader.readAsDataURL(file);
-    }
-  };
+        try {
+          // Revoke previous preview URL to avoid memory leaks
+          if (previewImage && !previewImage.startsWith("/assets/")) {
+            URL.revokeObjectURL(previewImage);
+          }
+
+          const previewUrl = URL.createObjectURL(file);
+          setPreviewImage(previewUrl);
+          setImageFile(file);
+        } catch (error) {
+          console.error("Error processing image:", error);
+          toast.error("Failed to process image");
+        }
+      }
+    },
+    [previewImage]
+  );
 
   const handleArrayFieldChange = (
     setter: React.Dispatch<React.SetStateAction<string[]>>,
     index: number,
     value: string
   ) => {
-    setter(prev => {
+    setter((prev) => {
       const newArray = [...prev];
       newArray[index] = value;
       return newArray;
     });
   };
 
-  const addArrayField = (setter: React.Dispatch<React.SetStateAction<string[]>>) => {
-    setter(prev => [...prev, ""]);
+  const addArrayField = (
+    setter: React.Dispatch<React.SetStateAction<string[]>>
+  ) => {
+    setter((prev) => [...prev, ""]);
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -270,77 +337,122 @@ export default function CreatePage() {
       return;
     }
 
-    if (!name || bios.length === 0 || lore.length === 0 || knowledge.length === 0 || 
-        topics.length === 0 || adjectives.length === 0) {
+    if (!name || bios.length === 0) {
       toast.error("Please fill in all required fields");
       return;
     }
 
-    if (!image) {
-      toast.error("Please upload an agent image");
-      return;
-    }
-
-    const agentData = {
-      name,
-      ticker,
-      bio: bios.filter(b => b.trim() !== ""),
-      lore: lore.filter(l => l.trim() !== ""),
-      knowledge: knowledge.filter(k => k.trim() !== ""),
-      messageExamples,
-      topics: topics.filter(t => t.trim() !== ""),
-      adjectives: adjectives.filter(a => a.trim() !== ""),
-      twitter,
-      image,
-      owner: address
-    };
-
     try {
       setIsSubmitting(true);
       toast.loading("Creating your AI agent...");
-      
-      // Create document in Firestore
-      await createAgent(constants.AGENTS_COLLECTION, name.toLowerCase(), agentData);
-      
+
+      // Upload image to Cloudinary
+      let cloudinaryUrl;
+
+      if (imageFile) {
+        // Handle uploaded file
+        const reader = new FileReader();
+        const base64Data = await new Promise<string>((resolve) => {
+          reader.onloadend = () => resolve(reader.result as string);
+          reader.readAsDataURL(imageFile);
+        });
+
+        const response = await fetch("/api/upload", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ image: base64Data }),
+        });
+
+        if (!response.ok) throw new Error("Failed to upload image");
+        const data = await response.json();
+        cloudinaryUrl = data.url;
+      } else if (previewImage.startsWith("/assets/")) {
+        // Handle placeholder image
+        try {
+          // Fetch the image file first
+          const imageResponse = await fetch(previewImage);
+          const blob = await imageResponse.blob();
+
+          // Convert blob to base64
+          const reader = new FileReader();
+          const base64Data = await new Promise<string>((resolve) => {
+            reader.onloadend = () => resolve(reader.result as string);
+            reader.readAsDataURL(blob);
+          });
+
+          // Upload to Cloudinary
+          const response = await fetch("/api/upload", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ image: base64Data }),
+          });
+
+          if (!response.ok) throw new Error("Failed to upload image");
+          const data = await response.json();
+          cloudinaryUrl = data.url;
+        } catch (error) {
+          console.error("Error processing placeholder image:", error);
+          throw new Error("Failed to process placeholder image");
+        }
+      } else {
+        // If it's already a Cloudinary URL, use it as is
+        cloudinaryUrl = previewImage;
+      }
+
+      const agentData = {
+        name,
+        ticker,
+        bio: bios.filter((b) => b.trim() !== ""),
+        lore: lore.filter((l) => l.trim() !== ""),
+        knowledge: knowledge.filter((k) => k.trim() !== ""),
+        messageExamples,
+        topics: topics.filter((t) => t.trim() !== ""),
+        adjectives: adjectives.filter((a) => a.trim() !== ""),
+        twitter,
+        profileImage: cloudinaryUrl,
+        owner: address,
+        createdAt: new Date().toISOString(),
+      };
+
+      await createAgent(
+        constants.AGENTS_COLLECTION,
+        name.toLowerCase(),
+        agentData
+      );
+
       toast.dismiss();
-      toast.success("AI agent created successfully!", {
-        duration: 5000,
-      });
-
-      // Reset form
-      setImage("/assets/anyachan.jpg");
-      setName("");
-      setTicker("");
-      setBios([""]);
-      setLore([""]);
-      setKnowledge([""]);
-      setMessageExamples([]);
-      setTopics([""]);
-      setAdjectives([""]);
-      setTwitter("");
-
-      // Redirect to home
-      setTimeout(() => {
-        router.push("/");
-      }, 1000);
-
+      toast.success("AI agent created successfully!");
+      setTimeout(() => router.push("/"), 1000);
     } catch (error: any) {
-      console.error("Error creating AI agent:", error);
+      toast.dismiss();
       toast.error(error.message || "Failed to create AI agent");
     } finally {
       setIsSubmitting(false);
     }
   };
 
-  const applyTemplate = (template: Template) => {
-    setBios(template.bio || []);
-    setLore(template.lore || []);
-    setKnowledge(template.knowledge || []);
-    setMessageExamples(template.messageExamples || []);
-    setTopics(template.topics || []);
-    setAdjectives(template.adjectives || []);
-    setImage(template.image);
-  };
+  const applyTemplate = useCallback(async (template: Template) => {
+    try {
+      toast.loading("Applying template...");
+
+      setPreviewImage(template.image);
+      setImageFile(null);
+
+      setBios(template.bio || []);
+      setLore(template.lore || []);
+      setKnowledge(template.knowledge || []);
+      setMessageExamples(template.messageExamples || []);
+      setTopics(template.topics || []);
+      setAdjectives(template.adjectives || []);
+
+      toast.dismiss();
+      toast.success("Template applied successfully!");
+    } catch (error) {
+      toast.dismiss();
+      toast.error("Failed to apply template");
+      console.error("Error applying template:", error);
+    }
+  }, []);
 
   if (!isConnected) {
     return (
@@ -384,9 +496,10 @@ export default function CreatePage() {
           <div className="flex justify-center">
             <div className="relative w-32 h-32">
               <Image
-                src={image}
+                src={previewImage}
                 alt="Agent"
                 fill
+                sizes="(max-width: 128px) 100vw, 128px"
                 className="rounded-full object-cover"
               />
               <label className="absolute bottom-0 right-0 bg-zinc-800 rounded-full p-2 cursor-pointer hover:bg-pink-500/50 transition-colors">
@@ -399,9 +512,9 @@ export default function CreatePage() {
                 />
               </label>
 
-              {!image && (
+              {!previewImage && (
                 <p className="text-xs text-zinc-500 text-center mt-2">
-                  Max image size: 50KB
+                  Max image size: 2MB
                 </p>
               )}
             </div>
@@ -442,7 +555,9 @@ export default function CreatePage() {
                     required
                     className="bg-zinc-800 border-zinc-700"
                     value={bio}
-                    onChange={(e) => handleArrayFieldChange(setBios, index, e.target.value)}
+                    onChange={(e) =>
+                      handleArrayFieldChange(setBios, index, e.target.value)
+                    }
                   />
                   {index === bios.length - 1 && (
                     <Button
@@ -466,7 +581,9 @@ export default function CreatePage() {
                     required
                     className="bg-zinc-800 border-zinc-700"
                     value={item}
-                    onChange={(e) => handleArrayFieldChange(setLore, index, e.target.value)}
+                    onChange={(e) =>
+                      handleArrayFieldChange(setLore, index, e.target.value)
+                    }
                   />
                   {index === lore.length - 1 && (
                     <Button
@@ -490,7 +607,13 @@ export default function CreatePage() {
                     required
                     className="bg-zinc-800 border-zinc-700"
                     value={item}
-                    onChange={(e) => handleArrayFieldChange(setKnowledge, index, e.target.value)}
+                    onChange={(e) =>
+                      handleArrayFieldChange(
+                        setKnowledge,
+                        index,
+                        e.target.value
+                      )
+                    }
                   />
                   {index === knowledge.length - 1 && (
                     <Button
@@ -514,7 +637,9 @@ export default function CreatePage() {
                     required
                     className="bg-zinc-800 border-zinc-700"
                     value={topic}
-                    onChange={(e) => handleArrayFieldChange(setTopics, index, e.target.value)}
+                    onChange={(e) =>
+                      handleArrayFieldChange(setTopics, index, e.target.value)
+                    }
                   />
                   {index === topics.length - 1 && (
                     <Button
@@ -538,7 +663,13 @@ export default function CreatePage() {
                     required
                     className="bg-zinc-800 border-zinc-700"
                     value={adj}
-                    onChange={(e) => handleArrayFieldChange(setAdjectives, index, e.target.value)}
+                    onChange={(e) =>
+                      handleArrayFieldChange(
+                        setAdjectives,
+                        index,
+                        e.target.value
+                      )
+                    }
                   />
                   {index === adjectives.length - 1 && (
                     <Button
@@ -565,7 +696,7 @@ export default function CreatePage() {
                 onChange={(e) => setTwitter(validateTwitter(e.target.value))}
               />
             </div>
-            <MessageExampleInput 
+            <MessageExampleInput
               examples={messageExamples}
               setExamples={setMessageExamples}
             />
@@ -584,7 +715,7 @@ export default function CreatePage() {
         <h2 className="text-lg font-semibold text-white mb-4">Templates</h2>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           {botTemplates.map((template) => (
-            <Card 
+            <Card
               key={template.name}
               className="bg-zinc-800 border-zinc-700 p-4 cursor-pointer hover:border-pink-500/50 transition-colors"
               onClick={() => applyTemplate(template)}
@@ -593,7 +724,9 @@ export default function CreatePage() {
                 <div>
                   <h3 className="font-medium text-white">{template.name}</h3>
                   <p className="text-sm text-zinc-400">
-                    {Array.isArray(template.bio) ? template.bio[0] : template.bio}
+                    {Array.isArray(template.bio)
+                      ? template.bio[0]
+                      : template.bio}
                   </p>
                 </div>
               </div>

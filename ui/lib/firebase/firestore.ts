@@ -8,7 +8,7 @@ const db = getFirestore(app);
 // Helper function to convert arrays to Firestore-compatible format
 const convertArraysToMaps = (data: any) => {
   const converted = { ...data };
-  
+
   // Convert arrays to objects with numeric keys
   Object.keys(converted).forEach(key => {
     if (Array.isArray(converted[key])) {
@@ -36,7 +36,7 @@ const convertArraysToMaps = (data: any) => {
     const imagePath = converted.image.split('/').pop(); // Get the last part of the path
     converted.image = imagePath || converted.image;
   }
-  
+
   return converted;
 };
 
