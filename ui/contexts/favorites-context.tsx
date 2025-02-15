@@ -2,12 +2,11 @@
 
 import { createContext, useContext, useState, useEffect } from "react";
 import { useAccount } from 'wagmi';
-
-const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL;
+import { testUsers } from '@/lib/test-data';
 
 type FavoritesContextType = {
   favorites: string[];
-  toggleFavorite: (id: string) => Promise<void>;
+  toggleFavorite: (id: string) => void;
   isFavorite: (id: string) => boolean;
 };
 
@@ -19,66 +18,28 @@ export function FavoritesProvider({ children }: { children: React.ReactNode }) {
   const [favorites, setFavorites] = useState<string[]>([]);
   const { address } = useAccount();
 
-  // Fetch favorites when wallet is connected
   useEffect(() => {
-    const fetchFavorites = async () => {
-      if (!address) {
-        setFavorites([]);
-        return;
-      }
-
-      try {
-        const response = await fetch(`${backendUrl}/users/${address}`);
-        const data = await response.json();
-        setFavorites(data.favourite_agents || []);
-      } catch (error) {
-        console.error('Error fetching favorites:', error);
-        setFavorites([]);
-      }
-    };
-
-    fetchFavorites();
+    if (address) {
+      // Use test data instead of API call
+      const testUser = testUsers[address as keyof typeof testUsers];
+      setFavorites(testUser?.favourite_agents || []);
+    } else {
+      setFavorites([]);
+    }
   }, [address]);
 
-  const toggleFavorite = async (id: string) => {
-    if (!address) return;
-
-    try {
-      // Get current user data
-      const userResponse = await fetch(`${backendUrl}/users/${address}`);
-      const userData = await userResponse.json();
-
-      // Update favorites list
-      const newFavorites = favorites.includes(id)
-        ? favorites.filter(fav => fav !== id)
-        : [...favorites, id];
-
-      // Update user data on backend
-      const response = await fetch(`${backendUrl}/users/${address}`, {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          ...userData, // Keep existing user data
-          favourite_agents: newFavorites,
-        }),
-      });
-
-      if (response.ok) {
-        setFavorites(newFavorites);
-      }
-    } catch (error) {
-      console.error('Error updating favorites:', error);
-    }
+  const toggleFavorite = (id: string) => {
+    setFavorites(prev => 
+      prev.includes(id) 
+        ? prev.filter(fav => fav !== id)
+        : [...prev, id]
+    );
   };
 
   const isFavorite = (id: string) => favorites.includes(id);
 
   return (
-    <FavoritesContext.Provider
-      value={{ favorites, toggleFavorite, isFavorite }}
-    >
+    <FavoritesContext.Provider value={{ favorites, toggleFavorite, isFavorite }}>
       {children}
     </FavoritesContext.Provider>
   );

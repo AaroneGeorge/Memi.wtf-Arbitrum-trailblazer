@@ -7,53 +7,22 @@ import { Card } from "@/components/ui/card";
 import { useState, useEffect } from "react";
 import WalletConnectButton from "@/components/wallet-connect-button";
 import { getImageSrc } from "@/lib/utils";
-
-// Interface for bot data from API
-interface Bot {
-  name: string;
-  bio: string;
-  personality: string;
-  starting_dialogue: string;
-  ticker_symbol: string;
-  contract_address: string;
-  ticker: string;
-  creator: string;
-  created_date: string;
-  image: string;
-  twitter: string;
-}
-
-const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL;
+import { testBots } from "@/lib/test-data";
 
 export default function YourAgentsPage() {
   const { address, isConnected } = useAccount();
   const router = useRouter();
-  const [userBots, setUserBots] = useState<Bot[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
+  const [userBots, setUserBots] = useState(testBots);
+  const [isLoading, setIsLoading] = useState(false);
 
-  // Fetch bots from API
+  // Filter bots by creator
   useEffect(() => {
-    const fetchBots = async () => {
-      if (!isConnected || !address) return;
-
-      try {
-        const response = await fetch(`${backendUrl}/bots`);
-        if (response.ok) {
-          const data = await response.json();
-          // Filter bots where creator matches wallet address
-          const userOwnedBots = data.bots.filter(
-            (bot: Bot) => bot.creator.toLowerCase() === address.toLowerCase()
-          );
-          setUserBots(userOwnedBots);
-        }
-      } catch (error) {
-        console.error('Error fetching bots:', error);
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    fetchBots();
+    if (isConnected && address) {
+      const filteredBots = testBots.filter(
+        (bot) => bot.creator.toLowerCase() === address.toLowerCase()
+      );
+      setUserBots(filteredBots);
+    }
   }, [isConnected, address]);
 
   if (!isConnected) {
@@ -63,16 +32,6 @@ export default function YourAgentsPage() {
           <h1 className="text-2xl font-bold text-white mb-6">Your Agents</h1>
           <p className="text-zinc-400 mb-6">Please connect your wallet to view your agents</p>
           <WalletConnectButton />
-        </Card>
-      </div>
-    );
-  }
-
-  if (isLoading) {
-    return (
-      <div className="container mx-auto p-6 max-w-2xl h-[80vh] flex items-center justify-center">
-        <Card className="bg-zinc-900 border-zinc-800 p-6 text-center">
-          <p className="text-zinc-400">Loading your agents...</p>
         </Card>
       </div>
     );
@@ -110,7 +69,7 @@ export default function YourAgentsPage() {
               personality={bot.personality}
               image={getImageSrc(bot.image) || '/assets/anyachan.jpg'}
               startingDialogue={bot.starting_dialogue}
-              price={0} // Add these if available from API
+              price={0}
               marketCap={0}
               volume={0}
               change={0}

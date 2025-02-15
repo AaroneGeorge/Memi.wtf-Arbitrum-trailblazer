@@ -9,6 +9,8 @@ import { useEffect, useState } from "react";
 import { getImageSrc } from "@/lib/utils";
 import WalletConnectButton from "@/components/wallet-connect-button";
 import Squares from "@/components/Squares";
+import { testBots, testUsers, testChatHistory } from "@/lib/test-data";
+
 interface ChatMessage {
   message: string;
   role: string;
@@ -23,69 +25,46 @@ interface ChatHistory {
   timestamp: string;
 }
 
-interface Bot {
-  name: string;
-  bio: string;
-  image: string;
-  // ... other bot fields
-}
-
-const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL;
-
 export default function HistoryPage() {
   const { address, isConnected } = useAccount();
   const [chatHistories, setChatHistories] = useState<ChatHistory[]>([]);
-  const [bots, setBots] = useState<{ [key: string]: Bot }>({});
+  const [bots, setBots] = useState<{ [key: string]: typeof testBots[0] }>({});
 
   useEffect(() => {
-    const fetchData = async () => {
-      if (!address) return;
+    if (!address) return;
 
-      try {
-        // Get user info to get list of bots they've chatted with
-        const userResponse = await fetch(`${backendUrl}/users/${address}`);
-        const userData = await userResponse.json();
+    // Get user's chat history from test data
+    const userChats = testUsers[address as keyof typeof testUsers]?.chat_summary || {};
+    
+    // Create chat histories from test data
+    const histories = Object.entries(userChats).map(([botName, summary]) => ({
+      user_id: address,
+      bot_name: botName,
+      messages: testChatHistory[botName]?.messages || [],
+      timestamp: summary.timestamp
+    }));
 
-        // Get all bots info
-        const botsResponse = await fetch(`${backendUrl}/bots`);
-        const botsData = await botsResponse.json();
-        const botsMap = botsData.bots.reduce((acc: any, bot: Bot) => {
-          acc[bot.name] = bot;
-          return acc;
-        }, {});
-        setBots(botsMap);
+    setChatHistories(histories);
 
-        // Get chat history for each bot the user has chatted with
-        const histories = await Promise.all(
-          Object.keys(userData.chat_summary).map(async (botName) => {
-            const chatResponse = await fetch(
-              `${backendUrl}/chats/${address}/${botName}`
-            );
-            return chatResponse.json();
-          })
-        );
-
-        setChatHistories(histories);
-      } catch (error) {
-        console.error('Error fetching chat history:', error);
-      }
-    };
-
-    fetchData();
+    // Create bots map
+    const botsMap = testBots.reduce((acc, bot) => {
+      acc[bot.name] = bot;
+      return acc;
+    }, {} as { [key: string]: typeof testBots[0] });
+    setBots(botsMap);
   }, [address]);
 
   if (!isConnected) {
     return (
       <div className="container mx-auto p-6 max-w-2xl h-[80vh] flex items-center justify-center">
         <div className="fixed inset-0 z-0">
-        <Squares
-          speed={0.5}
-          squareSize={40}
-          direction="diagonal"
-          borderColor="#fff"
-          // hoverFillColor="#222"
-        />
-      </div>
+          <Squares
+            speed={0.5}
+            squareSize={40}
+            direction="diagonal"
+            borderColor="#fff"
+          />
+        </div>
         <Card className="bg-zinc-900 border-zinc-800 p-6 text-center">
           <h1 className="text-2xl font-bold text-white mb-6">Chat History</h1>
           <p className="text-zinc-400 mb-6">

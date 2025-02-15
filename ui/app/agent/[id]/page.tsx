@@ -2,7 +2,6 @@
 
 import { useState, useEffect, useRef } from "react";
 import { useParams } from "next/navigation";
-import { agents } from "@/lib/data";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -11,12 +10,11 @@ import Image from "next/image";
 import { useFavorites } from "@/contexts/favorites-context";
 import Link from "next/link";
 import { useAccount } from "wagmi";
-import { Bot, ChatMessage, ChatHistory } from "./types";
+import { Bot, ChatMessage } from "./types";
 import WalletConnectButton from "@/components/wallet-connect-button";
 import { getImageSrc } from "@/lib/utils";
 import TradingViewWidget from "@/components/TradingViewWidget";
-
-const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL;
+import { testBots, testChatHistory } from "@/lib/test-data";
 
 export default function AgentPage() {
   const { id } = useParams();
@@ -34,75 +32,40 @@ export default function AgentPage() {
   const { isFavorite, toggleFavorite } = useFavorites();
   const favorite = isFavorite(id as string);
 
-  const staticData = agents.find((a) => a.id === id);
-
-  // Fetch bot data
+  // Get bot data from test data
   useEffect(() => {
-    const fetchBot = async () => {
-      try {
-        const response = await fetch(`${backendUrl}/bots`);
-        const data = await response.json();
-        const foundBot = data.bots.find((b: Bot) => b.name === id);
-        if (foundBot) setBot(foundBot);
-      } catch (error) {
-        console.error("Error fetching bot:", error);
-      }
-    };
-    fetchBot();
+    // Convert id from string[] to string if needed
+    const botId = Array.isArray(id) ? id[0] : id;
+    console.log("Looking for bot with id:", botId); // Debug log
+    const foundBot = testBots.find(b => b.name === botId);
+    console.log("Found bot:", foundBot); // Debug log
+    if (foundBot) {
+      setBot(foundBot);
+      setCreatorUsername(foundBot.creator);
+    }
   }, [id]);
 
-  // Fetch chat history
+  // Get chat history from test data
   useEffect(() => {
-    const fetchChatHistory = async () => {
-      if (!address || !bot) return;
+    if (!address || !bot) return;
 
-      // Set the starting dialogue as first message
-      const startingMessage: ChatMessage = {
-        message: bot.starting_dialogue,
-        role: "assistant",
-        expression: null,
-        timestamp: new Date().toISOString(),
-      };
-
-      try {
-        const response = await fetch(`${backendUrl}/chats/${address}/${id}`);
-        const data: ChatHistory = await response.json();
-
-        // Combine starting dialogue with chat history
-        setMessages([startingMessage, ...data.messages]);
-      } catch (error) {
-        console.error("Error fetching chat history:", error);
-        setMessages([startingMessage]);
-      }
+    const startingMessage: ChatMessage = {
+      message: bot.starting_dialogue,
+      role: "assistant",
+      expression: null,
+      timestamp: new Date().toISOString(),
     };
 
-    fetchChatHistory();
-  }, [id, address, bot]);
-
-  // Add new useEffect to fetch creator's username
-  useEffect(() => {
-    const fetchCreatorUsername = async () => {
-      if (!bot?.creator) return;
-
-      try {
-        const response = await fetch(`${backendUrl}/users/${bot.creator}`);
-        const data = await response.json();
-        setCreatorUsername(data.username || bot.creator); // fallback to address if no username
-      } catch (error) {
-        console.error("Error fetching creator username:", error);
-        setCreatorUsername(bot.creator); // fallback to address on error
-      }
-    };
-
-    fetchCreatorUsername();
-  }, [bot?.creator]);
+    const chatHistory = testChatHistory[bot.name]?.messages || [];
+    setMessages([startingMessage, ...chatHistory]);
+  }, [bot, address]);
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const chatContainerRef = useRef<HTMLDivElement>(null);
+
   useEffect(() => {
     if (chatContainerRef.current) {
-      chatContainerRef.current.scrollTop =
-        chatContainerRef.current.scrollHeight;
+      chatContainerRef.current.scrollTop = chatContainerRef.current.scrollHeight;
     }
   }, [messages]);
 
@@ -110,7 +73,6 @@ export default function AgentPage() {
     e.preventDefault();
     if (!message.trim() || !address) return;
 
-    // Add user message immediately
     const userMessage: ChatMessage = {
       message: message,
       role: "user",
@@ -118,36 +80,18 @@ export default function AgentPage() {
       timestamp: new Date().toISOString(),
     };
     setMessages((prev) => [...prev, userMessage]);
-
-    // Clear the input field immediately
     setMessage("");
 
-    try {
-      const response = await fetch(`${backendUrl}/chat`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          bot_name: id,
-          user_id: address,
-          message: userMessage.message,
-        }),
-      });
-
-      const data = await response.json();
-
-      // Add bot response
+    // Simulate bot response
+    setTimeout(() => {
       const botMessage: ChatMessage = {
-        message: data.response.content,
+        message: "This is a simulated response from the bot!",
         role: "assistant",
-        expression: data.response.expression,
+        expression: "happy",
         timestamp: new Date().toISOString(),
       };
       setMessages((prev) => [...prev, botMessage]);
-    } catch (error) {
-      console.error("Error sending message:", error);
-    }
+    }, 1000);
   };
 
   // Update the message display in the chat
@@ -310,40 +254,39 @@ export default function AgentPage() {
             )}
           </Card>
 
-          {/* <Card className={`bg-zinc-950 border-zinc-800 p-4 ${overlayClass}`}>
-            <div className="grid grid-cols-2 gap-4 mb-4">
+          <Card className="bg-zinc-900 border-zinc-800">
+            <div className="p-4 border-b border-zinc-800">
+              <h3 className="font-semibold text-white">Market Data</h3>
+            </div>
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 p-4">
               <div>
                 <div className="text-sm text-zinc-400">Price</div>
                 <div className="text-xl font-bold text-white">
-                  ${staticData?.price || "0.00"}
+                  ${bot?.price.toFixed(4)}
                 </div>
               </div>
               <div>
                 <div className="text-sm text-zinc-400">24h Change</div>
-                <div className="text-xl font-bold text-green-500">
-                  +{staticData?.change || "0.00"}%
+                <div className={`text-xl font-bold ${bot?.change >= 0 ? 'text-green-500' : 'text-red-500'}`}>
+                  {bot?.change >= 0 ? '+' : ''}{bot?.change.toFixed(2)}%
                 </div>
               </div>
               <div>
                 <div className="text-sm text-zinc-400">Market Cap</div>
                 <div className="text-xl font-bold text-white">
-                  ${staticData?.marketCap.toLocaleString() || "0"}
+                  ${bot?.marketCap.toLocaleString()}
                 </div>
               </div>
               <div>
                 <div className="text-sm text-zinc-400">Volume</div>
                 <div className="text-xl font-bold text-white">
-                  ${staticData?.volume.toLocaleString() || "0"}
+                  ${bot?.volume.toLocaleString()}
                 </div>
               </div>
             </div>
-          </Card> */}
+          </Card>
 
           <TradingViewWidget />
-
-
-
-
         </div>
       </Card>
     </div>

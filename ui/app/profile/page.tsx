@@ -8,6 +8,7 @@ import { Copy, Edit2, Check, X } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import WalletConnectButton from "@/components/wallet-connect-button";
 import Squares from "@/components/Squares";
+import { testUsers } from "@/lib/test-data";
 
 // Add new interface for user data
 interface UserData {
@@ -18,63 +19,34 @@ interface UserData {
   created_date?: string;
 }
 
-const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL;
-
 export default function ProfilePage() {
   const { address, isConnected } = useAccount();
   const [isEditing, setIsEditing] = useState(false);
-  const [userData, setUserData] = useState<UserData | null>(null);
+  const [userData, setUserData] = useState<typeof testUsers[keyof typeof testUsers] | null>(null);
   const [editingUsername, setEditingUsername] = useState("");
   const [isLoading, setIsLoading] = useState(true);
 
-  // Fetch user data when wallet is connected
   useEffect(() => {
-    const fetchUserData = async () => {
-      if (isConnected && address) {
-        try {
-          const response = await fetch(`${backendUrl}/users/${address}`);
-          if (response.ok) {
-            const data = await response.json();
-            setUserData(data);
-            setEditingUsername(data.username);
-          }
-        } catch (error) {
-          console.error("Error fetching user data:", error);
-        } finally {
-          setIsLoading(false);
-        }
+    if (isConnected && address) {
+      // Get user data from test data
+      const user = testUsers[address as keyof typeof testUsers];
+      if (user) {
+        setUserData(user);
+        setEditingUsername(user.username);
       }
-    };
-
-    fetchUserData();
+      setIsLoading(false);
+    }
   }, [isConnected, address]);
 
-  // Update the saveUsername function to call the API
-  const saveUsername = async () => {
-    if (!address || !userData) return;
-
-    try {
-      const response = await fetch(`${backendUrl}/users/${address}`, {
-        method: "PUT",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          ...userData,
-          username: editingUsername,
-        }),
-      });
-
-      if (response.ok) {
-        const updatedData = await response.json();
-        setUserData(updatedData.user);
-        setIsEditing(false);
-      } else {
-        console.error("Failed to update username");
-      }
-    } catch (error) {
-      console.error("Error updating username:", error);
-    }
+  const saveUsername = () => {
+    if (!userData) return;
+    
+    // Simulate saving
+    setUserData({
+      ...userData,
+      username: editingUsername
+    });
+    setIsEditing(false);
   };
 
   const copyAddress = () => {

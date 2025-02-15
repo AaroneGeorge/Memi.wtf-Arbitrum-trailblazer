@@ -20,6 +20,7 @@ import { useRouter } from "next/navigation";
 import WalletConnectButton from "@/components/wallet-connect-button";
 import { HoverTooltip } from "@/components/hover-tooltip";
 import Squares from "@/components/Squares";
+import { generateRandomUsername } from "@/lib/utils";
 
 const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL;
 
@@ -36,6 +37,23 @@ const waitForReceipt = async (hash: `0x${string}`, maxAttempts = 20) => {
   }
   throw new Error("Transaction receipt not found after maximum attempts");
 };
+
+const botTemplates = [
+  {
+    name: "Trading Assistant",
+    bio: "Expert in crypto trading and market analysis",
+    personality: "Professional, analytical, and detail-oriented",
+    starting_dialogue: "Hello! Ready to analyze the markets together?",
+    image: "/assets/trading-template.jpg"
+  },
+  {
+    name: "DeFi Guide",
+    bio: "Your personal guide to decentralized finance",
+    personality: "Educational, patient, and thorough",
+    starting_dialogue: "Welcome! What would you like to learn about DeFi today?",
+    image: "/assets/defi-template.jpg"
+  }
+];
 
 export default function CreatePage() {
   const router = useRouter();
@@ -126,80 +144,31 @@ export default function CreatePage() {
     try {
       setIsSubmitting(true);
 
-      // Use writeContractAsync instead of writeContract
-      const hash = await writeContractAsync({
-        address: "0x77aDfAe2d4639de469dDD47ea6ed1C3Abc2CeD33", // arbitrum sepolia
-        abi,
-        functionName: "createToken",
-        args: [name, ticker],
-      });
-
-      console.log("Transaction hash:", hash);
-
-      toast.loading("Waiting for transaction confirmation...");
-      const receipt = await waitForReceipt(hash);
-      toast.dismiss();
-
-      // Extract token ID from receipt
-      const tokenId = receipt.logs[0].address;
-      const contractAddress = `${tokenId}`;
-
-      console.log("Transaction receipt:", receipt);
-      console.log("Token ID:", tokenId);
-
-      // Prepare image
-      const imageFile = image ? await fetch(image).then((r) => r.blob()) : null;
-      let base64Image = null;
-      if (imageFile) {
-        base64Image = await convertImageToBase64(imageFile as File);
-      }
-
-      // Create bot on backend
-      const response = await fetch(`${backendUrl}/bots/create`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          name: name,
-          bio: bio,
-          personality: personality,
-          starting_dialogue: startingDialogue,
-          ticker_symbol: `$${ticker}`,
-          contract_address: contractAddress,
-          ticker: `$${ticker}`,
-          creator: address,
-          image: base64Image,
-          twitter: twitter,
-        }),
-      });
-
-      if (!response.ok) {
-        const error = await response.json();
-        if (error.detail?.includes("database is locked")) {
-          throw new Error("Server is busy, please try again in a few moments");
-        }
-        throw new Error(error.detail || "Failed to create AI agent");
-      }
-
-      const data = await response.json();
-      toast.success("AI agent created successfully!", {
-        duration: 5000,
-      });
-
-      // Reset form
-      setImage("/assets/anyachan.jpg");
-      setName("");
-      setTicker("");
-      setBio("");
-      setPersonality("");
-      setStartingDialogue("");
-      setContractAddress("");
-      setTwitter("");
-
+      // Simulate contract interaction
+      toast.loading("Creating your AI agent...");
+      
+      // Simulate success after 2 seconds
       setTimeout(() => {
-        router.push("/");
-      }, 1000);
+        toast.dismiss();
+        toast.success("AI agent created successfully!", {
+          duration: 5000,
+        });
+
+        // Reset form
+        setImage("/assets/anyachan.jpg");
+        setName("");
+        setTicker("");
+        setBio("");
+        setPersonality("");
+        setStartingDialogue("");
+        setContractAddress("");
+        setTwitter("");
+
+        // Redirect to home
+        setTimeout(() => {
+          router.push("/");
+        }, 1000);
+      }, 2000);
 
     } catch (error: any) {
       console.error("Error creating AI agent:", error);
@@ -207,6 +176,13 @@ export default function CreatePage() {
     } finally {
       setIsSubmitting(false);
     }
+  };
+
+  const applyTemplate = (template: typeof botTemplates[0]) => {
+    setBio(template.bio);
+    setPersonality(template.personality);
+    setStartingDialogue(template.starting_dialogue);
+    setImage(template.image);
   };
 
   if (!isConnected) {
@@ -373,6 +349,33 @@ export default function CreatePage() {
             {isSubmitting ? "Creating..." : "Create Agent"}
           </Button>
         </form>
+      </Card>
+      <Card className="bg-zinc-900/90 backdrop-blur border-zinc-800 p-6 mb-6">
+        <h2 className="text-lg font-semibold text-white mb-4">Templates</h2>
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          {botTemplates.map((template) => (
+            <Card 
+              key={template.name}
+              className="bg-zinc-800 border-zinc-700 p-4 cursor-pointer hover:border-pink-500/50 transition-colors"
+              onClick={() => applyTemplate(template)}
+            >
+              <div className="flex items-center gap-3">
+                <div className="relative w-12 h-12 rounded-full overflow-hidden">
+                  <Image
+                    src={template.image}
+                    alt={template.name}
+                    fill
+                    className="object-cover"
+                  />
+                </div>
+                <div>
+                  <h3 className="font-medium text-white">{template.name}</h3>
+                  <p className="text-sm text-zinc-400">{template.bio}</p>
+                </div>
+              </div>
+            </Card>
+          ))}
+        </div>
       </Card>
       <Toaster position="top-right" />
     </div>

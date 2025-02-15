@@ -1,4 +1,4 @@
-export type Bot = {
+export interface Bot {
   name: string;
   bio: string;
   personality: string;
@@ -10,14 +10,18 @@ export type Bot = {
   created_date: string;
   image: string;
   twitter: string;
-};
+  price: number;
+  marketCap: number;
+  volume: number;
+  change: number;
+}
 
-export type ChatMessage = {
+export interface ChatMessage {
   message: string;
-  role: "user" | "assistant";
+  role: string;
   expression: string | null;
   timestamp: string;
-};
+}
 
 export type ChatHistory = {
   user_id: string;
