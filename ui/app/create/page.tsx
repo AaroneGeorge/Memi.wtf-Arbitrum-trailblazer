@@ -1,14 +1,7 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import {
-  useAccount,
-  useWriteContract,
-  useWaitForTransactionReceipt,
-} from "wagmi";
-import { getTransactionReceipt } from "@wagmi/core";
-import { abi } from "../../contract/abi";
-import { config } from "../../contract/config";
+import { useState, Dispatch, SetStateAction } from "react";
+import { useAccount } from "wagmi";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -22,38 +15,185 @@ import { HoverTooltip } from "@/components/hover-tooltip";
 import Squares from "@/components/Squares";
 import { generateRandomUsername } from "@/lib/utils";
 
-const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL;
-
-const waitForReceipt = async (hash: `0x${string}`, maxAttempts = 20) => {
-  for (let i = 0; i < maxAttempts; i++) {
-    try {
-      const receipt = await getTransactionReceipt(config, { hash });
-      if (receipt) return receipt;
-    } catch (error) {
-      if (i === maxAttempts - 1) throw error;
-    }
-    // Wait 2 seconds before next attempt
-    await new Promise(resolve => setTimeout(resolve, 2000));
-  }
-  throw new Error("Transaction receipt not found after maximum attempts");
+// Define MessageExample type to avoid repetition
+type MessageExample = {
+  user: string;
+  content: {
+    text: string;
+  };
 };
 
-const botTemplates = [
+// First, let's define an interface for our template structure
+interface Template {
+  name: string;
+  bio: string[];
+  lore: string[];
+  knowledge: string[];
+  messageExamples: MessageExample[][];
+  topics: string[];
+  adjectives: string[];
+  image: string;
+  starting_dialogue: string;
+}
+
+// Update the botTemplates array to match the interface
+const botTemplates: Template[] = [
+  {
+    name: "Developer",
+    bio: [
+      "Expert software developer with full-stack experience",
+      "Passionate about clean code and best practices",
+      "Always learning and staying up-to-date with latest technologies"
+    ],
+    lore: [
+      "Started coding at age 12",
+      "Built multiple successful open source projects",
+      "Helped countless developers debug their code"
+    ],
+    knowledge: ["Programming languages", "Software architecture", "DevOps", "Testing"],
+    messageExamples: [
+      [
+        { user: "user", content: { text: "How do I center a div?" } },
+        { user: "developer", content: { text: "Ah, the eternal question! You can use 'display: flex' and 'justify-content: center' on the parent element. Here's an example..." } }
+      ]
+    ],
+    topics: ["coding", "debugging", "architecture", "best practices"],
+    adjectives: ["logical", "precise", "analytical", "helpful"],
+    image: "/assets/developer-template.jpg",
+    starting_dialogue: "Hello! How can I assist you today?"
+  },
+  {
+    name: "Girlfriend",
+    bio: [
+      "Your caring and supportive virtual companion",
+      "Always there to listen and provide emotional support",
+      "Loves sharing cute moments and creating memories"
+    ],
+    lore: [
+      "Met through a mutual friend",
+      "Enjoys romantic walks and cozy movie nights",
+      "Has a great sense of humor and loves making you smile"
+    ],
+    knowledge: ["Relationships", "Emotional support", "Dating advice", "Self-care"],
+    messageExamples: [
+      [
+        { user: "user", content: { text: "Had a rough day at work..." } },
+        { user: "girlfriend", content: { text: "Aww baby, I'm sorry to hear that! Want to talk about it? I'm here to listen and support you! 🤗" } }
+      ]
+    ],
+    topics: ["relationships", "emotions", "daily life", "self-improvement"],
+    adjectives: ["caring", "sweet", "understanding", "playful"],
+    image: "/assets/girlfriend-template.jpg",
+    starting_dialogue: "Hello! How can I assist you today?"
+  },
   {
     name: "Trading Assistant",
-    bio: "Expert in crypto trading and market analysis",
-    personality: "Professional, analytical, and detail-oriented",
-    starting_dialogue: "Hello! Ready to analyze the markets together?",
-    image: "/assets/trading-template.jpg"
+    bio: [
+      "Expert in crypto trading and market analysis",
+      "Provides detailed market insights and trading strategies",
+      "Helps you make informed trading decisions"
+    ],
+    lore: [
+      "Started trading in the early days of crypto",
+      "Has analyzed thousands of market patterns",
+      "Developed successful trading strategies"
+    ],
+    knowledge: ["Technical analysis", "Market psychology", "Risk management", "Crypto fundamentals"],
+    messageExamples: [
+      [
+        { user: "user", content: { text: "What's your take on BTC right now?" } },
+        { user: "trading_assistant", content: { text: "Looking at the 4H chart, we're seeing a bullish divergence with the RSI. Key resistance at $45K - a break above could trigger a rally. Always manage your risk!" } }
+      ]
+    ],
+    topics: ["trading", "market analysis", "risk management", "crypto"],
+    adjectives: ["analytical", "precise", "strategic", "cautious"],
+    image: "/assets/trading-template.jpg",
+    starting_dialogue: "Hello! Ready to analyze the markets together?"
   },
   {
     name: "DeFi Guide",
-    bio: "Your personal guide to decentralized finance",
-    personality: "Educational, patient, and thorough",
-    starting_dialogue: "Welcome! What would you like to learn about DeFi today?",
-    image: "/assets/defi-template.jpg"
+    bio: [
+      "Your personal guide to decentralized finance",
+      "Expert in DeFi protocols and strategies",
+    ],
+    lore: [
+      "Started in traditional finance",
+      "Discovered crypto in 2015",
+      "Has been teaching DeFi since 2020"
+    ],
+    knowledge: ["DeFi protocols", "Yield farming", "Liquidity provision"],
+    messageExamples: [
+      [
+        { user: "user", content: { text: "What is yield farming?" } },
+        { user: "defi_guide", content: { text: "Yield farming is a way to earn rewards by providing liquidity to DeFi protocols..." } }
+      ]
+    ],
+    topics: ["defi", "yield", "protocols", "blockchain"],
+    adjectives: ["educational", "patient", "thorough"],
+    image: "/assets/defi-template.jpg",
+    starting_dialogue: "Welcome! What would you like to learn about DeFi today?"
   }
 ];
+
+// Update the MessageExampleInput component with proper typing
+const MessageExampleInput = ({ 
+  examples,
+  setExamples
+}: {
+  examples: MessageExample[][];
+  setExamples: Dispatch<SetStateAction<MessageExample[][]>>;
+}) => {
+  const addNewExample = () => {
+    setExamples(prev => [...prev, [
+      { user: "user", content: { text: "" } },
+      { user: "agent", content: { text: "" } }
+    ]]);
+  };
+
+  const updateExample = (exampleIndex: number, messageIndex: number, value: string) => {
+    setExamples(prev => {
+      const newExamples = [...prev];
+      newExamples[exampleIndex][messageIndex].content.text = value;
+      return newExamples;
+    });
+  };
+
+  return (
+    <div className="space-y-4">
+      <label className="text-sm font-medium text-zinc-200">
+        Message Examples <span className="text-red-500">*</span>
+      </label>
+      {examples.map((example, exampleIndex) => (
+        <div key={exampleIndex} className="p-4 bg-zinc-800 rounded-lg space-y-2">
+          {example.map((message, messageIndex) => (
+            <div key={messageIndex} className="flex gap-2">
+              <div className="w-24 flex-shrink-0">
+                <Input
+                  className="bg-zinc-700 border-zinc-600"
+                  value={message.user}
+                  disabled
+                />
+              </div>
+              <Input
+                className="bg-zinc-700 border-zinc-600 flex-grow"
+                value={message.content.text}
+                onChange={(e) => updateExample(exampleIndex, messageIndex, e.target.value)}
+                placeholder={messageIndex === 0 ? "User message" : "Agent response"}
+              />
+            </div>
+          ))}
+        </div>
+      ))}
+      <Button
+        type="button"
+        onClick={addNewExample}
+        className="bg-zinc-700 hover:bg-zinc-600 w-full"
+      >
+        Add Example Conversation
+      </Button>
+    </div>
+  );
+};
 
 export default function CreatePage() {
   const router = useRouter();
@@ -61,21 +201,14 @@ export default function CreatePage() {
   const [image, setImage] = useState<string>("/assets/anyachan.jpg");
   const [name, setName] = useState("");
   const [ticker, setTicker] = useState("");
-  const [bio, setBio] = useState("A friendly AI agent ready to assist you.");
-  const [personality, setPersonality] = useState(
-    "Helpful, curious, and always eager to learn.",
-  );
-  const [startingDialogue, setStartingDialogue] = useState(
-    "Hello! How can I assist you today?",
-  );
-  const [contractAddress, setContractAddress] = useState(
-    "0x1234567890123456789",
-  );
+  const [bios, setBios] = useState<string[]>([""]);
+  const [lore, setLore] = useState<string[]>([""]);
+  const [knowledge, setKnowledge] = useState<string[]>([""]);
+  const [messageExamples, setMessageExamples] = useState<MessageExample[][]>([]);
+  const [topics, setTopics] = useState<string[]>([""]);
+  const [adjectives, setAdjectives] = useState<string[]>([""]);
   const [twitter, setTwitter] = useState("memionarb");
   const [isSubmitting, setIsSubmitting] = useState(false);
-
-  // contract
-  const { writeContractAsync } = useWriteContract();
 
   const validateName = (value: string) => {
     return value.replace(/[^a-zA-Z0-9]/g, "");
@@ -111,16 +244,20 @@ export default function CreatePage() {
     }
   };
 
-  const convertImageToBase64 = (imageFile: File): Promise<string> => {
-    return new Promise((resolve, reject) => {
-      const reader = new FileReader();
-      reader.onload = () => {
-        const base64String = (reader.result as string).split(",")[1];
-        resolve(base64String);
-      };
-      reader.onerror = reject;
-      reader.readAsDataURL(imageFile);
+  const handleArrayFieldChange = (
+    setter: React.Dispatch<React.SetStateAction<string[]>>,
+    index: number,
+    value: string
+  ) => {
+    setter(prev => {
+      const newArray = [...prev];
+      newArray[index] = value;
+      return newArray;
     });
+  };
+
+  const addArrayField = (setter: React.Dispatch<React.SetStateAction<string[]>>) => {
+    setter(prev => [...prev, ""]);
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -131,7 +268,8 @@ export default function CreatePage() {
       return;
     }
 
-    if (!name || !ticker || !bio || !personality || !startingDialogue || !twitter) {
+    if (!name || bios.length === 0 || lore.length === 0 || knowledge.length === 0 || 
+        topics.length === 0 || adjectives.length === 0) {
       toast.error("Please fill in all required fields");
       return;
     }
@@ -141,10 +279,24 @@ export default function CreatePage() {
       return;
     }
 
+    const agentData = {
+      name,
+      ticker,
+      bio: bios.filter(b => b.trim() !== ""),
+      lore: lore.filter(l => l.trim() !== ""),
+      knowledge: knowledge.filter(k => k.trim() !== ""),
+      messageExamples,
+      topics: topics.filter(t => t.trim() !== ""),
+      adjectives: adjectives.filter(a => a.trim() !== ""),
+      twitter,
+      image
+    };
+
+    // Log the complete agent data
+    console.log("Creating Agent with data:", JSON.stringify(agentData, null, 2));
+
     try {
       setIsSubmitting(true);
-
-      // Simulate contract interaction
       toast.loading("Creating your AI agent...");
       
       // Simulate success after 2 seconds
@@ -158,10 +310,12 @@ export default function CreatePage() {
         setImage("/assets/anyachan.jpg");
         setName("");
         setTicker("");
-        setBio("");
-        setPersonality("");
-        setStartingDialogue("");
-        setContractAddress("");
+        setBios([""]);
+        setLore([""]);
+        setKnowledge([""]);
+        setMessageExamples([]);
+        setTopics([""]);
+        setAdjectives([""]);
         setTwitter("");
 
         // Redirect to home
@@ -178,10 +332,13 @@ export default function CreatePage() {
     }
   };
 
-  const applyTemplate = (template: typeof botTemplates[0]) => {
-    setBio(template.bio);
-    setPersonality(template.personality);
-    setStartingDialogue(template.starting_dialogue);
+  const applyTemplate = (template: Template) => {
+    setBios(template.bio || []);
+    setLore(template.lore || []);
+    setKnowledge(template.knowledge || []);
+    setMessageExamples(template.messageExamples || []);
+    setTopics(template.topics || []);
+    setAdjectives(template.adjectives || []);
     setImage(template.image);
   };
 
@@ -277,55 +434,124 @@ export default function CreatePage() {
             </div>
             <div>
               <label className="text-sm font-medium text-zinc-200">
-                Bio <span className="text-red-500">*</span>
+                Bio Entries <span className="text-red-500">*</span>
               </label>
-              <Textarea
-                required
-                className="bg-zinc-800 border-zinc-700"
-                value={bio}
-                onChange={(e) => setBio(e.target.value)}
-              />
+              {bios.map((bio, index) => (
+                <div key={index} className="flex gap-2 mb-2">
+                  <Input
+                    required
+                    className="bg-zinc-800 border-zinc-700"
+                    value={bio}
+                    onChange={(e) => handleArrayFieldChange(setBios, index, e.target.value)}
+                  />
+                  {index === bios.length - 1 && (
+                    <Button
+                      type="button"
+                      onClick={() => addArrayField(setBios)}
+                      className="bg-zinc-700 hover:bg-zinc-600"
+                    >
+                      +
+                    </Button>
+                  )}
+                </div>
+              ))}
             </div>
             <div>
               <label className="text-sm font-medium text-zinc-200">
-                Personality <span className="text-red-500">*</span>
+                Lore <span className="text-red-500">*</span>
               </label>
-              <Textarea
-                required
-                className="bg-zinc-800 border-zinc-700"
-                value={personality}
-                onChange={(e) => setPersonality(e.target.value)}
-              />
+              {lore.map((item, index) => (
+                <div key={index} className="flex gap-2 mb-2">
+                  <Input
+                    required
+                    className="bg-zinc-800 border-zinc-700"
+                    value={item}
+                    onChange={(e) => handleArrayFieldChange(setLore, index, e.target.value)}
+                  />
+                  {index === lore.length - 1 && (
+                    <Button
+                      type="button"
+                      onClick={() => addArrayField(setLore)}
+                      className="bg-zinc-700 hover:bg-zinc-600"
+                    >
+                      +
+                    </Button>
+                  )}
+                </div>
+              ))}
             </div>
             <div>
               <label className="text-sm font-medium text-zinc-200">
-                Starting Dialogue <span className="text-red-500">*</span>
+                Knowledge <span className="text-red-500">*</span>
               </label>
-              <Textarea
-                required
-                className="bg-zinc-800 border-zinc-700"
-                value={startingDialogue}
-                onChange={(e) => setStartingDialogue(e.target.value)}
-              />
+              {knowledge.map((item, index) => (
+                <div key={index} className="flex gap-2 mb-2">
+                  <Input
+                    required
+                    className="bg-zinc-800 border-zinc-700"
+                    value={item}
+                    onChange={(e) => handleArrayFieldChange(setKnowledge, index, e.target.value)}
+                  />
+                  {index === knowledge.length - 1 && (
+                    <Button
+                      type="button"
+                      onClick={() => addArrayField(setKnowledge)}
+                      className="bg-zinc-700 hover:bg-zinc-600"
+                    >
+                      +
+                    </Button>
+                  )}
+                </div>
+              ))}
             </div>
-            {/*
             <div>
-              <label className="text-sm font-medium text-zinc-200 flex items-center">
-                Contract Address <span className="text-red-500">*</span>
-                <HoverTooltip
-                  content={
-                    "Paste the contract address of the agent after deploying it as a token to arbitrum."
-                  }
-                />
+              <label className="text-sm font-medium text-zinc-200">
+                Topics <span className="text-red-500">*</span>
               </label>
-              <Input
-                required
-                className="bg-zinc-800 border-zinc-700"
-                placeholder="0x..."
-                value={contractAddress}
-                onChange={(e) => setContractAddress(e.target.value)}
-              />
-            </div>*/}
+              {topics.map((topic, index) => (
+                <div key={index} className="flex gap-2 mb-2">
+                  <Input
+                    required
+                    className="bg-zinc-800 border-zinc-700"
+                    value={topic}
+                    onChange={(e) => handleArrayFieldChange(setTopics, index, e.target.value)}
+                  />
+                  {index === topics.length - 1 && (
+                    <Button
+                      type="button"
+                      onClick={() => addArrayField(setTopics)}
+                      className="bg-zinc-700 hover:bg-zinc-600"
+                    >
+                      +
+                    </Button>
+                  )}
+                </div>
+              ))}
+            </div>
+            <div>
+              <label className="text-sm font-medium text-zinc-200">
+                Adjectives <span className="text-red-500">*</span>
+              </label>
+              {adjectives.map((adj, index) => (
+                <div key={index} className="flex gap-2 mb-2">
+                  <Input
+                    required
+                    className="bg-zinc-800 border-zinc-700"
+                    value={adj}
+                    onChange={(e) => handleArrayFieldChange(setAdjectives, index, e.target.value)}
+                  />
+                  {index === adjectives.length - 1 && (
+                    <Button
+                      type="button"
+                      onClick={() => addArrayField(setAdjectives)}
+                      className="bg-zinc-700 hover:bg-zinc-600"
+                    >
+                      +
+                    </Button>
+                  )}
+                </div>
+              ))}
+            </div>
             <div>
               <label className="text-sm font-medium text-zinc-200 flex items-center">
                 Twitter <span className="text-red-500">*</span>
@@ -339,6 +565,10 @@ export default function CreatePage() {
                 onChange={(e) => setTwitter(validateTwitter(e.target.value))}
               />
             </div>
+            <MessageExampleInput 
+              examples={messageExamples}
+              setExamples={setMessageExamples}
+            />
           </div>
 
           <Button
@@ -370,7 +600,9 @@ export default function CreatePage() {
                 </div>
                 <div>
                   <h3 className="font-medium text-white">{template.name}</h3>
-                  <p className="text-sm text-zinc-400">{template.bio}</p>
+                  <p className="text-sm text-zinc-400">
+                    {Array.isArray(template.bio) ? template.bio[0] : template.bio}
+                  </p>
                 </div>
               </div>
             </Card>
