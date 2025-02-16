@@ -44,4 +44,13 @@ export interface AgentCardProps {
   bio: string | string[];
   className?: string;
   imageClassName?: string;
+}
+
+declare global {
+  interface Window {
+    ethereum?: {
+      request: (args: { method: string }) => Promise<string[]>;
+      on: (event: string, callback: (accounts: string[]) => void) => void;
+    };
+  }
 } 

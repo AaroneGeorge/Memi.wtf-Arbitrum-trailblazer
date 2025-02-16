@@ -12,6 +12,8 @@ import { getImageSrc } from "@/lib/utils";
 import TradingViewWidget from "@/components/TradingViewWidget";
 import { getAgentDetails } from "@/lib/firebase/firestore";
 import { Agent, ChatMessage } from "@/app/types";
+import WalletConnectButton from "@/components/wallet-connect-button";
+import { TypingAnimation } from "@/components/typing-animation";
 
 export default function AgentPage() {
   const { id } = useParams();
@@ -21,6 +23,9 @@ export default function AgentPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const chatContainerRef = useRef<HTMLDivElement>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [walletAddress, setWalletAddress] = useState<string>("");
+  const [isTyping, setIsTyping] = useState(false);
 
   useEffect(() => {
     const fetchAgent = async () => {
@@ -44,9 +49,33 @@ export default function AgentPage() {
     fetchAgent();
   }, [id]);
 
-  const handleSendMessage = (e: React.FormEvent) => {
+  useEffect(() => {
+    if (typeof window !== 'undefined' && window.ethereum) {
+      window.ethereum.request({ method: 'eth_accounts' })
+        .then((accounts: string[]) => {
+          if (accounts.length > 0) {
+            setWalletAddress(accounts[0]);
+          }
+        });
+
+      window.ethereum.on('accountsChanged', function (accounts: string[]) {
+        if (accounts.length > 0) {
+          setWalletAddress(accounts[0]);
+        } else {
+          setWalletAddress("");
+        }
+      });
+    }
+  }, []);
+
+  const handleSendMessage = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!message.trim()) return;
+    if (!message.trim() || !agent || isSubmitting) return;
+    
+    if (!walletAddress) {
+      setError("Please connect your wallet first");
+      return;
+    }
 
     const userMessage: ChatMessage = {
       message: message,
@@ -56,6 +85,38 @@ export default function AgentPage() {
     };
     setMessages((prev) => [...prev, userMessage]);
     setMessage("");
+    setIsSubmitting(true);
+    setIsTyping(true);
+
+    try {
+      const response = await fetch(`http://localhost:3000/${agent.agentId}/message`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          text: message,
+          userId: walletAddress,
+        }),
+      });
+
+      const data = await response.json();
+      
+      if (data && data.length > 0) {
+        const agentMessage: ChatMessage = {
+          message: data[0].text,
+          role: "assistant",
+          expression: null,
+          timestamp: new Date().toISOString(),
+        };
+        setMessages((prev) => [...prev, agentMessage]);
+      }
+    } catch (error) {
+      console.error('Error sending message:', error);
+    } finally {
+      setIsSubmitting(false);
+      setIsTyping(false);
+    }
   };
 
   const renderMessage = (msg: ChatMessage, index: number) => (
@@ -79,6 +140,12 @@ export default function AgentPage() {
       </div>
     </div>
   );
+
+  useEffect(() => {
+    if (chatContainerRef.current) {
+      chatContainerRef.current.scrollTop = chatContainerRef.current.scrollHeight;
+    }
+  }, [messages, isTyping]);
 
   if (loading) {
     return (
@@ -134,9 +201,12 @@ export default function AgentPage() {
               </div>
             </div>
           </div>
-          <Button variant="ghost" size="icon" className="text-pink-500">
-            <Heart className="h-5 w-5" />
-          </Button>
+          <div className="flex items-center gap-2">
+            <Button variant="ghost" size="icon" className="text-pink-500">
+              <Heart className="h-5 w-5" />
+            </Button>
+            <WalletConnectButton />
+          </div>
         </div>
 
         <div className="grid gap-6">
@@ -159,6 +229,11 @@ export default function AgentPage() {
               ref={chatContainerRef}
             >
               {messages.map((msg, i) => renderMessage(msg, i))}
+              {isTyping && (
+                <div className="flex gap-2">
+                  <TypingAnimation />
+                </div>
+              )}
             </div>
 
             <form
@@ -167,15 +242,17 @@ export default function AgentPage() {
             >
               <div className="flex gap-2">
                 <Input
-                  placeholder="Type a message..."
+                  placeholder={walletAddress ? "Type a message..." : "Connect wallet to chat..."}
                   value={message}
                   onChange={(e) => setMessage(e.target.value)}
                   className="bg-zinc-800 border-zinc-700"
+                  disabled={isSubmitting || !walletAddress}
                 />
                 <Button
                   type="submit"
                   size="icon"
                   className="bg-pink-600 hover:bg-pink-700"
+                  disabled={isSubmitting || !walletAddress}
                 >
                   <Send className="h-4 w-4" />
                 </Button>
