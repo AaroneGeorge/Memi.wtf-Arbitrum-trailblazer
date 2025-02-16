@@ -8,9 +8,10 @@ import { useFavorites } from "@/contexts/favorites-context";
 import { useRouter } from "next/navigation";
 import { cn } from "@/lib/utils";
 import type { AgentCardProps } from "@/app/types";
+import type { ReactNode } from "react";
 
 export function AgentCard({
-  id,
+  agentProfileId,
   name,
   description,
   image,
@@ -22,14 +23,14 @@ export function AgentCard({
   const { favorites, toggleFavorite } = useFavorites();
 
   // Handle bio formatting
-  const formattedBio = Array.isArray(bio)
+  const formattedBio: ReactNode = Array.isArray(bio)
     ? bio[0] || "No bio available"
-    : typeof bio === "object"
-    ? Object.values(bio)[0] || "No bio available"
-    : bio || "No bio available";
+    : typeof bio === "string"
+    ? bio
+    : "No bio available";
 
   const handleCardClick = () => {
-    router.push(`/agent/${id}`);
+    router.push(`/agent/${agentProfileId}`);
   };
 
   return (
@@ -54,7 +55,9 @@ export function AgentCard({
             />
           </div>
           <div className="flex-1 space-y-1 overflow-hidden">
-            <h3 className="font-semibold text-white truncate text-lg">{name}</h3>
+            <h3 className="font-semibold text-white truncate text-lg">
+              {name}
+            </h3>
             <p className="text-sm text-zinc-400 truncate">{description}</p>
           </div>
           <Button
@@ -63,14 +66,14 @@ export function AgentCard({
             className="text-zinc-400 hover:text-pink-500 transition-colors"
             onClick={(e) => {
               e.stopPropagation();
-              toggleFavorite(id);
+              toggleFavorite(agentProfileId);
             }}
           >
             <Heart
               className={cn(
                 "h-4 w-4 transition-all",
-                favorites.includes(id) 
-                  ? "fill-current text-pink-500" 
+                favorites.includes(agentProfileId)
+                  ? "fill-current text-pink-500"
                   : "group-hover:text-pink-500/50"
               )}
             />

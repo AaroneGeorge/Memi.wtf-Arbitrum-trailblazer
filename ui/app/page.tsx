@@ -13,7 +13,7 @@ import constants from "@/lib/constants";
 import type { Agent } from "./types";
 
 const truncateAddress = (address: string) => {
-  if (!address) return '';
+  if (!address) return "";
   return `${address.slice(0, 6)}...${address.slice(-4)}`;
 };
 
@@ -26,9 +26,9 @@ export default function Home() {
     const fetchAgents = async () => {
       try {
         const documents = await listDocuments(constants.AGENTS_COLLECTION);
-        // Sort by createdAt in descending order (latest first)
+        // Filter out invalid documents and those without agentProfileId
         const sortedAgents = documents
-          .filter(doc => doc && doc.name) // Filter out any invalid documents
+          .filter((doc) => doc && doc.name && doc.agentProfileId) // Ensure agentProfileId exists
           .sort((a, b) => {
             const dateA = new Date(a.createdAt || 0).getTime();
             const dateB = new Date(b.createdAt || 0).getTime();
@@ -48,9 +48,10 @@ export default function Home() {
   const filteredAgents = agents.filter(
     (agent) =>
       agent.name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      (Array.isArray(agent.bio) && agent.bio.some(b => 
-        b?.toLowerCase().includes(searchQuery.toLowerCase())
-      ))
+      (Array.isArray(agent.bio) &&
+        agent.bio.some((b) =>
+          b?.toLowerCase().includes(searchQuery.toLowerCase())
+        ))
   );
 
   return (
@@ -100,7 +101,9 @@ export default function Home() {
           ) : filteredAgents.length === 0 ? (
             <div className="flex justify-center items-center min-h-[200px]">
               <p className="text-zinc-400">
-                {searchQuery ? "No agents found matching your search" : "No agents available"}
+                {searchQuery
+                  ? "No agents found matching your search"
+                  : "No agents available"}
               </p>
             </div>
           ) : (
@@ -108,7 +111,7 @@ export default function Home() {
               {filteredAgents.map((agent) => (
                 <AgentCard
                   key={agent.name}
-                  id={agent.name}
+                  agentProfileId={agent.agentProfileId}
                   name={agent.name}
                   description={`Created by ${truncateAddress(agent.owner)}`}
                   image={getImageSrc(agent.profileImage)}

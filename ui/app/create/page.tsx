@@ -244,9 +244,9 @@ const MessageExampleInput = ({
 };
 
 function generateUUID() {
-  return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
-    const r = Math.random() * 16 | 0;
-    const v = c === 'x' ? r : (r & 0x3 | 0x8);
+  return "xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx".replace(/[xy]/g, function (c) {
+    const r = (Math.random() * 16) | 0;
+    const v = c === "x" ? r : (r & 0x3) | 0x8;
     return v.toString(16);
   });
 }
@@ -353,52 +353,57 @@ export default function CreatePage() {
         clients: ["direct"],
         modelProvider: "openai",
         settings: {
-          secrets: {}
+          secrets: {},
         },
         plugins: [],
-        bio: bios.filter(b => b.trim() !== ""),
-        lore: lore.filter(l => l.trim() !== ""),
-        knowledge: knowledge.filter(k => k.trim() !== ""),
-        messageExamples: messageExamples.map(example => [
+        bio: bios.filter((b) => b.trim() !== ""),
+        lore: lore.filter((l) => l.trim() !== ""),
+        knowledge: knowledge.filter((k) => k.trim() !== ""),
+        messageExamples: messageExamples.map((example) => [
           {
             user: "{{user1}}",
             content: {
-              text: example[0].content.text
-            }
+              text: example[0].content.text,
+            },
           },
           {
             user: name.toLowerCase(),
             content: {
-              text: example[1].content.text
-            }
-          }
+              text: example[1].content.text,
+            },
+          },
         ]),
         postExamples: [""],
-        topics: topics.filter(t => t.trim() !== ""),
+        topics: topics.filter((t) => t.trim() !== ""),
         style: {
           all: [""],
           chat: [""],
-          post: [""]
+          post: [""],
         },
-        adjectives: adjectives.filter(a => a.trim() !== "")
+        adjectives: adjectives.filter((a) => a.trim() !== ""),
       };
 
-      const setupResponse = await fetch(`http://localhost:3000/agents/${generateUUID()}/set`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify(agentSetupData)
-      });
+      const agentProfileId = generateUUID();
+
+      const setupResponse = await fetch(
+        `http://localhost:3000/agents/${agentProfileId}/set`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(agentSetupData),
+        }
+      );
 
       if (!setupResponse.ok) {
         const errorText = await setupResponse.text();
-        console.error('Server error:', errorText);
+        console.error("Server error:", errorText);
         throw new Error(`Failed to set up agent: ${errorText}`);
       }
 
       const setupResult = await setupResponse.json();
-      console.log('Agent setup result:', setupResult);
+      console.log("Agent setup result:", setupResult);
 
       // Upload image to Cloudinary
       let cloudinaryUrl;
@@ -453,7 +458,7 @@ export default function CreatePage() {
         cloudinaryUrl = previewImage;
       }
 
-      const agentData: Omit<Agent, 'createdAt'> = {
+      const agentData: Omit<Agent, "createdAt" | "id"> = {
         name,
         ticker,
         bio: bios.filter((b) => b.trim() !== ""),
@@ -465,18 +470,18 @@ export default function CreatePage() {
         twitter,
         profileImage: cloudinaryUrl,
         owner: address,
+        agentProfileId,
       };
 
       // Pass the setupResult.id as agentId
-      await createAgent(
-        constants.AGENTS_COLLECTION,
-        name,
-        { ...agentData, agentId: setupResult.id }
-      );
+      await createAgent(constants.AGENTS_COLLECTION, name, {
+        ...agentData,
+        agentId: setupResult.id,
+      });
 
       toast.dismiss();
       toast.success("AI agent created successfully!");
-      setTimeout(() => router.push("/"), 1000);
+      setTimeout(() => router.push(`/agent/${agentProfileId}`), 1000);
     } catch (error: any) {
       toast.dismiss();
       toast.error(error.message || "Failed to create AI agent");

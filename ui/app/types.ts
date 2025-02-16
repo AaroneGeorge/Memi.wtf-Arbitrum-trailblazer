@@ -1,3 +1,10 @@
+export interface MessageExample {
+  user: string;
+  content: {
+    text: string;
+  };
+}
+
 export interface Agent {
   name: string;
   ticker: string;
@@ -10,15 +17,10 @@ export interface Agent {
   twitter: string;
   profileImage: string;
   owner: string;
-  createdAt: string;
+  createdAt?: string;
+  agentId?: string;
+  agentProfileId: string;
 }
-
-export type MessageExample = {
-  user: string;
-  content: {
-    text: string;
-  };
-};
 
 export interface ChatMessage {
   message: string;
@@ -35,7 +37,7 @@ export interface ChatHistory {
 }
 
 export interface AgentCardProps {
-  id: string;
+  agentProfileId: string;
   name: string;
   description: string;
   image: string;
