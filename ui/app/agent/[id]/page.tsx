@@ -15,6 +15,118 @@ import { Agent, ChatMessage } from "@/app/types";
 import WalletConnectButton from "@/components/wallet-connect-button";
 import { TypingAnimation } from "@/components/typing-animation";
 
+interface AgentResponse {
+  user?: string;
+  text: string;
+  action?: "WEB_SEARCH" | "NONE";
+}
+
+// Update the formatLinks function to show truncated links with icons
+const formatLinks = (text: string) => {
+  // Match URLs, including those starting with www., and handle parentheses
+  const urlRegex = /\(?(https?:\/\/[^\s)]+|www\.[^\s)]+)\)?/g;
+  
+  // Match Twitter handles
+  const twitterRegex = /(@\w+)/g;
+  
+  // First split by URLs
+  const parts = text.split(urlRegex);
+  const matches = text.match(urlRegex) || [];
+  
+  return parts.map((part, i) => {
+    // If there's a matching URL for this position
+    if (matches[i]) {
+      // Clean the URL by removing parentheses
+      const cleanUrl = matches[i].replace(/^\(|\)$/g, '');
+      const url = cleanUrl.startsWith('www.') ? `https://${cleanUrl}` : cleanUrl;
+      
+      // Get domain name for display
+      let displayText = cleanUrl;
+      try {
+        const urlObj = new URL(url);
+        displayText = urlObj.hostname + (urlObj.pathname !== '/' ? '...' : '');
+      } catch (e) {
+        displayText = cleanUrl.length > 30 ? cleanUrl.substring(0, 30) + '...' : cleanUrl;
+      }
+
+      return (
+        <Link
+          key={`url-${i}`}
+          href={url}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="text-blue-400 hover:text-pink-500 inline-flex items-center gap-1 mx-1"
+          title={url}
+        >
+          <span className="text-sm">{displayText}</span>
+          <ExternalLink className="h-4 w-4 flex-shrink-0" />
+        </Link>
+      );
+    }
+    
+    // Handle Twitter handles
+    const twitterParts = part.split(twitterRegex);
+    return twitterParts.map((twitterPart, j) => {
+      if (twitterPart.match(twitterRegex)) {
+        const handle = twitterPart.substring(1); // Remove @ symbol
+        return (
+          <Link
+            key={`twitter-${i}-${j}`}
+            href={`https://x.com/${handle}`}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-blue-400 hover:text-pink-500 inline-flex items-center gap-1 mx-1"
+            title={`@${handle} on Twitter`}
+          >
+            <span>@{handle}</span>
+            <Twitter className="h-4 w-4 flex-shrink-0" />
+          </Link>
+        );
+      }
+      return twitterPart;
+    });
+  });
+};
+
+// Update the formatBulletPoints function to better handle links in bullet points
+const formatBulletPoints = (text: string) => {
+  const lines = text.split('\n');
+  return lines.map((line, index) => {
+    const trimmedLine = line.trim();
+    
+    // Handle bullet points
+    if (trimmedLine.startsWith('•') || trimmedLine.startsWith('-')) {
+      return (
+        <div key={index} className="flex gap-2 items-start ml-2 mt-1">
+          <span className="text-pink-500 mt-1 flex-shrink-0">•</span>
+          <span className="break-words">{formatLinks(trimmedLine.substring(1).trim())}</span>
+        </div>
+      );
+    }
+    
+    // Handle numbered lists
+    if (trimmedLine.match(/^\d+\./)) {
+      return (
+        <div key={index} className="flex gap-2 items-start ml-2 mt-1">
+          <span className="text-pink-500 min-w-[20px] flex-shrink-0">
+            {trimmedLine.split('.')[0]}.
+          </span>
+          <span className="break-words">
+            {formatLinks(trimmedLine.substring(trimmedLine.indexOf('.') + 1).trim())}
+          </span>
+        </div>
+      );
+    }
+    
+    // Handle regular text
+    return (
+      <div key={index} className={index > 0 ? "mt-2" : ""}>
+        {formatLinks(trimmedLine)}
+      </div>
+    );
+  });
+};
+
 export default function AgentPage() {
   const { id } = useParams();
   const [messages, setMessages] = useState<ChatMessage[]>([]);
@@ -100,16 +212,18 @@ export default function AgentPage() {
         }),
       });
 
-      const data = await response.json();
+      const data: AgentResponse[] = await response.json();
       
       if (data && data.length > 0) {
-        const agentMessage: ChatMessage = {
-          message: data[0].text,
-          role: "assistant",
-          expression: null,
-          timestamp: new Date().toISOString(),
-        };
-        setMessages((prev) => [...prev, agentMessage]);
+        data.forEach((response) => {
+          const agentMessage: ChatMessage = {
+            message: response.text,
+            role: "assistant",
+            expression: response.action === "WEB_SEARCH" ? "Searching the web..." : null,
+            timestamp: new Date().toISOString(),
+          };
+          setMessages((prev) => [...prev, agentMessage]);
+        });
       }
     } catch (error) {
       console.error('Error sending message:', error);
@@ -119,6 +233,7 @@ export default function AgentPage() {
     }
   };
 
+  // Update the renderMessage function
   const renderMessage = (msg: ChatMessage, index: number) => (
     <div
       key={index}
@@ -131,9 +246,15 @@ export default function AgentPage() {
             : "bg-zinc-800 text-zinc-200"
         }`}
       >
-        {msg.message}
+        <div className="whitespace-pre-wrap">
+          {formatBulletPoints(msg.message)}
+        </div>
         {msg.expression && (
-          <div className="text-xs text-zinc-400 mt-1 italic">
+          <div className={`text-xs mt-2 italic ${
+            msg.expression === "Searching the web..." 
+              ? "text-blue-400"
+              : "text-zinc-400"
+          }`}>
             *{msg.expression}*
           </div>
         )}
