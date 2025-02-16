@@ -243,6 +243,14 @@ const MessageExampleInput = ({
   );
 };
 
+function generateUUID() {
+  return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
+    const r = Math.random() * 16 | 0;
+    const v = c === 'x' ? r : (r & 0x3 | 0x8);
+    return v.toString(16);
+  });
+}
+
 export default function CreatePage() {
   const router = useRouter();
   const { isConnected, address } = useAccount();
@@ -339,6 +347,59 @@ export default function CreatePage() {
       setIsSubmitting(true);
       toast.loading("Creating your AI agent...");
 
+      // Update the agentSetupData
+      const agentSetupData = {
+        name: name,
+        clients: ["direct"],
+        modelProvider: "openai",
+        settings: {
+          secrets: {}
+        },
+        plugins: [],
+        bio: bios.filter(b => b.trim() !== ""),
+        lore: lore.filter(l => l.trim() !== ""),
+        knowledge: knowledge.filter(k => k.trim() !== ""),
+        messageExamples: messageExamples.map(example => [
+          {
+            user: "{{user1}}",
+            content: {
+              text: example[0].content.text
+            }
+          },
+          {
+            user: name.toLowerCase(),
+            content: {
+              text: example[1].content.text
+            }
+          }
+        ]),
+        postExamples: [""],
+        topics: topics.filter(t => t.trim() !== ""),
+        style: {
+          all: [""],
+          chat: [""],
+          post: [""]
+        },
+        adjectives: adjectives.filter(a => a.trim() !== "")
+      };
+
+      const setupResponse = await fetch(`http://localhost:3000/agents/${generateUUID()}/set`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(agentSetupData)
+      });
+
+      if (!setupResponse.ok) {
+        const errorText = await setupResponse.text();
+        console.error('Server error:', errorText);
+        throw new Error(`Failed to set up agent: ${errorText}`);
+      }
+
+      const setupResult = await setupResponse.json();
+      console.log('Agent setup result:', setupResult);
+
       // Upload image to Cloudinary
       let cloudinaryUrl;
 
@@ -406,10 +467,11 @@ export default function CreatePage() {
         owner: address,
       };
 
+      // Pass the setupResult.id as agentId
       await createAgent(
         constants.AGENTS_COLLECTION,
-        name.toLowerCase(),
-        agentData
+        name,
+        { ...agentData, agentId: setupResult.id }
       );
 
       toast.dismiss();
