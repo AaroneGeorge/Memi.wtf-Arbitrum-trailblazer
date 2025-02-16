@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { useParams } from "next/navigation";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -8,34 +8,41 @@ import { Input } from "@/components/ui/input";
 import { Heart, Send, Twitter, ExternalLink } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
-import { Bot, ChatMessage } from "./types";
 import { getImageSrc } from "@/lib/utils";
 import TradingViewWidget from "@/components/TradingViewWidget";
+import { getAgentDetails } from "@/lib/firebase/firestore";
+import { Agent, ChatMessage } from "@/app/types";
 
 export default function AgentPage() {
   const { id } = useParams();
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [message, setMessage] = useState("");
+  const [agent, setAgent] = useState<Agent | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const chatContainerRef = useRef<HTMLDivElement>(null);
 
-  // Example bot data
-  const bot: Bot = {
-    name: "Anya Bot",
-    bio: "Example bio",
-    personality: "Friendly",
-    starting_dialogue: "Hello! How can I help you today?",
-    ticker_symbol: "ANYA",
-    contract_address: "0x123...",
-    ticker: "ANYA",
-    creator: "Creator",
-    created_date: "2024-01-01",
-    image: "/assets/anyachan.jpg",
-    twitter: "@anyabot",
-    price: 0.1234,
-    marketCap: 1000000,
-    volume: 500000,
-    change: 5.67,
-  };
+  useEffect(() => {
+    const fetchAgent = async () => {
+      try {
+        if (typeof id === "string") {
+          const agentData = await getAgentDetails(id);
+          if (agentData) {
+            setAgent(agentData);
+          } else {
+            setError("Agent not found");
+          }
+        }
+      } catch (error) {
+        console.error("Error fetching agent:", error);
+        setError("Failed to load agent details");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchAgent();
+  }, [id]);
 
   const handleSendMessage = (e: React.FormEvent) => {
     e.preventDefault();
@@ -73,6 +80,26 @@ export default function AgentPage() {
     </div>
   );
 
+  if (loading) {
+    return (
+      <div className="container mx-auto p-6 flex items-center justify-center">
+        <Card className="bg-zinc-900 border-zinc-800 p-6">
+          <p className="text-zinc-400">Loading agent details...</p>
+        </Card>
+      </div>
+    );
+  }
+
+  if (error || !agent) {
+    return (
+      <div className="container mx-auto p-6 flex items-center justify-center">
+        <Card className="bg-zinc-900 border-zinc-800 p-6">
+          <p className="text-red-500">{error || "Agent not found"}</p>
+        </Card>
+      </div>
+    );
+  }
+
   return (
     <div className="container mx-auto p-6 max-w-6xl">
       <Card className="bg-zinc-900 border-zinc-800 p-6 mb-6">
@@ -80,39 +107,29 @@ export default function AgentPage() {
           <div className="flex items-center gap-4">
             <div className="relative aspect-square h-16 overflow-hidden rounded-full">
               <Image
-                src={getImageSrc(bot.image)}
-                alt={bot.name}
+                src={getImageSrc(agent.profileImage)}
+                alt={agent.name}
                 fill
                 className="object-cover"
               />
             </div>
             <div>
               <div className="flex items-center gap-2">
-                <h1 className="text-2xl font-bold text-white">{bot.name}</h1>
+                <h1 className="text-2xl font-bold text-white">{agent.name}</h1>
                 <span className="text-pink-500">
-                  {bot.ticker.toUpperCase()}
+                  {agent.ticker.toUpperCase()}
                 </span>
               </div>
               <div className="text-zinc-400 text-sm">
-                Created by {bot.creator} •
+                Created by {agent.owner} •
                 <Link
-                  href={`https://x.com/${bot.twitter.replace("@", "")}`}
+                  href={`https://x.com/${agent.twitter.replace("@", "")}`}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="text-blue-400 hover:text-pink-500 hover:underline"
                 >
                   <Twitter className="inline-block w-4 h-4 ml-1 mr-1" />
-                  {bot.twitter}
-                </Link>
-                •
-                <Link
-                  href={`https://sepolia.arbiscan.io/token/${bot.contract_address}`}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="text-blue-400 hover:text-pink-500 hover:underline"
-                >
-                  <ExternalLink className="inline-block w-4 h-4 ml-1 mr-1" />
-                  {bot.contract_address}
+                  {agent.twitter}
                 </Link>
               </div>
             </div>
@@ -128,10 +145,10 @@ export default function AgentPage() {
               <div className="flex items-center gap-2">
                 <div>
                   <h3 className="font-semibold text-white">
-                    Chat with {bot.name}
+                    Chat with {agent.name}
                   </h3>
                   <p className="text-xs text-zinc-400">
-                    Created by {bot.creator}
+                    Created by {agent.owner}
                   </p>
                 </div>
               </div>

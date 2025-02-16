@@ -1,6 +1,7 @@
-import { getFirestore, collection, doc, setDoc, updateDoc, deleteDoc, getDocs } from 'firebase/firestore';
+import { getFirestore, collection, doc, setDoc, updateDoc, deleteDoc, getDocs, getDoc, query, where } from 'firebase/firestore';
 import { app } from './firebase';
 import constants from '../constants';
+import type { Agent } from '@/app/types';
 
 // Initialize Firestore
 const db = getFirestore(app);
@@ -92,7 +93,7 @@ export const listDocuments = async (collectionName: string) => {
     const documents: any[] = [];
     querySnapshot.forEach((doc) => {
       const data = doc.data();
-      
+
       // Convert the nested data structure and handle arrays
       const processedData = data.data ? Object.entries(data.data).reduce((acc: any, [key, value]) => {
         // Convert object-like arrays back to actual arrays
@@ -117,6 +118,61 @@ export const listDocuments = async (collectionName: string) => {
     return documents;
   } catch (error) {
     console.error("Error listing documents:", error);
+    throw error;
+  }
+};
+
+// Update the getAgentDetails function to search by agentProfileId field
+export const getAgentDetails = async (agentProfileId: string): Promise<Agent | null> => {
+  try {
+    // Create a query to find the document where agentProfileId matches
+    const agentsRef = collection(db, constants.AGENTS_COLLECTION);
+    const q = query(agentsRef, where("data.agentProfileId", "==", agentProfileId));
+    const querySnapshot = await getDocs(q);
+
+    if (!querySnapshot.empty) {
+      // Get the first matching document
+      const docSnap = querySnapshot.docs[0];
+      const data = docSnap.data();
+
+      // Convert the nested data structure and handle arrays
+      const processedData = data.data ? Object.entries(data.data).reduce((acc: any, [key, value]) => {
+        // Convert object-like arrays back to actual arrays
+        if (value && typeof value === 'object' && !Array.isArray(value)) {
+          if (Object.keys(value).every(k => !isNaN(Number(k)))) {
+            acc[key] = Object.values(value);
+          } else {
+            acc[key] = value;
+          }
+        } else {
+          acc[key] = value;
+        }
+        return acc;
+      }, {}) : {};
+
+      // Ensure the returned data matches the Agent interface
+      const agent: Agent = {
+        name: processedData.name || '',
+        ticker: processedData.ticker || '',
+        bio: Array.isArray(processedData.bio) ? processedData.bio : [],
+        lore: Array.isArray(processedData.lore) ? processedData.lore : [],
+        knowledge: Array.isArray(processedData.knowledge) ? processedData.knowledge : [],
+        messageExamples: Array.isArray(processedData.messageExamples) ? processedData.messageExamples : [],
+        topics: Array.isArray(processedData.topics) ? processedData.topics : [],
+        adjectives: Array.isArray(processedData.adjectives) ? processedData.adjectives : [],
+        twitter: processedData.twitter || '',
+        profileImage: processedData.profileImage || '',
+        owner: processedData.owner || '',
+        agentId: processedData.agentId || '',
+        agentProfileId: agentProfileId,
+        createdAt: data.createdAt || new Date().toISOString()
+      };
+
+      return agent;
+    }
+    return null;
+  } catch (error) {
+    console.error("Error fetching agent details:", error);
     throw error;
   }
 }; 
