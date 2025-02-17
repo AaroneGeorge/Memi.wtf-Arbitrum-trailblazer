@@ -17,6 +17,7 @@ import { generateRandomUsername } from "@/lib/utils";
 import { createAgent } from "@/lib/firebase/firestore";
 import constants from "@/lib/constants";
 import type { Agent, MessageExample } from "../types";
+import { IconBrandDiscord, IconBrandTelegram, IconBrandTwitter } from "@tabler/icons-react";
 
 // First, let's define an interface for our template structure
 interface Template {
@@ -250,6 +251,13 @@ function generateUUID() {
     return v.toString(16);
   });
 }
+
+// Add this section before the header
+const SectionNumber = ({ number }: { number: number }) => (
+  <div className="absolute -left-4 -top-4 w-8 h-8 bg-gradient-to-br from-pink-500 to-purple-600 rounded-full flex items-center justify-center text-white font-bold shadow-lg">
+    {number}
+  </div>
+);
 
 export default function CreatePage() {
   const router = useRouter();
@@ -549,8 +557,94 @@ export default function CreatePage() {
           hoverFillColor="#222"
         />
       </div>
-      <Card className="bg-zinc-900/90 backdrop-blur border-zinc-800 p-6 relative z-10">
-        <h1 className="text-2xl font-bold text-white mb-6">Create AI Agent</h1>
+
+      {/* Enhanced Header Section */}
+      <div className="text-center mb-12 relative z-10">
+        <div className="inline-block mb-6">
+          <div className="text-sm font-semibold text-pink-500 mb-2 tracking-wide">
+            POWERED BY MEMI
+          </div>
+          <h1 className="text-5xl font-bold mb-4">
+            <span className="text-transparent bg-clip-text bg-gradient-to-r from-pink-500 via-purple-500 to-indigo-500">
+              Create Your
+            </span>
+            <br />
+            <span className="text-white">AI Agent</span>
+          </h1>
+          <div className="h-1 w-20 bg-gradient-to-r from-pink-500 to-purple-500 mx-auto rounded-full mb-4" />
+          <p className="text-zinc-400 text-lg max-w-xl mx-auto leading-relaxed">
+            Design and deploy your personalized AI assistant with custom traits,
+            knowledge, and social integrations.
+          </p>
+        </div>
+        
+        <div className="flex items-center justify-center gap-6 mt-6">
+          <div className="flex items-center gap-2 px-4 py-2 bg-zinc-800/50 rounded-full backdrop-blur-sm">
+            <div className="flex items-center gap-1 text-sm text-zinc-300">
+              <IconBrandDiscord className="w-5 h-5 text-[#5865F2]" />
+              <span>Discord</span>
+            </div>
+            <span className="text-zinc-600">•</span>
+            <div className="flex items-center gap-1 text-sm text-zinc-300">
+              <IconBrandTwitter className="w-5 h-5 text-[#1DA1F2]" />
+              <span>Twitter</span>
+            </div>
+            <span className="text-zinc-600">•</span>
+            <div className="flex items-center gap-1 text-sm text-zinc-300">
+              <IconBrandTelegram className="w-5 h-5 text-[#0088cc]" />
+              <span>Telegram</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Section 1: Templates */}
+      <Card className="bg-zinc-900/90 backdrop-blur border-zinc-800 p-6 mb-6 relative z-10">
+        <SectionNumber number={1} />
+        <h2 className="text-xl font-bold text-white mb-4">Agent Templates</h2>
+        <p className="text-zinc-400 mb-6">
+          Choose from our pre-configured agent personalities to quickly create
+          specialized AI assistants. Each template comes with optimized traits
+          and knowledge bases.
+        </p>
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          {botTemplates.map((template) => (
+            <Card
+              key={template.name}
+              className="bg-zinc-800 border-zinc-700 p-4 cursor-pointer hover:border-pink-500/50 transition-colors"
+              onClick={() => applyTemplate(template)}
+            >
+              <div className="flex items-center gap-3">
+                <Image
+                  src={template.image}
+                  alt={template.name}
+                  width={48}
+                  height={48}
+                  className="rounded-full"
+                />
+                <div>
+                  <h3 className="font-medium text-white">{template.name}</h3>
+                  <p className="text-sm text-zinc-400">
+                    {Array.isArray(template.bio)
+                      ? template.bio[0]
+                      : template.bio}
+                  </p>
+                </div>
+              </div>
+            </Card>
+          ))}
+        </div>
+      </Card>
+
+      {/* Section 2: Agent Configuration */}
+      <Card className="bg-zinc-900/90 backdrop-blur border-zinc-800 p-6 mb-6 relative">
+        <SectionNumber number={2} />
+        <h2 className="text-xl font-bold text-white mb-4">
+          Agent Configuration
+        </h2>
+        <p className="text-zinc-400 mb-6">
+          Customize your AI agent's personality, knowledge, and behavior.
+        </p>
         <form onSubmit={handleSubmit} className="space-y-6">
           <div className="flex justify-center">
             <div className="relative w-32 h-32">
@@ -760,37 +854,121 @@ export default function CreatePage() {
               setExamples={setMessageExamples}
             />
           </div>
-
-          <Button
-            type="submit"
-            className="w-full bg-pink-600 hover:bg-pink-700"
-            disabled={isSubmitting}
-          >
-            {isSubmitting ? "Creating..." : "Create Agent"}
-          </Button>
         </form>
       </Card>
-      <Card className="bg-zinc-900/90 backdrop-blur border-zinc-800 p-6 mb-6">
-        <h2 className="text-lg font-semibold text-white mb-4">Templates</h2>
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          {botTemplates.map((template) => (
-            <Card
-              key={template.name}
-              className="bg-zinc-800 border-zinc-700 p-4 cursor-pointer hover:border-pink-500/50 transition-colors"
-              onClick={() => applyTemplate(template)}
+
+      {/* Section 3: Social Integrations */}
+      <Card className="bg-zinc-900/90 backdrop-blur border-zinc-800 p-6 mb-6 relative">
+        <SectionNumber number={3} />
+        <h2 className="text-xl font-bold text-white mb-4">
+          Social Integrations
+        </h2>
+        <p className="text-zinc-400 mb-6">
+          Connect your AI agent to various social platforms to expand its reach.
+        </p>
+
+        {/* Discord Integration */}
+        <div className="mb-8">
+          <div className="flex items-center gap-3 mb-4">
+            <div className="w-10 h-10 bg-zinc-800 rounded-full flex items-center justify-center">
+              <IconBrandDiscord className="w-6 h-6 text-[#5865F2]" />
+            </div>
+            <div>
+              <h3 className="font-medium text-white">Discord Integration</h3>
+              <p className="text-sm text-zinc-400">
+                Let your agent interact with Discord communities
+              </p>
+            </div>
+          </div>
+          <div className="space-y-4">
+            <Input
+              className="bg-zinc-800 border-zinc-700"
+              placeholder="DISCORD_APPLICATION_ID"
+            />
+            <Input
+              className="bg-zinc-800 border-zinc-700"
+              placeholder="DISCORD_API_TOKEN"
+            />
+          </div>
+        </div>
+
+        {/* Twitter Integration */}
+        <div className="mb-8">
+          <div className="flex items-center gap-3 mb-4">
+            <div className="w-10 h-10 bg-zinc-800 rounded-full flex items-center justify-center">
+              <IconBrandTwitter className="w-6 h-6 text-[#1DA1F2]" />
+            </div>
+            <div>
+              <h3 className="font-medium text-white">Twitter Integration</h3>
+              <p className="text-sm text-zinc-400">
+                Enable your agent to post and interact on Twitter
+              </p>
+            </div>
+          </div>
+          <div className="space-y-4">
+            <Input
+              className="bg-zinc-800 border-zinc-700"
+              placeholder="TWITTER_USERNAME"
+            />
+            <Input
+              className="bg-zinc-800 border-zinc-700"
+              placeholder="TWITTER_EMAIL"
+              type="email"
+            />
+            <Input
+              className="bg-zinc-800 border-zinc-700"
+              placeholder="TWITTER_PASSWORD"
+              type="password"
+            />
+          </div>
+        </div>
+
+        {/* Telegram Integration */}
+        <div className="mb-8">
+          <div className="flex items-center gap-3 mb-4">
+            <div className="w-10 h-10 bg-zinc-800 rounded-full flex items-center justify-center">
+              <IconBrandTelegram className="w-6 h-6 text-[#0088cc]" />
+            </div>
+            <div>
+              <h3 className="font-medium text-white">Telegram Integration</h3>
+              <p className="text-sm text-zinc-400">
+                Connect your agent to Telegram for instant messaging
+              </p>
+            </div>
+          </div>
+          <div className="space-y-4">
+            <Input
+              className="bg-zinc-800 border-zinc-700"
+              placeholder="TELEGRAM_BOT_TOKEN"
+            />
+          </div>
+        </div>
+      </Card>
+
+      {/* Remove the Button from Section 3 and add this after all sections */}
+      <Card className="bg-gradient-to-r from-pink-500 via-purple-500 to-indigo-500 p-[1px] mb-6 relative overflow-hidden group">
+        <div className="relative bg-zinc-900 p-6">
+          <div className="absolute inset-0 bg-gradient-to-r from-pink-500/20 via-purple-500/20 to-indigo-500/20 opacity-0 group-hover:opacity-100 transition-opacity" />
+          <div className="flex items-center justify-between relative">
+            <div>
+              <h3 className="font-semibold text-white mb-1">Ready to Create?</h3>
+              <p className="text-sm text-zinc-400">Your AI agent is just one click away</p>
+            </div>
+            <Button
+              type="submit"
+              className="bg-gradient-to-r from-pink-500 via-purple-500 to-indigo-500 hover:from-pink-600 hover:via-purple-600 hover:to-indigo-600 text-white px-8 transition-all duration-200 transform hover:scale-105"
+              disabled={isSubmitting}
             >
-              <div className="flex items-center gap-3">
-                <div>
-                  <h3 className="font-medium text-white">{template.name}</h3>
-                  <p className="text-sm text-zinc-400">
-                    {Array.isArray(template.bio)
-                      ? template.bio[0]
-                      : template.bio}
-                  </p>
+              {isSubmitting ? (
+                <div className="flex items-center gap-2">
+                  <div className="w-4 h-4 border-2 border-white/50 border-t-white rounded-full animate-spin" />
+                  Creating...
                 </div>
-              </div>
-            </Card>
-          ))}
+              ) : (
+                "Create Agent"
+              )}
+            </Button>
+          </div>
         </div>
       </Card>
       <Toaster position="top-right" />
