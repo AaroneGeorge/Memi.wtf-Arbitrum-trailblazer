@@ -5,7 +5,8 @@ import { useParams } from "next/navigation";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Heart, Send, Twitter, ExternalLink } from "lucide-react";
+import { Heart, Send, ExternalLink, Lock, Check, ImageIcon, Mic, BookOpen } from "lucide-react";
+import { IconBrandDiscord, IconBrandTwitter } from '@tabler/icons-react';
 import Image from "next/image";
 import Link from "next/link";
 import { getImageSrc } from "@/lib/utils";
@@ -79,7 +80,7 @@ const formatLinks = (text: string) => {
             title={`@${handle} on Twitter`}
           >
             <span>@{handle}</span>
-            <Twitter className="h-4 w-4 flex-shrink-0" />
+            <IconBrandTwitter className="h-4 w-4 flex-shrink-0" />
           </Link>
         );
       }
@@ -316,7 +317,7 @@ export default function AgentPage() {
                   rel="noopener noreferrer"
                   className="text-blue-400 hover:text-pink-500 hover:underline"
                 >
-                  <Twitter className="inline-block w-4 h-4 ml-1 mr-1" />
+                  <IconBrandTwitter className="inline-block w-4 h-4 ml-1 mr-1" />
                   {agent.twitter}
                 </Link>
               </div>
@@ -382,6 +383,75 @@ export default function AgentPage() {
           </Card>
         </div>
       </Card>
+
+      {/* New Social Connections Section */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-6">
+        <Card className="bg-zinc-900 border-zinc-800 p-6 flex flex-col items-center text-center hover:border-pink-500/50 transition-colors cursor-pointer">
+          <div className="w-12 h-12 bg-zinc-800 rounded-full flex items-center justify-center mb-4">
+            <IconBrandDiscord className="w-6 h-6 text-[#5865F2]" />
+          </div>
+          <h3 className="text-lg font-semibold text-white mb-2">Discord Integration</h3>
+          <p className="text-sm text-zinc-400 mb-4">Connect your agent with Discord server</p>
+          <span className="text-red-500 text-sm flex items-center gap-1">
+            <Lock className="w-4 h-4" /> Locked
+          </span>
+        </Card>
+
+        <Card className="bg-zinc-900 border-zinc-800 p-6 flex flex-col items-center text-center hover:border-pink-500/50 transition-colors cursor-pointer">
+          <div className="w-12 h-12 bg-zinc-800 rounded-full flex items-center justify-center mb-4">
+            <IconBrandTwitter className="w-6 h-6 text-[#1DA1F2]" />
+          </div>
+          <h3 className="text-lg font-semibold text-white mb-2">Twitter Integration</h3>
+          <p className="text-sm text-zinc-400 mb-4">Connect your agent with Twitter</p>
+          <span className="text-green-500 text-sm flex items-center gap-1">
+            <Check className="w-4 h-4" /> Unlocked
+          </span>
+        </Card>
+
+        <Card className="bg-zinc-900 border-zinc-800 p-6 flex flex-col items-center text-center hover:border-pink-500/50 transition-colors cursor-pointer">
+          <div className="w-12 h-12 bg-zinc-800 rounded-full flex items-center justify-center mb-4">
+            <Send className="w-6 h-6 text-[#0088cc]" />
+          </div>
+          <h3 className="text-lg font-semibold text-white mb-2">Telegram Integration</h3>
+          <p className="text-sm text-zinc-400 mb-4">Connect your agent with Telegram</p>
+          <span className="text-red-500 text-sm flex items-center gap-1">
+            <Lock className="w-4 h-4" /> Locked
+          </span>
+        </Card>
+
+        <Card className="bg-zinc-900 border-zinc-800 p-6 flex flex-col items-center text-center hover:border-pink-500/50 transition-colors cursor-pointer">
+          <div className="w-12 h-12 bg-zinc-800 rounded-full flex items-center justify-center mb-4">
+            <ImageIcon className="w-6 h-6 text-purple-500" />
+          </div>
+          <h3 className="text-lg font-semibold text-white mb-2">Image Generation</h3>
+          <p className="text-sm text-zinc-400 mb-4">Enable AI image generation</p>
+          <span className="text-red-500 text-sm flex items-center gap-1">
+            <Lock className="w-4 h-4" /> Locked
+          </span>
+        </Card>
+
+        <Card className="bg-zinc-900 border-zinc-800 p-6 flex flex-col items-center text-center hover:border-pink-500/50 transition-colors cursor-pointer">
+          <div className="w-12 h-12 bg-zinc-800 rounded-full flex items-center justify-center mb-4">
+            <Mic className="w-6 h-6 text-yellow-500" />
+          </div>
+          <h3 className="text-lg font-semibold text-white mb-2">Voice Integration</h3>
+          <p className="text-sm text-zinc-400 mb-4">Enable voice interactions</p>
+          <span className="text-red-500 text-sm flex items-center gap-1">
+            <Lock className="w-4 h-4" /> Locked
+          </span>
+        </Card>
+
+        <Card className="bg-zinc-900 border-zinc-800 p-6 flex flex-col items-center text-center hover:border-pink-500/50 transition-colors cursor-pointer">
+          <div className="w-12 h-12 bg-zinc-800 rounded-full flex items-center justify-center mb-4">
+            <BookOpen className="w-6 h-6 text-emerald-500" />
+          </div>
+          <h3 className="text-lg font-semibold text-white mb-2">Training</h3>
+          <p className="text-sm text-zinc-400 mb-4">Customize agent knowledge</p>
+          <span className="text-red-500 text-sm flex items-center gap-1">
+            <Lock className="w-4 h-4" /> Locked
+          </span>
+        </Card>
+      </div>
     </div>
   );
 }
