@@ -276,14 +276,13 @@ export default function CreatePage() {
   );
   const [topics, setTopics] = useState<string[]>([""]);
   const [adjectives, setAdjectives] = useState<string[]>([""]);
-  const [twitter, setTwitter] = useState("memionarb");
+  const [twitterUsername, setTwitterUsername] = useState("");
+  const [twitterPassword, setTwitterPassword] = useState("");
+  const [twitterEmail, setTwitterEmail] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [discordAppId, setDiscordAppId] = useState("");
   const [discordApiToken, setDiscordApiToken] = useState("");
   const [telegramBotToken, setTelegramBotToken] = useState("");
-  const [twitterUsername, setTwitterUsername] = useState("");
-  const [twitterPassword, setTwitterPassword] = useState("");
-  const [twitterEmail, setTwitterEmail] = useState("");
 
   const validateName = (value: string) => {
     return value.replace(/[^a-zA-Z0-9]/g, "");
@@ -291,10 +290,6 @@ export default function CreatePage() {
 
   const validateTicker = (value: string) => {
     return value.replace(/[\$]/g, "");
-  };
-
-  const validateTwitter = (value: string) => {
-    return value.replace(/[@]/g, "");
   };
 
   const handleImageUpload = useCallback(
@@ -504,7 +499,7 @@ export default function CreatePage() {
         messageExamples,
         topics: topics.filter((t) => t.trim() !== ""),
         adjectives: adjectives.filter((a) => a.trim() !== ""),
-        twitter,
+        twitter: twitterUsername || "",
         profileImage: cloudinaryUrl,
         owner: address,
         agentProfileId,
@@ -865,19 +860,6 @@ export default function CreatePage() {
                   )}
                 </div>
               ))}
-            </div>
-            <div>
-              <label className="text-sm font-medium text-zinc-200 flex items-center">
-                Twitter <span className="text-red-500">*</span>
-                <HoverTooltip content="Twitter username of the agent" />
-              </label>
-              <Input
-                required
-                className="bg-zinc-800 border-zinc-700"
-                placeholder="username"
-                value={twitter}
-                onChange={(e) => setTwitter(validateTwitter(e.target.value))}
-              />
             </div>
             <MessageExampleInput
               examples={messageExamples}

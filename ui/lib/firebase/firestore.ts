@@ -122,25 +122,30 @@ export const listDocuments = async (collectionName: string) => {
   }
 };
 
-// Update the getAgentDetails function to search by agentProfileId field
+// Update the getAgentDetails function
 export const getAgentDetails = async (agentProfileId: string): Promise<Agent | null> => {
   try {
-    // Create a query to find the document where agentProfileId matches
     const agentsRef = collection(db, constants.AGENTS_COLLECTION);
     const q = query(agentsRef, where("data.agentProfileId", "==", agentProfileId));
     const querySnapshot = await getDocs(q);
 
     if (!querySnapshot.empty) {
-      // Get the first matching document
       const docSnap = querySnapshot.docs[0];
       const data = docSnap.data();
 
-      // Convert the nested data structure and handle arrays
+      // Process the nested data structure
       const processedData = data.data ? Object.entries(data.data).reduce((acc: any, [key, value]) => {
-        // Convert object-like arrays back to actual arrays
+        // Handle arrays and array-like objects
         if (value && typeof value === 'object' && !Array.isArray(value)) {
+          // Check if it's an array-like object (has numeric keys)
           if (Object.keys(value).every(k => !isNaN(Number(k)))) {
             acc[key] = Object.values(value);
+          } else if (key === 'clients' || key === 'plugins') {
+            // Special handling for clients and plugins arrays
+            acc[key] = Object.values(value);
+          } else if (key === 'secrets') {
+            // Keep secrets as an object
+            acc[key] = value;
           } else {
             acc[key] = value;
           }
@@ -165,9 +170,14 @@ export const getAgentDetails = async (agentProfileId: string): Promise<Agent | n
         owner: processedData.owner || '',
         agentId: processedData.agentId || '',
         agentProfileId: agentProfileId,
-        createdAt: data.createdAt || new Date().toISOString()
+        createdAt: data.createdAt || new Date().toISOString(),
+        // Add these fields
+        clients: Array.isArray(processedData.clients) ? processedData.clients : [],
+        secrets: processedData.secrets || {},
+        plugins: Array.isArray(processedData.plugins) ? processedData.plugins : []
       };
 
+      console.log("Processed agent data:", agent); // Debug log
       return agent;
     }
     return null;
