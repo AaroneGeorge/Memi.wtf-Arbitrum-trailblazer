@@ -263,7 +263,7 @@ export default function CreatePage() {
   const router = useRouter();
   const { isConnected, address } = useAccount();
   const [previewImage, setPreviewImage] = useState<string>(
-    "/assets/anyachan.jpg"
+    "/assets/placeholder-wimpy.jpg"
   );
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [name, setName] = useState("");
