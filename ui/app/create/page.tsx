@@ -278,6 +278,12 @@ export default function CreatePage() {
   const [adjectives, setAdjectives] = useState<string[]>([""]);
   const [twitter, setTwitter] = useState("memionarb");
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [discordAppId, setDiscordAppId] = useState("");
+  const [discordApiToken, setDiscordApiToken] = useState("");
+  const [telegramBotToken, setTelegramBotToken] = useState("");
+  const [twitterUsername, setTwitterUsername] = useState("");
+  const [twitterPassword, setTwitterPassword] = useState("");
+  const [twitterEmail, setTwitterEmail] = useState("");
 
   const validateName = (value: string) => {
     return value.replace(/[^a-zA-Z0-9]/g, "");
@@ -338,6 +344,33 @@ export default function CreatePage() {
     setter((prev) => [...prev, ""]);
   };
 
+  const validateSocialIntegrations = () => {
+    const clients = ["direct"];
+    const secrets: Record<string, string> = {};
+    
+    // Discord
+    if (discordAppId && discordApiToken) {
+      clients.push("discord");
+      secrets.DISCORD_APPLICATION_ID = discordAppId;
+      secrets.DISCORD_API_TOKEN = discordApiToken;
+    }
+
+    // Telegram
+    if (telegramBotToken) {
+      clients.push("telegram");
+      secrets.TELEGRAM_BOT_TOKEN = telegramBotToken;
+    }
+
+    // Twitter
+    if (twitterUsername && twitterPassword && twitterEmail) {
+      secrets.TWITTER_USERNAME = twitterUsername;
+      secrets.TWITTER_PASSWORD = twitterPassword;
+      secrets.TWITTER_EMAIL = twitterEmail;
+    }
+
+    return { clients, secrets };
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
@@ -351,19 +384,29 @@ export default function CreatePage() {
       return;
     }
 
+    const socialConfig = validateSocialIntegrations();
+    if (!socialConfig) return;
+
     try {
       setIsSubmitting(true);
       toast.loading("Creating your AI agent...");
 
-      // Update the agentSetupData
+      const plugins = ["@elizaos/plugin-web-search"];
+      if (socialConfig.secrets.TWITTER_USERNAME) {
+        plugins.push("@elizaos/plugin-twitter");
+      }
+
+      const agentProfileId = generateUUID();
+
+      // 1. First set up the agent with the API
       const agentSetupData = {
         name: name,
-        clients: ["direct"],
+        clients: socialConfig.clients,
         modelProvider: "openai",
         settings: {
-          secrets: {},
+          secrets: socialConfig.secrets,
         },
-        plugins: [],
+        plugins: plugins,
         bio: bios.filter((b) => b.trim() !== ""),
         lore: lore.filter((l) => l.trim() !== ""),
         knowledge: knowledge.filter((k) => k.trim() !== ""),
@@ -391,10 +434,9 @@ export default function CreatePage() {
         adjectives: adjectives.filter((a) => a.trim() !== ""),
       };
 
-      const agentProfileId = generateUUID();
-
+      // Make the API call to set up the agent
       const setupResponse = await fetch(
-        `http://localhost:3000/agents/${agentProfileId}/set`,
+        `http://localhost:3001/agents/${agentProfileId}/set`,
         {
           method: "POST",
           headers: {
@@ -411,13 +453,10 @@ export default function CreatePage() {
       }
 
       const setupResult = await setupResponse.json();
-      console.log("Agent setup result:", setupResult);
 
-      // Upload image to Cloudinary
+      // 2. Handle image upload to Cloudinary
       let cloudinaryUrl;
-
       if (imageFile) {
-        // Handle uploaded file
         const reader = new FileReader();
         const base64Data = await new Promise<string>((resolve) => {
           reader.onloadend = () => resolve(reader.result as string);
@@ -434,38 +473,28 @@ export default function CreatePage() {
         const data = await response.json();
         cloudinaryUrl = data.url;
       } else if (previewImage.startsWith("/assets/")) {
-        // Handle placeholder image
-        try {
-          // Fetch the image file first
-          const imageResponse = await fetch(previewImage);
-          const blob = await imageResponse.blob();
+        const imageResponse = await fetch(previewImage);
+        const blob = await imageResponse.blob();
+        const reader = new FileReader();
+        const base64Data = await new Promise<string>((resolve) => {
+          reader.onloadend = () => resolve(reader.result as string);
+          reader.readAsDataURL(blob);
+        });
 
-          // Convert blob to base64
-          const reader = new FileReader();
-          const base64Data = await new Promise<string>((resolve) => {
-            reader.onloadend = () => resolve(reader.result as string);
-            reader.readAsDataURL(blob);
-          });
+        const response = await fetch("/api/upload", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ image: base64Data }),
+        });
 
-          // Upload to Cloudinary
-          const response = await fetch("/api/upload", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ image: base64Data }),
-          });
-
-          if (!response.ok) throw new Error("Failed to upload image");
-          const data = await response.json();
-          cloudinaryUrl = data.url;
-        } catch (error) {
-          console.error("Error processing placeholder image:", error);
-          throw new Error("Failed to process placeholder image");
-        }
+        if (!response.ok) throw new Error("Failed to upload image");
+        const data = await response.json();
+        cloudinaryUrl = data.url;
       } else {
-        // If it's already a Cloudinary URL, use it as is
         cloudinaryUrl = previewImage;
       }
 
+      // 3. Save to Firestore
       const agentData: Omit<Agent, "createdAt" | "id"> = {
         name,
         ticker,
@@ -479,13 +508,13 @@ export default function CreatePage() {
         profileImage: cloudinaryUrl,
         owner: address,
         agentProfileId,
+        agentId: setupResult.id,
+        clients: socialConfig.clients,
+        secrets: socialConfig.secrets,
+        plugins
       };
 
-      // Pass the setupResult.id as agentId
-      await createAgent(constants.AGENTS_COLLECTION, name, {
-        ...agentData,
-        agentId: setupResult.id,
-      });
+      await createAgent(constants.AGENTS_COLLECTION, name, agentData);
 
       toast.dismiss();
       toast.success("AI agent created successfully!");
@@ -493,6 +522,7 @@ export default function CreatePage() {
     } catch (error: any) {
       toast.dismiss();
       toast.error(error.message || "Failed to create AI agent");
+      console.error("Error creating agent:", error);
     } finally {
       setIsSubmitting(false);
     }
@@ -884,10 +914,14 @@ export default function CreatePage() {
             <Input
               className="bg-zinc-800 border-zinc-700"
               placeholder="DISCORD_APPLICATION_ID"
+              value={discordAppId}
+              onChange={(e) => setDiscordAppId(e.target.value)}
             />
             <Input
               className="bg-zinc-800 border-zinc-700"
               placeholder="DISCORD_API_TOKEN"
+              value={discordApiToken}
+              onChange={(e) => setDiscordApiToken(e.target.value)}
             />
           </div>
         </div>
@@ -909,16 +943,22 @@ export default function CreatePage() {
             <Input
               className="bg-zinc-800 border-zinc-700"
               placeholder="TWITTER_USERNAME"
+              value={twitterUsername}
+              onChange={(e) => setTwitterUsername(e.target.value)}
             />
             <Input
               className="bg-zinc-800 border-zinc-700"
               placeholder="TWITTER_EMAIL"
               type="email"
+              value={twitterEmail}
+              onChange={(e) => setTwitterEmail(e.target.value)}
             />
             <Input
               className="bg-zinc-800 border-zinc-700"
               placeholder="TWITTER_PASSWORD"
               type="password"
+              value={twitterPassword}
+              onChange={(e) => setTwitterPassword(e.target.value)}
             />
           </div>
         </div>
@@ -940,12 +980,14 @@ export default function CreatePage() {
             <Input
               className="bg-zinc-800 border-zinc-700"
               placeholder="TELEGRAM_BOT_TOKEN"
+              value={telegramBotToken}
+              onChange={(e) => setTelegramBotToken(e.target.value)}
             />
           </div>
         </div>
       </Card>
 
-      {/* Remove the Button from Section 3 and add this after all sections */}
+      {/* Submit Button Card */}
       <Card className="bg-gradient-to-r from-pink-500 via-purple-500 to-indigo-500 p-[1px] mb-6 relative overflow-hidden group">
         <div className="relative bg-zinc-900 p-6">
           <div className="absolute inset-0 bg-gradient-to-r from-pink-500/20 via-purple-500/20 to-indigo-500/20 opacity-0 group-hover:opacity-100 transition-opacity" />
@@ -956,6 +998,7 @@ export default function CreatePage() {
             </div>
             <Button
               type="submit"
+              onClick={handleSubmit}
               className="bg-gradient-to-r from-pink-500 via-purple-500 to-indigo-500 hover:from-pink-600 hover:via-purple-600 hover:to-indigo-600 text-white px-8 transition-all duration-200 transform hover:scale-105"
               disabled={isSubmitting}
             >

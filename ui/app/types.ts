@@ -17,9 +17,12 @@ export interface Agent {
   twitter: string;
   profileImage: string;
   owner: string;
-  createdAt?: string;
-  agentId?: string;
+  agentId: string;
   agentProfileId: string;
+  createdAt?: string;
+  clients?: string[];
+  secrets?: Record<string, string>;
+  plugins?: string[];
 }
 
 export interface ChatMessage {

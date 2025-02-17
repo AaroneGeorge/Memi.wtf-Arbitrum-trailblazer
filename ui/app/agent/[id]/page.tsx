@@ -202,7 +202,7 @@ export default function AgentPage() {
     setIsTyping(true);
 
     try {
-      const response = await fetch(`http://localhost:3000/${agent.agentId}/message`, {
+      const response = await fetch(`http://localhost:3001/${agent.agentId}/message`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
