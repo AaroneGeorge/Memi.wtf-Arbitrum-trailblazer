@@ -431,7 +431,7 @@ export default function CreatePage() {
 
       // Make the API call to set up the agent
       const setupResponse = await fetch(
-        `http://localhost:3001/agents/${agentProfileId}/set`,
+        `${process.env.NEXT_PUBLIC_ELIZA_BACKEND_URL}/agents/${agentProfileId}/set`,
         {
           method: "POST",
           headers: {
