@@ -1,8 +1,14 @@
 "use client";
 
 import { useState, Dispatch, SetStateAction, useCallback } from "react";
-import { useAccount } from "wagmi";
-import { Card } from "@/components/ui/card";
+import {
+  useAccount,
+  useWriteContract,
+  useWaitForTransactionReceipt,
+} from "wagmi";
+import { getTransactionReceipt } from "@wagmi/core";
+import { guABI } from "../../contract/guABI";
+import { config } from "../../contract/config"; import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
@@ -245,7 +251,7 @@ const MessageExampleInput = ({
 };
 
 function generateUUID() {
-  return "xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx".replace(/[xy]/g, function (c) {
+  return "xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx".replace(/[xy]/g, function(c) {
     const r = (Math.random() * 16) | 0;
     const v = c === "x" ? r : (r & 0x3) | 0x8;
     return v.toString(16);
@@ -259,6 +265,21 @@ const SectionNumber = ({ number }: { number: number }) => (
   </div>
 );
 
+// Get transaction data
+const waitForReceipt = async (hash: `0x${string}`, maxAttempts = 20) => {
+  for (let i = 0; i < maxAttempts; i++) {
+    try {
+      const receipt = await getTransactionReceipt(config, { hash });
+      if (receipt) return receipt;
+    } catch (error) {
+      if (i === maxAttempts - 1) throw error;
+    }
+    // Wait 2 seconds before next attempt
+    await new Promise(resolve => setTimeout(resolve, 2000));
+  }
+  throw new Error("Transaction receipt not found after maximum attempts");
+};
+
 export default function CreatePage() {
   const router = useRouter();
   const { isConnected, address } = useAccount();
@@ -266,6 +287,8 @@ export default function CreatePage() {
     "/assets/placeholder-wimpy.jpg"
   );
   const [imageFile, setImageFile] = useState<File | null>(null);
+  const [ipfsImage, setIpfsImage] = useState<string>("");
+  const { writeContractAsync } = useWriteContract();  // contract
   const [name, setName] = useState("");
   const [ticker, setTicker] = useState("");
   const [bios, setBios] = useState<string[]>([""]);
@@ -342,7 +365,7 @@ export default function CreatePage() {
   const validateSocialIntegrations = () => {
     const clients = ["direct"];
     const secrets: Record<string, string> = {};
-    
+
     // Discord
     if (discordAppId && discordApiToken) {
       clients.push("discord");
@@ -457,6 +480,50 @@ export default function CreatePage() {
           reader.onloadend = () => resolve(reader.result as string);
           reader.readAsDataURL(imageFile);
         });
+
+        // Uploading image in Gu Factory
+        const guResponse = await fetch('https://api.gu.exchange/upload', {
+          method: 'POST',
+          body: JSON.stringify({
+            name: name,
+            image: base64Data
+          })
+        });
+        if (!guResponse.ok) {
+          const error = await guResponse.json();
+          throw new Error(error.detail || "Failed to upload image to GU");
+        }
+        const guData = await guResponse.json();
+        console.log("guData", guData, "ipfsHash", guData.ipfsHash);
+        //setIpfsImage(guData.ipfsHash);
+
+        // Smart contract
+        const imageHash = `ipfs://${guData.ipfsHash}`;
+        const guHash = await writeContractAsync({
+          address: "0x4b76208FdC0eeafA8635021b3BF1cd692a9b8B14",
+          abi: guABI,
+          functionName: "deploy",
+          args: [name, ticker, bios, imageHash],
+          value: BigInt("6000000000000000") // 0.006 ETH
+
+        });
+
+        console.log("guHash Transaction hash:", guHash);
+        // Wait for transaction receipt
+        toast.loading("Waiting for transaction confirmation...");
+        const receipt = await waitForReceipt(guHash);
+        toast.dismiss();
+        // Get the deployed contract address from the event logs
+        const deployedEvent = receipt.logs.find(log => {
+          // Assuming GuCoinDeployed is the first event in the contract
+          return log.topics[0] === guABI.find(x => x.type === 'event' && x.name === 'GuCoinDeployed')?.id;
+        });
+
+        if (!deployedEvent) {
+          throw new Error("Could not find deployed contract address in transaction logs");
+        }
+        const tokenAddress = deployedEvent.address;
+        console.log("Token Address:", tokenAddress)
 
         const response = await fetch("/api/upload", {
           method: "POST",
@@ -602,7 +669,7 @@ export default function CreatePage() {
             knowledge, and social integrations.
           </p>
         </div>
-        
+
         <div className="flex items-center justify-center gap-6 mt-6">
           <div className="flex items-center gap-2 px-4 py-2 bg-zinc-800/50 rounded-full backdrop-blur-sm">
             <div className="flex items-center gap-1 text-sm text-zinc-300">
