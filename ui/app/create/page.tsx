@@ -505,6 +505,7 @@ export default function CreatePage() {
       };
       const formattedBio = formatBio(bios, twitterUsername, telegramUsername);
       console.log("Formatted Bio:", formattedBio);
+      let tokenAddress: string
 
       // 2. Handle image upload to Cloudinary
       let cloudinaryUrl;
@@ -550,7 +551,7 @@ export default function CreatePage() {
         const receipt = await waitForReceipt(guHash);
         toast.dismiss();
         console.log("receipt:", receipt)
-        const tokenAddress = receipt.logs[0].address;
+        tokenAddress = receipt.logs[0].address;
         console.log("Token Address:", tokenAddress);
 
         const response = await fetch("/api/upload", {
@@ -606,7 +607,7 @@ export default function CreatePage() {
         const receipt = await waitForReceipt(guHash);
         toast.dismiss();
         console.log("receipt:", receipt)
-        const tokenAddress = receipt.logs[0].address;
+        tokenAddress = receipt.logs[0].address;
         console.log("Token Address:", tokenAddress);
 
         const response = await fetch("/api/upload", {
@@ -622,7 +623,40 @@ export default function CreatePage() {
         cloudinaryUrl = previewImage;
       }
 
-      // 3. Save to Firestore
+      // 3. Fetch token's details from `https://api.gu.exchange/historical`
+      // Find id by searching using token address and use the id in `https://gu.exchange/coin/[id]`
+      async function getTokenIdByAddress(tokenAddress: any) {
+        try {
+          const response = await fetch('http://api.gu.exchange/historical');
+          if (!response.ok) {
+            throw new Error(`API request failed with status: ${response.status}`);
+          }
+          const responseData = await response.json();
+          const normalizedTokenAddress = tokenAddress.toLowerCase();
+          const matchingItem = responseData.data.find(
+            (item: any) => item.token.toLowerCase() === normalizedTokenAddress
+          );
+          return matchingItem ? matchingItem.id : null;
+
+        } catch (error) {
+          console.error('Error fetching or filtering token data:', error);
+          return null;
+        }
+      }
+
+      let guCoinId;
+      // @ts-ignore
+      getTokenIdByAddress(tokenAddress)
+        .then((id: string | null) => {
+          if (id) {
+            guCoinId = id;
+            console.log(`Found token with ID: ${id}`);
+          } else {
+            console.log(`No token found with address: ${tokenAddress}`);
+          }
+        });
+
+      // 4. Save to Firestore
       const agentData: Omit<Agent, "createdAt" | "id"> = {
         name,
         ticker,
@@ -633,6 +667,7 @@ export default function CreatePage() {
         topics: topics.filter((t) => t.trim() !== ""),
         adjectives: adjectives.filter((a) => a.trim() !== ""),
         twitter: twitterUsername || "",
+        gu: guCoinId || " ",
         profileImage: cloudinaryUrl,
         owner: address,
         agentProfileId,
@@ -1123,7 +1158,7 @@ export default function CreatePage() {
                   Creating...
                 </div>
               ) : (
-                "Create Agent"
+                "Create Agent (0.006 ETH)"
               )}
             </Button>
           </div>
