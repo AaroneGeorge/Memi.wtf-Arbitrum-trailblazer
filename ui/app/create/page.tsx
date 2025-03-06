@@ -8,6 +8,7 @@ import {
 } from "wagmi";
 import { getTransactionReceipt } from "@wagmi/core";
 import { guABI } from "../../contract/guABI";
+import { simpleguABI } from "@/contract/simpleguABI";
 import { config } from "../../contract/config"; import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -495,17 +496,19 @@ export default function CreatePage() {
         }
         const guData = await guResponse.json();
         console.log("guData", guData, "ipfsHash", guData.ipfsHash);
-        //setIpfsImage(guData.ipfsHash);
+        setIpfsImage(guData.ipfsHash);
 
         // Smart contract
         const imageHash = `ipfs://${guData.ipfsHash}`;
+        //const imageHash = `ipfs://bafkreig7zmost55aziibmk2kbqeo566eolt4jgu23w3dnepb5oe37hrtoa`
         const guHash = await writeContractAsync({
-          address: "0x4b76208FdC0eeafA8635021b3BF1cd692a9b8B14",
+          //address: "0x4b76208FdC0eeafA8635021b3BF1cd692a9b8B14",
+          address: "0x215b2D682fcE0a5366E9d950F1b014c0C6c8511e", // testnet address
           abi: guABI,
           functionName: "deploy",
           args: [name, ticker, bios, imageHash],
-          value: BigInt("6000000000000000") // 0.006 ETH
-
+          //value: BigInt("6000000000000000") // 0.006 ETH
+          value: BigInt("1000000000000000") // 0.001 ETH
         });
 
         console.log("guHash Transaction hash:", guHash);
@@ -513,17 +516,9 @@ export default function CreatePage() {
         toast.loading("Waiting for transaction confirmation...");
         const receipt = await waitForReceipt(guHash);
         toast.dismiss();
-        // Get the deployed contract address from the event logs
-        const deployedEvent = receipt.logs.find(log => {
-          // Assuming GuCoinDeployed is the first event in the contract
-          return log.topics[0] === guABI.find(x => x.type === 'event' && x.name === 'GuCoinDeployed')?.id;
-        });
-
-        if (!deployedEvent) {
-          throw new Error("Could not find deployed contract address in transaction logs");
-        }
-        const tokenAddress = deployedEvent.address;
-        console.log("Token Address:", tokenAddress)
+        console.log("receipt:", receipt)
+        const tokenAddress = receipt.logs[0].address;
+        console.log("Token Address:", tokenAddress);
 
         const response = await fetch("/api/upload", {
           method: "POST",
@@ -542,6 +537,44 @@ export default function CreatePage() {
           reader.onloadend = () => resolve(reader.result as string);
           reader.readAsDataURL(blob);
         });
+
+        // Uploading image in Gu Factory
+        const guResponse = await fetch('https://api.gu.exchange/upload', {
+          method: 'POST',
+          body: JSON.stringify({
+            name: name,
+            image: base64Data
+          })
+        });
+        if (!guResponse.ok) {
+          const error = await guResponse.json();
+          throw new Error(error.detail || "Failed to upload image to GU");
+        }
+        const guData = await guResponse.json();
+        console.log("guData", guData, "ipfsHash", guData.ipfsHash);
+        setIpfsImage(guData.ipfsHash);
+
+        // Smart contract
+        const imageHash = `ipfs://${guData.ipfsHash}`;
+        //const imageHash = `ipfs://bafkreig7zmost55aziibmk2kbqeo566eolt4jgu23w3dnepb5oe37hrtoa`
+        const guHash = await writeContractAsync({
+          //address: "0x4b76208FdC0eeafA8635021b3BF1cd692a9b8B14",
+          address: "0x215b2D682fcE0a5366E9d950F1b014c0C6c8511e", // testnet address
+          abi: guABI,
+          functionName: "deploy",
+          args: [name, ticker, bios, imageHash],
+          //value: BigInt("6000000000000000") // 0.006 ETH
+          value: BigInt("1000000000000000") // 0.001 ETH
+        });
+
+        console.log("guHash Transaction hash:", guHash);
+        // Wait for transaction receipt
+        toast.loading("Waiting for transaction confirmation...");
+        const receipt = await waitForReceipt(guHash);
+        toast.dismiss();
+        console.log("receipt:", receipt)
+        const tokenAddress = receipt.logs[0].address;
+        console.log("Token Address:", tokenAddress);
 
         const response = await fetch("/api/upload", {
           method: "POST",
