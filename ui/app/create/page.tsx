@@ -473,6 +473,39 @@ export default function CreatePage() {
 
       const setupResult = await setupResponse.json();
 
+      // Telegram Bot Username
+      // Add this helper function to fetch Telegram bot details
+      const getTelegramBotDetails = async (token: string) => {
+        try {
+          const response = await fetch(`https://api.telegram.org/bot${token}/getMe`);
+          const data = await response.json();
+          if (data.ok) {
+            return data.result.username
+          }
+          return null;
+        } catch (error) {
+          console.error('Error fetching Telegram bot details:', error);
+          return null;
+        }
+      };
+      const telegramUsername = await getTelegramBotDetails(telegramBotToken)
+      console.log("telegramBotUsername:", telegramUsername, bios);
+
+      // Format bios as a single string with Twitter and Telegram links
+      const formatBio = (biosArray: any, twitterUsername: string, telegramUsername: string) => {
+        const bioText = biosArray.join(". ");
+        let socialLinks = "";
+        if (twitterUsername) {
+          socialLinks += ` [twitter]https://x.com/${twitterUsername}[/twitter]`;
+        }
+        if (telegramUsername) {
+          socialLinks += ` [telegram]https://t.me/${telegramUsername}[/telegram]`;
+        }
+        return bioText + socialLinks;
+      };
+      const formattedBio = formatBio(bios, twitterUsername, telegramUsername);
+      console.log("Formatted Bio:", formattedBio);
+
       // 2. Handle image upload to Cloudinary
       let cloudinaryUrl;
       if (imageFile) {
@@ -506,7 +539,7 @@ export default function CreatePage() {
           address: "0x215b2D682fcE0a5366E9d950F1b014c0C6c8511e", // testnet address
           abi: guABI,
           functionName: "deploy",
-          args: [name, ticker, bios, imageHash],
+          args: [name, ticker, formattedBio, imageHash],
           //value: BigInt("6000000000000000") // 0.006 ETH
           value: BigInt("1000000000000000") // 0.001 ETH
         });
@@ -562,7 +595,7 @@ export default function CreatePage() {
           address: "0x215b2D682fcE0a5366E9d950F1b014c0C6c8511e", // testnet address
           abi: guABI,
           functionName: "deploy",
-          args: [name, ticker, bios, imageHash],
+          args: [name, ticker, formattedBio, imageHash],
           //value: BigInt("6000000000000000") // 0.006 ETH
           value: BigInt("1000000000000000") // 0.001 ETH
         });
