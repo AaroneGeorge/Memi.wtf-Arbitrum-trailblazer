@@ -502,7 +502,7 @@ export default function CreatePage() {
         const imageHash = `ipfs://${guData.ipfsHash}`;
         //const imageHash = `ipfs://bafkreig7zmost55aziibmk2kbqeo566eolt4jgu23w3dnepb5oe37hrtoa`
         const guHash = await writeContractAsync({
-          //address: "0x4b76208FdC0eeafA8635021b3BF1cd692a9b8B14",
+          //address: "0x4b76208FdC0eeafA8635021b3BF1cd692a9b8B14", // mainet address
           address: "0x215b2D682fcE0a5366E9d950F1b014c0C6c8511e", // testnet address
           abi: guABI,
           functionName: "deploy",
@@ -558,7 +558,7 @@ export default function CreatePage() {
         const imageHash = `ipfs://${guData.ipfsHash}`;
         //const imageHash = `ipfs://bafkreig7zmost55aziibmk2kbqeo566eolt4jgu23w3dnepb5oe37hrtoa`
         const guHash = await writeContractAsync({
-          //address: "0x4b76208FdC0eeafA8635021b3BF1cd692a9b8B14",
+          //address: "0x4b76208FdC0eeafA8635021b3BF1cd692a9b8B14", // mainet address
           address: "0x215b2D682fcE0a5366E9d950F1b014c0C6c8511e", // testnet address
           abi: guABI,
           functionName: "deploy",
