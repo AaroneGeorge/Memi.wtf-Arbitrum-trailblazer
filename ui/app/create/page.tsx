@@ -421,7 +421,7 @@ export default function CreatePage() {
       const agentSetupData = {
         name: name,
         clients: socialConfig.clients,
-        modelProvider: "openai",
+        modelProvider: "together",
         settings: {
           secrets: socialConfig.secrets,
         },
@@ -1041,7 +1041,7 @@ export default function CreatePage() {
       <Card className="bg-zinc-900/90 backdrop-blur border-zinc-800 p-6 mb-6 relative">
         <SectionNumber number={3} />
         <h2 className="text-xl font-bold text-white mb-4">
-          Social Integrations
+          Social Integrations [OPTIONAL]
         </h2>
         <p className="text-zinc-400 mb-6">
           Connect your AI agent to various social platforms to expand its reach.
