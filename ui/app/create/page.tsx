@@ -1,8 +1,15 @@
 "use client";
 
 import { useState, Dispatch, SetStateAction, useCallback } from "react";
-import { useAccount } from "wagmi";
-import { Card } from "@/components/ui/card";
+import {
+  useAccount,
+  useWriteContract,
+  useWaitForTransactionReceipt,
+} from "wagmi";
+import { getTransactionReceipt } from "@wagmi/core";
+import { guABI } from "../../contract/guABI";
+import { simpleguABI } from "@/contract/simpleguABI";
+import { config } from "../../contract/config"; import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
@@ -245,7 +252,7 @@ const MessageExampleInput = ({
 };
 
 function generateUUID() {
-  return "xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx".replace(/[xy]/g, function (c) {
+  return "xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx".replace(/[xy]/g, function(c) {
     const r = (Math.random() * 16) | 0;
     const v = c === "x" ? r : (r & 0x3) | 0x8;
     return v.toString(16);
@@ -259,6 +266,21 @@ const SectionNumber = ({ number }: { number: number }) => (
   </div>
 );
 
+// Get transaction data
+const waitForReceipt = async (hash: `0x${string}`, maxAttempts = 20) => {
+  for (let i = 0; i < maxAttempts; i++) {
+    try {
+      const receipt = await getTransactionReceipt(config, { hash });
+      if (receipt) return receipt;
+    } catch (error) {
+      if (i === maxAttempts - 1) throw error;
+    }
+    // Wait 2 seconds before next attempt
+    await new Promise(resolve => setTimeout(resolve, 2000));
+  }
+  throw new Error("Transaction receipt not found after maximum attempts");
+};
+
 export default function CreatePage() {
   const router = useRouter();
   const { isConnected, address } = useAccount();
@@ -266,6 +288,8 @@ export default function CreatePage() {
     "/assets/placeholder-wimpy.jpg"
   );
   const [imageFile, setImageFile] = useState<File | null>(null);
+  const [ipfsImage, setIpfsImage] = useState<string>("");
+  const { writeContractAsync } = useWriteContract();  // contract
   const [name, setName] = useState("");
   const [ticker, setTicker] = useState("");
   const [bios, setBios] = useState<string[]>([""]);
@@ -342,7 +366,7 @@ export default function CreatePage() {
   const validateSocialIntegrations = () => {
     const clients = ["direct"];
     const secrets: Record<string, string> = {};
-    
+
     // Discord
     if (discordAppId && discordApiToken) {
       clients.push("discord");
@@ -449,6 +473,40 @@ export default function CreatePage() {
 
       const setupResult = await setupResponse.json();
 
+      // Telegram Bot Username
+      // Add this helper function to fetch Telegram bot details
+      const getTelegramBotDetails = async (token: string) => {
+        try {
+          const response = await fetch(`https://api.telegram.org/bot${token}/getMe`);
+          const data = await response.json();
+          if (data.ok) {
+            return data.result.username
+          }
+          return null;
+        } catch (error) {
+          console.error('Error fetching Telegram bot details:', error);
+          return null;
+        }
+      };
+      const telegramUsername = await getTelegramBotDetails(telegramBotToken)
+      console.log("telegramBotUsername:", telegramUsername, bios);
+
+      // Format bios as a single string with Twitter and Telegram links
+      const formatBio = (biosArray: any, twitterUsername: string, telegramUsername: string) => {
+        const bioText = biosArray.join(". ");
+        let socialLinks = "";
+        if (twitterUsername) {
+          socialLinks += ` [twitter]https://x.com/${twitterUsername}[/twitter]`;
+        }
+        if (telegramUsername) {
+          socialLinks += ` [telegram]https://t.me/${telegramUsername}[/telegram]`;
+        }
+        return bioText + socialLinks;
+      };
+      const formattedBio = formatBio(bios, twitterUsername, telegramUsername);
+      console.log("Formatted Bio:", formattedBio);
+      let tokenAddress: string
+
       // 2. Handle image upload to Cloudinary
       let cloudinaryUrl;
       if (imageFile) {
@@ -457,6 +515,44 @@ export default function CreatePage() {
           reader.onloadend = () => resolve(reader.result as string);
           reader.readAsDataURL(imageFile);
         });
+
+        // Uploading image in Gu Factory
+        const guResponse = await fetch('https://api.gu.exchange/upload', {
+          method: 'POST',
+          body: JSON.stringify({
+            name: name,
+            image: base64Data
+          })
+        });
+        if (!guResponse.ok) {
+          const error = await guResponse.json();
+          throw new Error(error.detail || "Failed to upload image to GU");
+        }
+        const guData = await guResponse.json();
+        console.log("guData", guData, "ipfsHash", guData.ipfsHash);
+        setIpfsImage(guData.ipfsHash);
+
+        // Smart contract
+        const imageHash = `ipfs://${guData.ipfsHash}`;
+        //const imageHash = `ipfs://bafkreig7zmost55aziibmk2kbqeo566eolt4jgu23w3dnepb5oe37hrtoa`
+        const guHash = await writeContractAsync({
+          //address: "0x4b76208FdC0eeafA8635021b3BF1cd692a9b8B14", // mainet address
+          address: "0x215b2D682fcE0a5366E9d950F1b014c0C6c8511e", // testnet address
+          abi: guABI,
+          functionName: "deploy",
+          args: [name, ticker, formattedBio, imageHash],
+          //value: BigInt("6000000000000000") // 0.006 ETH
+          value: BigInt("1000000000000000") // 0.001 ETH
+        });
+
+        console.log("guHash Transaction hash:", guHash);
+        // Wait for transaction receipt
+        toast.loading("Waiting for transaction confirmation...");
+        const receipt = await waitForReceipt(guHash);
+        toast.dismiss();
+        console.log("receipt:", receipt)
+        tokenAddress = receipt.logs[0].address;
+        console.log("Token Address:", tokenAddress);
 
         const response = await fetch("/api/upload", {
           method: "POST",
@@ -476,6 +572,44 @@ export default function CreatePage() {
           reader.readAsDataURL(blob);
         });
 
+        // Uploading image in Gu Factory
+        const guResponse = await fetch('https://api.gu.exchange/upload', {
+          method: 'POST',
+          body: JSON.stringify({
+            name: name,
+            image: base64Data
+          })
+        });
+        if (!guResponse.ok) {
+          const error = await guResponse.json();
+          throw new Error(error.detail || "Failed to upload image to GU");
+        }
+        const guData = await guResponse.json();
+        console.log("guData", guData, "ipfsHash", guData.ipfsHash);
+        setIpfsImage(guData.ipfsHash);
+
+        // Smart contract
+        const imageHash = `ipfs://${guData.ipfsHash}`;
+        //const imageHash = `ipfs://bafkreig7zmost55aziibmk2kbqeo566eolt4jgu23w3dnepb5oe37hrtoa`
+        const guHash = await writeContractAsync({
+          //address: "0x4b76208FdC0eeafA8635021b3BF1cd692a9b8B14", // mainet address
+          address: "0x215b2D682fcE0a5366E9d950F1b014c0C6c8511e", // testnet address
+          abi: guABI,
+          functionName: "deploy",
+          args: [name, ticker, formattedBio, imageHash],
+          //value: BigInt("6000000000000000") // 0.006 ETH
+          value: BigInt("1000000000000000") // 0.001 ETH
+        });
+
+        console.log("guHash Transaction hash:", guHash);
+        // Wait for transaction receipt
+        toast.loading("Waiting for transaction confirmation...");
+        const receipt = await waitForReceipt(guHash);
+        toast.dismiss();
+        console.log("receipt:", receipt)
+        tokenAddress = receipt.logs[0].address;
+        console.log("Token Address:", tokenAddress);
+
         const response = await fetch("/api/upload", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -489,7 +623,40 @@ export default function CreatePage() {
         cloudinaryUrl = previewImage;
       }
 
-      // 3. Save to Firestore
+      // 3. Fetch token's details from `https://api.gu.exchange/historical`
+      // Find id by searching using token address and use the id in `https://gu.exchange/coin/[id]`
+      async function getTokenIdByAddress(tokenAddress: any) {
+        try {
+          const response = await fetch('http://api.gu.exchange/historical');
+          if (!response.ok) {
+            throw new Error(`API request failed with status: ${response.status}`);
+          }
+          const responseData = await response.json();
+          const normalizedTokenAddress = tokenAddress.toLowerCase();
+          const matchingItem = responseData.data.find(
+            (item: any) => item.token.toLowerCase() === normalizedTokenAddress
+          );
+          return matchingItem ? matchingItem.id : null;
+
+        } catch (error) {
+          console.error('Error fetching or filtering token data:', error);
+          return null;
+        }
+      }
+
+      let guCoinId;
+      // @ts-ignore
+      getTokenIdByAddress(tokenAddress)
+        .then((id: string | null) => {
+          if (id) {
+            guCoinId = id;
+            console.log(`Found token with ID: ${id}`);
+          } else {
+            console.log(`No token found with address: ${tokenAddress}`);
+          }
+        });
+
+      // 4. Save to Firestore
       const agentData: Omit<Agent, "createdAt" | "id"> = {
         name,
         ticker,
@@ -500,6 +667,7 @@ export default function CreatePage() {
         topics: topics.filter((t) => t.trim() !== ""),
         adjectives: adjectives.filter((a) => a.trim() !== ""),
         twitter: twitterUsername || "",
+        gu: guCoinId || " ",
         profileImage: cloudinaryUrl,
         owner: address,
         agentProfileId,
@@ -602,7 +770,7 @@ export default function CreatePage() {
             knowledge, and social integrations.
           </p>
         </div>
-        
+
         <div className="flex items-center justify-center gap-6 mt-6">
           <div className="flex items-center gap-2 px-4 py-2 bg-zinc-800/50 rounded-full backdrop-blur-sm">
             <div className="flex items-center gap-1 text-sm text-zinc-300">
@@ -990,7 +1158,7 @@ export default function CreatePage() {
                   Creating...
                 </div>
               ) : (
-                "Create Agent"
+                "Create Agent (0.006 ETH)"
               )}
             </Button>
           </div>

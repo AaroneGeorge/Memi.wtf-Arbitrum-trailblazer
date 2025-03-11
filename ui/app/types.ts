@@ -15,6 +15,7 @@ export interface Agent {
   topics: string[];
   adjectives: string[];
   twitter: string;
+  gu: string;
   profileImage: string;
   owner: string;
   agentId: string;
