@@ -584,7 +584,7 @@ export default function AgentPage() {
           <h3 className="text-lg font-semibold text-white mb-2">Image Generation</h3>
           <p className="text-sm text-zinc-400 mb-4">Enable AI image generation</p>
           <span className="text-red-500 text-sm flex items-center gap-1">
-            <Lock className="w-4 h-4" /> Locked
+            <Lock className="w-4 h-4" /> Coming Soon
           </span>
         </Card>
 
@@ -606,7 +606,7 @@ export default function AgentPage() {
           <h3 className="text-lg font-semibold text-white mb-2">Training</h3>
           <p className="text-sm text-zinc-400 mb-4">Customize agent knowledge</p>
           <span className="text-red-500 text-sm flex items-center gap-1">
-            <Lock className="w-4 h-4" /> Locked
+            <Lock className="w-4 h-4" /> Coming Soon
           </span>
         </Card>
       </div>

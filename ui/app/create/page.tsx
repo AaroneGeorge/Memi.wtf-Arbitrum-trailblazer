@@ -382,6 +382,7 @@ export default function CreatePage() {
 
     // Twitter
     if (twitterUsername && twitterPassword && twitterEmail) {
+      clients.push("twitter");
       secrets.TWITTER_USERNAME = twitterUsername;
       secrets.TWITTER_PASSWORD = twitterPassword;
       secrets.TWITTER_EMAIL = twitterEmail;
@@ -410,9 +411,21 @@ export default function CreatePage() {
       setIsSubmitting(true);
       toast.loading("Creating your AI agent...");
 
-      const plugins = ["@elizaos/plugin-web-search"];
+      // Initialize plugins with web search
+      const plugins = ["@elizaos-plugins/plugin-web-search"];
+      
+      // Add social platform plugins based on user configuration
       if (socialConfig.secrets.TWITTER_USERNAME) {
-        plugins.push("@elizaos/plugin-twitter");
+        plugins.push("@elizaos-plugins/client-twitter");
+        plugins.push("@elizaos-plugins/plugin-twitter");
+      }
+      
+      if (discordAppId && discordApiToken) {
+        plugins.push("@elizaos-plugins/client-discord");
+      }
+      
+      if (telegramBotToken) {
+        plugins.push("@elizaos-plugins/client-telegram");
       }
 
       const agentProfileId = generateUUID();
