@@ -614,7 +614,7 @@ export default function AgentPage() {
           <h3 className="text-lg font-semibold text-white mb-2">Voice Integration</h3>
           <p className="text-sm text-zinc-400 mb-4">Enable voice interactions</p>
           <span className="text-red-500 text-sm flex items-center gap-1">
-            <Lock className="w-4 h-4" /> Locked
+            <Lock className="w-4 h-4" /> Coming Soon
           </span>
         </Card>
 
