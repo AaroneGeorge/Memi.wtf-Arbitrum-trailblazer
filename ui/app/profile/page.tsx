@@ -9,7 +9,10 @@ import { Input } from "@/components/ui/input";
 import WalletConnectButton from "@/components/wallet-connect-button";
 import Squares from "@/components/Squares";
 import { testUsers } from "@/lib/test-data";
-import { createOrUpdateUserProfile, getUserProfile } from "@/lib/firebase/firestore";
+import {
+  createOrUpdateUserProfile,
+  getUserProfile,
+} from "@/lib/firebase/firestore";
 
 // Add new interface for user data
 interface UserData {
@@ -35,17 +38,17 @@ export default function ProfilePage() {
         try {
           // Try to get user data from Firebase
           const userProfile = await getUserProfile(address);
-          
+
           if (userProfile) {
             // User exists in Firebase
             setUserData({
-              username: userProfile.username || '',
+              username: userProfile.username || "",
               wallet_address: userProfile.wallet_address,
-              network: userProfile.network || 'Arbitrum',
+              network: userProfile.network || "Arbitrum",
               favourite_agents: userProfile.favourite_agents || [],
-              created_date: userProfile.created_date
+              created_date: userProfile.created_date,
             });
-            setEditingUsername(userProfile.username || '');
+            setEditingUsername(userProfile.username || "");
           } else {
             // Fallback to test data or create a new user object
             const user = testUsers[address as keyof typeof testUsers];
@@ -55,12 +58,12 @@ export default function ProfilePage() {
             } else {
               // Create a minimal user object
               setUserData({
-                username: '',
+                username: "",
                 wallet_address: address,
-                network: 'Arbitrum',
-                favourite_agents: []
+                network: "Arbitrum",
+                favourite_agents: [],
               });
-              setEditingUsername('');
+              setEditingUsername("");
             }
           }
         } catch (error) {
@@ -76,19 +79,19 @@ export default function ProfilePage() {
 
   const saveUsername = async () => {
     if (!userData || !address) return;
-    
+
     setIsSaving(true);
     try {
       // Save to Firebase
       await createOrUpdateUserProfile(address, {
         username: editingUsername,
-        wallet_address: address
+        wallet_address: address,
       });
-      
+
       // Update local state
       setUserData({
         ...userData,
-        username: editingUsername
+        username: editingUsername,
       });
       setIsEditing(false);
     } catch (error) {
@@ -106,11 +109,11 @@ export default function ProfilePage() {
           const userProfile = await getUserProfile(address);
           if (userProfile) {
             setUserData({
-              username: userProfile.username || '',
+              username: userProfile.username || "",
               wallet_address: userProfile.wallet_address,
-              network: userProfile.network || 'Arbitrum',
+              network: userProfile.network || "Arbitrum",
               favourite_agents: userProfile.favourite_agents || [],
-              created_date: userProfile.created_date
+              created_date: userProfile.created_date,
             });
           }
         } catch (error) {
@@ -250,15 +253,6 @@ export default function ProfilePage() {
                   {userData?.created_date
                     ? new Date(userData.created_date).toLocaleDateString()
                     : "N/A"}
-                </p>
-              </div>
-
-              <div className="space-y-2">
-                <label className="text-sm text-zinc-400">Favorite Agents</label>
-                <p className="text-zinc-100">
-                  {userData?.favourite_agents?.length
-                    ? userData.favourite_agents.join(", ")
-                    : "No favorite agents yet"}
                 </p>
               </div>
             </CardContent>
