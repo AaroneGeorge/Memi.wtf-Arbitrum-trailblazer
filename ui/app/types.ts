@@ -43,11 +43,13 @@ export interface ChatHistory {
 export interface AgentCardProps {
   agentProfileId: string;
   name: string;
-  description: string;
+  description?: string;
   image: string;
-  bio: string | string[];
+  bio?: string | string[];
   className?: string;
   imageClassName?: string;
+  owner?: string;
+  creatorName?: string;
 }
 
 declare global {

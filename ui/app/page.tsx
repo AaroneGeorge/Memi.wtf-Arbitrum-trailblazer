@@ -8,9 +8,10 @@ import { Search } from "lucide-react";
 import { getImageSrc } from "@/lib/utils";
 import Squares from "@/components/Squares";
 import TrueFocus from "@/components/TrueFocus";
-import { listDocuments } from "@/lib/firebase/firestore";
+import { listDocuments, getUserProfiles } from "@/lib/firebase/firestore";
 import constants from "@/lib/constants";
 import type { Agent } from "./types";
+import type { UserProfile } from "@/lib/firebase/firestore";
 
 const truncateAddress = (address: string) => {
   if (!address) return "";
@@ -21,6 +22,7 @@ export default function Home() {
   const [searchQuery, setSearchQuery] = useState("");
   const [agents, setAgents] = useState<Agent[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [userProfiles, setUserProfiles] = useState<Record<string, UserProfile>>({});
 
   useEffect(() => {
     const fetchAgents = async () => {
@@ -34,7 +36,17 @@ export default function Home() {
             const dateB = new Date(b.createdAt || 0).getTime();
             return dateB - dateA;
           });
+        
         setAgents(sortedAgents);
+        
+        // Get unique wallet addresses from agents
+        const ownerAddresses = [...new Set(sortedAgents.map(agent => agent.owner))].filter(Boolean);
+        
+        // Fetch user profiles for all agent owners
+        if (ownerAddresses.length > 0) {
+          const profiles = await getUserProfiles(ownerAddresses);
+          setUserProfiles(profiles);
+        }
       } catch (error) {
         console.error("Error fetching agents:", error);
       } finally {
@@ -44,6 +56,17 @@ export default function Home() {
 
     fetchAgents();
   }, []);
+
+  // Function to get creator display name (username or address)
+  const getCreatorName = (walletAddress: string) => {
+    if (!walletAddress) return "Unknown";
+    
+    const profile = userProfiles[walletAddress];
+    if (profile && profile.username) {
+      return profile.username;
+    }
+    return truncateAddress(walletAddress);
+  };
 
   const filteredAgents = agents.filter(
     (agent) =>
@@ -113,11 +136,13 @@ export default function Home() {
                   key={agent.name}
                   agentProfileId={agent.agentProfileId}
                   name={agent.name}
-                  description={`Created by ${truncateAddress(agent.owner)}`}
+                  description={`Created by ${getCreatorName(agent.owner)}`}
                   image={getImageSrc(agent.profileImage)}
                   bio={Array.isArray(agent.bio) ? agent.bio[0] : agent.bio}
                   className="h-[200px]"
                   imageClassName="rounded-full"
+                  owner={agent.owner}
+                  creatorName={getCreatorName(agent.owner)}
                 />
               ))}
             </div>

@@ -11,7 +11,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { getImageSrc } from "@/lib/utils";
 import TradingViewWidget from "@/components/TradingViewWidget";
-import { getAgentDetails } from "@/lib/firebase/firestore";
+import { getAgentDetails, getUserProfile } from "@/lib/firebase/firestore";
 import { Agent, ChatMessage } from "@/app/types";
 import WalletConnectButton from "@/components/wallet-connect-button";
 import { TypingAnimation } from "@/components/typing-animation";
@@ -239,6 +239,7 @@ export default function AgentPage() {
   const [walletAddress, setWalletAddress] = useState<string>("");
   const [isTyping, setIsTyping] = useState(false);
   const [socialLinks, setSocialLinks] = useState<Array<{ type: string; url: string; enabled: boolean; username?: string }>>([]);
+  const [ownerUsername, setOwnerUsername] = useState<string | null>(null);
 
   useEffect(() => {
     const fetchAgentAndSocials = async () => {
@@ -249,6 +250,14 @@ export default function AgentPage() {
             setAgent(agentData);
             const links = await getSocialLinks(agentData);
             setSocialLinks(links);
+            
+            // Fetch owner's username if available
+            if (agentData.owner) {
+              const ownerProfile = await getUserProfile(agentData.owner);
+              if (ownerProfile && ownerProfile.username) {
+                setOwnerUsername(ownerProfile.username);
+              }
+            }
           } else {
             setError("Agent not found");
           }
@@ -369,6 +378,19 @@ export default function AgentPage() {
     }
   }, [messages, isTyping]);
 
+  // Function to get creator display name (username or truncated address)
+  const getCreatorName = () => {
+    if (!agent || !agent.owner) return "Unknown";
+    
+    if (ownerUsername) {
+      return ownerUsername;
+    }
+    
+    // Truncate wallet address if no username
+    const address = agent.owner;
+    return address;
+  };
+
   if (loading) {
     return (
       <div className="container mx-auto p-6 flex items-center justify-center">
@@ -473,7 +495,7 @@ export default function AgentPage() {
                     Chat with {agent.name}
                   </h3>
                   <p className="text-xs text-zinc-400">
-                    Created by {agent.owner}
+                    Created by {getCreatorName()}
                   </p>
                 </div>
               </div>

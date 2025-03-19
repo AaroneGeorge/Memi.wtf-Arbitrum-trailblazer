@@ -9,6 +9,7 @@ import { Input } from "@/components/ui/input";
 import WalletConnectButton from "@/components/wallet-connect-button";
 import Squares from "@/components/Squares";
 import { testUsers } from "@/lib/test-data";
+import { createOrUpdateUserProfile, getUserProfile } from "@/lib/firebase/firestore";
 
 // Add new interface for user data
 interface UserData {
@@ -22,32 +23,104 @@ interface UserData {
 export default function ProfilePage() {
   const { address, isConnected } = useAccount();
   const [isEditing, setIsEditing] = useState(false);
-  const [userData, setUserData] = useState<typeof testUsers[keyof typeof testUsers] | null>(null);
+  const [userData, setUserData] = useState<UserData | null>(null);
   const [editingUsername, setEditingUsername] = useState("");
   const [isLoading, setIsLoading] = useState(true);
+  const [isSaving, setIsSaving] = useState(false);
 
   useEffect(() => {
-    if (isConnected && address) {
-      // Get user data from test data
-      const user = testUsers[address as keyof typeof testUsers];
-      if (user) {
-        setUserData(user);
-        setEditingUsername(user.username);
+    const fetchUserData = async () => {
+      if (isConnected && address) {
+        setIsLoading(true);
+        try {
+          // Try to get user data from Firebase
+          const userProfile = await getUserProfile(address);
+          
+          if (userProfile) {
+            // User exists in Firebase
+            setUserData({
+              username: userProfile.username || '',
+              wallet_address: userProfile.wallet_address,
+              network: userProfile.network || 'Arbitrum',
+              favourite_agents: userProfile.favourite_agents || [],
+              created_date: userProfile.created_date
+            });
+            setEditingUsername(userProfile.username || '');
+          } else {
+            // Fallback to test data or create a new user object
+            const user = testUsers[address as keyof typeof testUsers];
+            if (user) {
+              setUserData(user);
+              setEditingUsername(user.username);
+            } else {
+              // Create a minimal user object
+              setUserData({
+                username: '',
+                wallet_address: address,
+                network: 'Arbitrum',
+                favourite_agents: []
+              });
+              setEditingUsername('');
+            }
+          }
+        } catch (error) {
+          console.error("Error fetching user data:", error);
+        } finally {
+          setIsLoading(false);
+        }
       }
-      setIsLoading(false);
-    }
+    };
+
+    fetchUserData();
   }, [isConnected, address]);
 
-  const saveUsername = () => {
-    if (!userData) return;
+  const saveUsername = async () => {
+    if (!userData || !address) return;
     
-    // Simulate saving
-    setUserData({
-      ...userData,
-      username: editingUsername
-    });
-    setIsEditing(false);
+    setIsSaving(true);
+    try {
+      // Save to Firebase
+      await createOrUpdateUserProfile(address, {
+        username: editingUsername,
+        wallet_address: address
+      });
+      
+      // Update local state
+      setUserData({
+        ...userData,
+        username: editingUsername
+      });
+      setIsEditing(false);
+    } catch (error) {
+      console.error("Error saving username:", error);
+    } finally {
+      setIsSaving(false);
+    }
   };
+
+  // Effect to refresh user data after saving
+  useEffect(() => {
+    const refreshUserData = async () => {
+      if (!isSaving && !isEditing && address) {
+        try {
+          const userProfile = await getUserProfile(address);
+          if (userProfile) {
+            setUserData({
+              username: userProfile.username || '',
+              wallet_address: userProfile.wallet_address,
+              network: userProfile.network || 'Arbitrum',
+              favourite_agents: userProfile.favourite_agents || [],
+              created_date: userProfile.created_date
+            });
+          }
+        } catch (error) {
+          console.error("Error refreshing user data:", error);
+        }
+      }
+    };
+
+    refreshUserData();
+  }, [isSaving, isEditing, address]);
 
   const copyAddress = () => {
     if (address) {
@@ -64,6 +137,7 @@ export default function ProfilePage() {
     setEditingUsername(userData?.username || "");
     setIsEditing(false);
   };
+
   if (!isConnected) {
     return (
       <div className="relative min-h-screen">
@@ -138,20 +212,27 @@ export default function ProfilePage() {
                       onChange={(e) => setEditingUsername(e.target.value)}
                       className="bg-zinc-900 border-zinc-800 text-zinc-100"
                       placeholder="Enter username"
+                      disabled={isSaving}
                     />
                     <Button
                       variant="ghost"
                       size="icon"
                       className="h-8 w-8 text-green-500 hover:text-green-400"
                       onClick={saveUsername}
+                      disabled={isSaving}
                     >
-                      <Check className="h-4 w-4" />
+                      {isSaving ? (
+                        <div className="h-4 w-4 animate-spin rounded-full border-b-2 border-green-500"></div>
+                      ) : (
+                        <Check className="h-4 w-4" />
+                      )}
                     </Button>
                     <Button
                       variant="ghost"
                       size="icon"
                       className="h-8 w-8 text-red-500 hover:text-red-400"
                       onClick={cancelEditing}
+                      disabled={isSaving}
                     >
                       <X className="h-4 w-4" />
                     </Button>

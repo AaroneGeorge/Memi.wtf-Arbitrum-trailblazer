@@ -18,6 +18,8 @@ export function AgentCard({
   bio,
   className = "",
   imageClassName = "",
+  owner,
+  creatorName,
 }: AgentCardProps) {
   const router = useRouter();
   const { favorites, toggleFavorite } = useFavorites();
@@ -28,6 +30,9 @@ export function AgentCard({
     : typeof bio === "string"
     ? bio
     : "No bio available";
+
+  // Format the description to show "Created by username" or "Created by wallet address"
+  const formattedDescription = description || (creatorName ? `Created by ${creatorName}` : owner ? `Created by ${owner.slice(0, 6)}...${owner.slice(-4)}` : "Unknown creator");
 
   const handleCardClick = () => {
     router.push(`/agent/${agentProfileId}`);
@@ -58,7 +63,7 @@ export function AgentCard({
             <h3 className="font-semibold text-white truncate text-lg">
               {name}
             </h3>
-            <p className="text-sm text-zinc-400 truncate">{description}</p>
+            <p className="text-sm text-zinc-400 truncate">{formattedDescription}</p>
           </div>
           <Button
             variant="ghost"

@@ -185,4 +185,79 @@ export const getAgentDetails = async (agentProfileId: string): Promise<Agent | n
     console.error("Error fetching agent details:", error);
     throw error;
   }
+};
+
+// New interface for UserProfile
+export interface UserProfile {
+  username: string;
+  wallet_address: string;
+  network?: string;
+  favourite_agents?: string[];
+  created_date?: string;
+}
+
+// Create or update a user profile
+export const createOrUpdateUserProfile = async (wallet_address: string, userData: Partial<UserProfile>) => {
+  try {
+    const userRef = doc(db, constants.USERS_COLLECTION || 'users', wallet_address);
+    const userSnap = await getDoc(userRef);
+    
+    if (userSnap.exists()) {
+      // Update existing user
+      await updateDoc(userRef, {
+        ...userData,
+        updatedAt: new Date().toISOString()
+      });
+    } else {
+      // Create new user
+      await setDoc(userRef, {
+        wallet_address,
+        ...userData,
+        created_date: new Date().toISOString(),
+        updatedAt: new Date().toISOString()
+      });
+    }
+    return wallet_address;
+  } catch (error) {
+    console.error("Error creating/updating user profile:", error);
+    throw error;
+  }
+};
+
+// Get a user profile by wallet address
+export const getUserProfile = async (wallet_address: string): Promise<UserProfile | null> => {
+  try {
+    const userRef = doc(db, constants.USERS_COLLECTION || 'users', wallet_address);
+    const userSnap = await getDoc(userRef);
+    
+    if (userSnap.exists()) {
+      return userSnap.data() as UserProfile;
+    }
+    return null;
+  } catch (error) {
+    console.error("Error fetching user profile:", error);
+    throw error;
+  }
+};
+
+// Get multiple user profiles by wallet addresses
+export const getUserProfiles = async (wallet_addresses: string[]): Promise<Record<string, UserProfile>> => {
+  try {
+    const result: Record<string, UserProfile> = {};
+    
+    // Use Promise.all to fetch all profiles in parallel
+    await Promise.all(
+      wallet_addresses.map(async (address) => {
+        const profile = await getUserProfile(address);
+        if (profile) {
+          result[address] = profile;
+        }
+      })
+    );
+    
+    return result;
+  } catch (error) {
+    console.error("Error fetching multiple user profiles:", error);
+    throw error;
+  }
 }; 
