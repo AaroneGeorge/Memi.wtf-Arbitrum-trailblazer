@@ -260,4 +260,99 @@ export const getUserProfiles = async (wallet_addresses: string[]): Promise<Recor
     console.error("Error fetching multiple user profiles:", error);
     throw error;
   }
+};
+
+// Add/remove favorite agent for a user
+export const toggleFavoriteAgent = async (
+  wallet_address: string, 
+  agentProfileId: string
+): Promise<{ isFavorite: boolean }> => {
+  try {
+    const userRef = doc(db, constants.USERS_COLLECTION || 'users', wallet_address);
+    const userSnap = await getDoc(userRef);
+    
+    if (userSnap.exists()) {
+      const userData = userSnap.data();
+      const currentFavorites = userData.favourite_agents || [];
+      
+      const isFavorite = currentFavorites.includes(agentProfileId);
+      let updatedFavorites;
+      
+      if (isFavorite) {
+        // Remove from favorites
+        updatedFavorites = currentFavorites.filter((id: string) => id !== agentProfileId);
+      } else {
+        // Add to favorites
+        updatedFavorites = [...currentFavorites, agentProfileId];
+      }
+      
+      // Update user document
+      await updateDoc(userRef, {
+        favourite_agents: updatedFavorites,
+        updatedAt: new Date().toISOString()
+      });
+      
+      return { isFavorite: !isFavorite };
+    } else {
+      // Create new user with favorite agent
+      await setDoc(userRef, {
+        wallet_address,
+        favourite_agents: [agentProfileId],
+        created_date: new Date().toISOString(),
+        updatedAt: new Date().toISOString()
+      });
+      
+      return { isFavorite: true };
+    }
+  } catch (error) {
+    console.error("Error toggling favorite agent:", error);
+    throw error;
+  }
+};
+
+// Get favorite agents for a user
+export const getFavoriteAgents = async (wallet_address: string): Promise<string[]> => {
+  try {
+    const userRef = doc(db, constants.USERS_COLLECTION || 'users', wallet_address);
+    const userSnap = await getDoc(userRef);
+    
+    if (userSnap.exists()) {
+      const userData = userSnap.data();
+      return userData.favourite_agents || [];
+    }
+    return [];
+  } catch (error) {
+    console.error("Error getting favorite agents:", error);
+    throw error;
+  }
+};
+
+// Get detailed agent info for a list of agent profile IDs
+export const getAgentsByProfileIds = async (agentProfileIds: string[]): Promise<Agent[]> => {
+  if (!agentProfileIds.length) return [];
+  
+  try {
+    const agents: Agent[] = [];
+    const agentsCollection = collection(db, constants.AGENTS_COLLECTION);
+    
+    // Use Promise.all to fetch all agents in parallel
+    await Promise.all(
+      agentProfileIds.map(async (profileId) => {
+        const q = query(agentsCollection, where("data.agentProfileId", "==", profileId));
+        const querySnapshot = await getDocs(q);
+        
+        if (!querySnapshot.empty) {
+          const agentData = await getAgentDetails(profileId);
+          if (agentData) {
+            agents.push(agentData);
+          }
+        }
+      })
+    );
+    
+    return agents;
+  } catch (error) {
+    console.error("Error fetching agents by profile IDs:", error);
+    throw error;
+  }
 }; 

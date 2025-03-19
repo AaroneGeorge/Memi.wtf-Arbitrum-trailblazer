@@ -1,54 +1,79 @@
 "use client";
 
-import { createContext, useContext, useState, useEffect } from "react";
-import { useAccount } from 'wagmi';
-import { testUsers } from '@/lib/test-data';
+import { createContext, useContext, useState, useEffect, ReactNode } from "react";
+import { useAccount } from "wagmi";
+import { getFavoriteAgents, toggleFavoriteAgent } from "@/lib/firebase/firestore";
 
-type FavoritesContextType = {
+interface FavoritesContextType {
   favorites: string[];
-  toggleFavorite: (id: string) => void;
-  isFavorite: (id: string) => boolean;
-};
+  toggleFavorite: (agentId: string) => Promise<void>;
+  isFavorite: (agentId: string) => boolean;
+  loading: boolean;
+}
 
-const FavoritesContext = createContext<FavoritesContextType | undefined>(
-  undefined
-);
+const FavoritesContext = createContext<FavoritesContextType>({
+  favorites: [],
+  toggleFavorite: async () => {},
+  isFavorite: () => false,
+  loading: true
+});
 
-export function FavoritesProvider({ children }: { children: React.ReactNode }) {
+export const useFavorites = () => useContext(FavoritesContext);
+
+export const FavoritesProvider = ({ children }: { children: ReactNode }) => {
   const [favorites, setFavorites] = useState<string[]>([]);
-  const { address } = useAccount();
+  const [loading, setLoading] = useState(true);
+  const { address, isConnected } = useAccount();
 
+  // Load favorites from Firebase when wallet connects
   useEffect(() => {
-    if (address) {
-      // Use test data instead of API call
-      const testUser = testUsers[address as keyof typeof testUsers];
-      setFavorites(testUser?.favourite_agents || []);
-    } else {
-      setFavorites([]);
-    }
-  }, [address]);
+    const loadFavorites = async () => {
+      setLoading(true);
+      try {
+        if (isConnected && address) {
+          const userFavorites = await getFavoriteAgents(address);
+          setFavorites(userFavorites);
+        } else {
+          setFavorites([]);
+        }
+      } catch (error) {
+        console.error("Error loading favorites:", error);
+        setFavorites([]);
+      } finally {
+        setLoading(false);
+      }
+    };
 
-  const toggleFavorite = (id: string) => {
-    setFavorites(prev => 
-      prev.includes(id) 
-        ? prev.filter(fav => fav !== id)
-        : [...prev, id]
-    );
+    loadFavorites();
+  }, [address, isConnected]);
+
+  const toggleFavorite = async (agentId: string) => {
+    if (!isConnected || !address) {
+      console.log("Wallet not connected. Cannot toggle favorite.");
+      return;
+    }
+
+    try {
+      const { isFavorite } = await toggleFavoriteAgent(address, agentId);
+      
+      // Update local state based on the toggle result
+      if (isFavorite) {
+        setFavorites(prev => [...prev, agentId]);
+      } else {
+        setFavorites(prev => prev.filter(id => id !== agentId));
+      }
+    } catch (error) {
+      console.error("Error toggling favorite:", error);
+    }
   };
 
-  const isFavorite = (id: string) => favorites.includes(id);
+  const isFavorite = (agentId: string) => {
+    return favorites.includes(agentId);
+  };
 
   return (
-    <FavoritesContext.Provider value={{ favorites, toggleFavorite, isFavorite }}>
+    <FavoritesContext.Provider value={{ favorites, toggleFavorite, isFavorite, loading }}>
       {children}
     </FavoritesContext.Provider>
   );
-}
-
-export function useFavorites() {
-  const context = useContext(FavoritesContext);
-  if (context === undefined) {
-    throw new Error("useFavorites must be used within a FavoritesProvider");
-  }
-  return context;
-}
+};

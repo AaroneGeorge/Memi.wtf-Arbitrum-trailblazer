@@ -22,7 +22,10 @@ export function AgentCard({
   creatorName,
 }: AgentCardProps) {
   const router = useRouter();
-  const { favorites, toggleFavorite } = useFavorites();
+  const { favorites, toggleFavorite, isFavorite } = useFavorites();
+  
+  // Check if this agent is favorited
+  const isFavorited = isFavorite ? isFavorite(agentProfileId) : favorites.includes(agentProfileId);
 
   // Handle bio formatting
   const formattedBio: ReactNode = Array.isArray(bio)
@@ -68,17 +71,23 @@ export function AgentCard({
           <Button
             variant="ghost"
             size="icon"
-            className="text-zinc-400 hover:text-pink-500 transition-colors"
+            className={cn(
+              "transition-colors",
+              isFavorited 
+                ? "text-pink-500 hover:text-pink-400" 
+                : "text-zinc-400 hover:text-pink-500"
+            )}
             onClick={(e) => {
               e.stopPropagation();
               toggleFavorite(agentProfileId);
             }}
+            title={isFavorited ? "Remove from favorites" : "Add to favorites"}
           >
             <Heart
               className={cn(
                 "h-4 w-4 transition-all",
-                favorites.includes(agentProfileId)
-                  ? "fill-current text-pink-500"
+                isFavorited 
+                  ? "fill-current animate-pulse" // Add animation for filled heart
                   : "group-hover:text-pink-500/50"
               )}
             />
@@ -89,14 +98,22 @@ export function AgentCard({
         <p className="text-sm text-zinc-400 line-clamp-2 group-hover:text-zinc-300 transition-colors">
           {formattedBio}
         </p>
-        <div className="mt-4 flex justify-end">
-          <Button
-            variant="ghost"
-            size="sm"
-            className="text-zinc-400 hover:text-pink-500 group-hover:text-zinc-300 transition-colors text-xs"
-          >
-            Chat Now →
-          </Button>
+        <div className="mt-4 flex justify-between items-center">
+          {/* Show a small label for favorited agents */}
+          {isFavorited && (
+            <span className="text-xs text-pink-500 flex items-center">
+              <Heart className="h-3 w-3 fill-current mr-1" /> Favorited
+            </span>
+          )}
+          <div className={isFavorited ? "ml-auto" : ""}>
+            <Button
+              variant="ghost"
+              size="sm"
+              className="text-zinc-400 hover:text-pink-500 group-hover:text-zinc-300 transition-colors text-xs"
+            >
+              Chat Now →
+            </Button>
+          </div>
         </div>
       </CardContent>
     </Card>
