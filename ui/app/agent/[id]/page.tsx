@@ -15,6 +15,7 @@ import { getAgentDetails, getUserProfile } from "@/lib/firebase/firestore";
 import { Agent, ChatMessage } from "@/app/types";
 import WalletConnectButton from "@/components/wallet-connect-button";
 import { TypingAnimation } from "@/components/typing-animation";
+import { useAccount } from "wagmi";
 
 interface AgentResponse {
   user?: string;
@@ -236,7 +237,7 @@ export default function AgentPage() {
   const [error, setError] = useState<string | null>(null);
   const chatContainerRef = useRef<HTMLDivElement>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [walletAddress, setWalletAddress] = useState<string>("");
+  const { address, isConnected } = useAccount();
   const [isTyping, setIsTyping] = useState(false);
   const [socialLinks, setSocialLinks] = useState<Array<{ type: string; url: string; enabled: boolean; username?: string }>>([]);
   const [ownerUsername, setOwnerUsername] = useState<string | null>(null);
@@ -273,30 +274,11 @@ export default function AgentPage() {
     fetchAgentAndSocials();
   }, [id]);
 
-  useEffect(() => {
-    if (typeof window !== 'undefined' && window.ethereum) {
-      window.ethereum.request({ method: 'eth_accounts' })
-        .then((accounts: string[]) => {
-          if (accounts.length > 0) {
-            setWalletAddress(accounts[0]);
-          }
-        });
-
-      window.ethereum.on('accountsChanged', function(accounts: string[]) {
-        if (accounts.length > 0) {
-          setWalletAddress(accounts[0]);
-        } else {
-          setWalletAddress("");
-        }
-      });
-    }
-  }, []);
-
   const handleSendMessage = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!message.trim() || !agent || isSubmitting) return;
 
-    if (!walletAddress) {
+    if (!isConnected) {
       setError("Please connect your wallet first");
       return;
     }
@@ -320,7 +302,7 @@ export default function AgentPage() {
         },
         body: JSON.stringify({
           text: message,
-          roomId: walletAddress,
+          roomId: address,
         }),
       });
 
@@ -516,17 +498,17 @@ export default function AgentPage() {
             >
               <div className="flex gap-2">
                 <Input
-                  placeholder={walletAddress ? "Type a message..." : "Connect wallet to chat..."}
+                  placeholder={address ? "Type a message..." : "Connect wallet to chat..."}
                   value={message}
                   onChange={(e) => setMessage(e.target.value)}
                   className="bg-zinc-800 border-zinc-700"
-                  disabled={isSubmitting || !walletAddress}
+                  disabled={isSubmitting || !address}
                 />
                 <Button
                   type="submit"
                   size="icon"
                   className="bg-pink-600 hover:bg-pink-700"
-                  disabled={isSubmitting || !walletAddress}
+                  disabled={isSubmitting || !address}
                 >
                   <Send className="h-4 w-4" />
                 </Button>
