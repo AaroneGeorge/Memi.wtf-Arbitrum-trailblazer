@@ -413,17 +413,17 @@ export default function CreatePage() {
 
       // Initialize plugins with web search
       const plugins = ["@elizaos-plugins/plugin-web-search"];
-      
+
       // Add social platform plugins based on user configuration
       if (socialConfig.secrets.TWITTER_USERNAME) {
         plugins.push("@elizaos-plugins/client-twitter");
         plugins.push("@elizaos-plugins/plugin-twitter");
       }
-      
+
       if (discordAppId && discordApiToken) {
         plugins.push("@elizaos-plugins/client-discord");
       }
-      
+
       if (telegramBotToken) {
         plugins.push("@elizaos-plugins/client-telegram");
       }
@@ -549,13 +549,13 @@ export default function CreatePage() {
         const imageHash = `ipfs://${guData.ipfsHash}`;
         //const imageHash = `ipfs://bafkreig7zmost55aziibmk2kbqeo566eolt4jgu23w3dnepb5oe37hrtoa`
         const guHash = await writeContractAsync({
-          //address: "0x4b76208FdC0eeafA8635021b3BF1cd692a9b8B14", // mainet address
-          address: "0x215b2D682fcE0a5366E9d950F1b014c0C6c8511e", // testnet address
+          address: "0x4b76208FdC0eeafA8635021b3BF1cd692a9b8B14", // mainet address
+          //address: "0x215b2D682fcE0a5366E9d950F1b014c0C6c8511e", // arbitrum sepolia testnet address
           abi: guABI,
           functionName: "deploy",
           args: [name, ticker, formattedBio, imageHash],
-          //value: BigInt("6000000000000000") // 0.006 ETH
-          value: BigInt("1000000000000000") // 0.001 ETH
+          value: BigInt("6000000000000000") // 0.006 ETH Mainnet
+          //value: BigInt("1000000000000000") // 0.001 ETH Testnet
         });
 
         console.log("guHash Transaction hash:", guHash);
@@ -605,13 +605,13 @@ export default function CreatePage() {
         const imageHash = `ipfs://${guData.ipfsHash}`;
         //const imageHash = `ipfs://bafkreig7zmost55aziibmk2kbqeo566eolt4jgu23w3dnepb5oe37hrtoa`
         const guHash = await writeContractAsync({
-          //address: "0x4b76208FdC0eeafA8635021b3BF1cd692a9b8B14", // mainet address
-          address: "0x215b2D682fcE0a5366E9d950F1b014c0C6c8511e", // testnet address
+          address: "0x4b76208FdC0eeafA8635021b3BF1cd692a9b8B14", // mainet address
+          //address: "0x215b2D682fcE0a5366E9d950F1b014c0C6c8511e", // arbitrum sepolia testnet address
           abi: guABI,
           functionName: "deploy",
           args: [name, ticker, formattedBio, imageHash],
-          //value: BigInt("6000000000000000") // 0.006 ETH
-          value: BigInt("1000000000000000") // 0.001 ETH
+          value: BigInt("6000000000000000") // 0.006 ETH mainet
+          //value: BigInt("1000000000000000") // 0.001 ETH testnet
         });
 
         console.log("guHash Transaction hash:", guHash);
