@@ -320,7 +320,7 @@ export default function AgentPage() {
         },
         body: JSON.stringify({
           text: message,
-          userId: walletAddress,
+          roomId: walletAddress,
         }),
       });
 
