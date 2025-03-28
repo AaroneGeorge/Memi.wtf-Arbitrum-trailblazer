@@ -633,8 +633,6 @@ export default function CreatePage() {
         //  value: BigInt("1000000000000000") // 0.001 ETH testnet
         //});
 
-
-
         console.log("guHash Transaction hash:", guHash);
         // Wait for transaction receipt
         toast.loading("Waiting for transaction confirmation...");

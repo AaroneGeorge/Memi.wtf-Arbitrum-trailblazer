@@ -186,6 +186,46 @@ const getSocialLinks = async (agent: Agent) => {
     })
   }
 
+  if (!agent.gu) {
+    async function getTokenIdByAddress(tokenAddress: any) {
+      try {
+        const response = await fetch('http://api.gu.exchange/historical');
+        if (!response.ok) {
+          throw new Error(`API request failed with status: ${response.status}`);
+        }
+        const responseData = await response.json();
+        const normalizedTokenAddress = tokenAddress.toLowerCase();
+        const matchingItem = responseData.data.find(
+          (item: any) => item.token.toLowerCase() === normalizedTokenAddress
+        );
+        return matchingItem ? matchingItem.id : null;
+
+      } catch (error) {
+        console.error('Error fetching or filtering token data:', error);
+        return null;
+      }
+    }
+
+    let guCoinId;
+    // @ts-ignore
+    getTokenIdByAddress(agent.guTokenAddress)
+      .then((id: string | null) => {
+        if (id) {
+          guCoinId = id;
+          links.push({
+            type: 'gu',
+            url: `https://gu.exchange/coin/${guCoinId}`,
+            enabled: true,
+            username: guCoinId
+          })
+
+          console.log(`Found token with ID: ${id}`);
+        } else {
+          console.log(`No token found with address: ${agent.guTokenAddress}`);
+        }
+      });
+  }
+
   // Check Twitter
   if (agent.twitter) {
     links.push({
@@ -251,7 +291,7 @@ export default function AgentPage() {
             setAgent(agentData);
             const links = await getSocialLinks(agentData);
             setSocialLinks(links);
-            
+
             // Fetch owner's username if available
             if (agentData.owner) {
               const ownerProfile = await getUserProfile(agentData.owner);
@@ -363,11 +403,11 @@ export default function AgentPage() {
   // Function to get creator display name (username or truncated address)
   const getCreatorName = () => {
     if (!agent || !agent.owner) return "Unknown";
-    
+
     if (ownerUsername) {
       return ownerUsername;
     }
-    
+
     // Truncate wallet address if no username
     const address = agent.owner;
     return address;
