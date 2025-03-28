@@ -32,7 +32,7 @@ const queryClient = new QueryClient();
 createWeb3Modal({
   wagmiConfig: config,
   projectId: process.env.NEXT_PUBLIC_WALLET_CONNECT_PROJECT_ID || "",
-  defaultChain: arbitrumSepolia,
+  defaultChain: arbitrum,
   themeMode: "dark",
 });
 
