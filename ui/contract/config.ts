@@ -3,12 +3,10 @@ import { mainnet, arbitrum, arbitrumSepolia, sepolia } from "viem/chains";
 import { injected, walletConnect } from "wagmi/connectors";
 
 export const config = createConfig({
-  chains: [mainnet, arbitrum, arbitrumSepolia, sepolia],
+  chains: [arbitrum, arbitrumSepolia],
   transports: {
-    [mainnet.id]: http(),
     [arbitrum.id]: http(),
     [arbitrumSepolia.id]: http(),
-    [sepolia.id]: http(),
   },
   connectors: [
     injected(),
