@@ -5,6 +5,7 @@ import {
   useAccount,
   useWriteContract,
   useWaitForTransactionReceipt,
+  useSimulateContract,
 } from "wagmi";
 import { getTransactionReceipt } from "@wagmi/core";
 import { guABI } from "../../contract/guABI";
@@ -549,12 +550,14 @@ export default function CreatePage() {
         // Smart contract
         const imageHash = `ipfs://${guData.ipfsHash}`;
         //const imageHash = `ipfs://bafkreig7zmost55aziibmk2kbqeo566eolt4jgu23w3dnepb5oe37hrtoa`
+        console.log("name: ", name, "ticker", ticker, "formattedBio", formattedBio, "imageHash", imageHash)
         const guHash = await writeContractAsync({
           address: "0x4b76208FdC0eeafA8635021b3BF1cd692a9b8B14", // mainet address
           abi: guABI,
           functionName: "deploy",
           args: [name, ticker, formattedBio, imageHash],
-          value: BigInt("6000000000000000") // 0.006 ETH Mainnet
+          value: BigInt("6000000000000000"), // 0.006 ETH Mainnet
+          gas: 15_000_000n
         });
 
         // Testnet arbitrum sepolia 
@@ -615,13 +618,15 @@ export default function CreatePage() {
         const imageHash = `ipfs://${guData.ipfsHash}`;
         //const imageHash = `ipfs://bafkreig7zmost55aziibmk2kbqeo566eolt4jgu23w3dnepb5oe37hrtoa`
 
-        // Mainnet
+        //Mainnet
+        console.log("name: ", name, "ticker", ticker, "formattedBio", formattedBio, "imageHash", imageHash)
         const guHash = await writeContractAsync({
           address: "0x4b76208FdC0eeafA8635021b3BF1cd692a9b8B14", // mainet address
           abi: guABI,
           functionName: "deploy",
           args: [name, ticker, formattedBio, imageHash],
-          value: BigInt("6000000000000000") // 0.006 ETH mainet
+          value: BigInt("6000000000000000"), // 0.006 ETH mainet
+          gas: 15_000_000n
         });
 
         // Testnet arbitrum sepolia
