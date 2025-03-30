@@ -292,7 +292,6 @@ export default function CreatePage() {
   const [ipfsImage, setIpfsImage] = useState<string>("");
   const { writeContractAsync } = useWriteContract();  // contract
   const [name, setName] = useState("");
-  const [guTokenAddress, setGuTokenAddress] = useState("");
   const [ticker, setTicker] = useState("");
   const [bios, setBios] = useState<string[]>([""]);
   const [lore, setLore] = useState<string[]>([""]);
@@ -577,7 +576,6 @@ export default function CreatePage() {
         toast.dismiss();
         console.log("receipt:", receipt)
         tokenAddress = receipt.logs[0].address;
-        setGuTokenAddress(tokenAddress);
         console.log("Token Address:", tokenAddress);
 
         const response = await fetch("/api/upload", {
@@ -645,7 +643,6 @@ export default function CreatePage() {
         toast.dismiss();
         console.log("receipt:", receipt)
         tokenAddress = receipt.logs[0].address;
-        setGuTokenAddress(tokenAddress);
         console.log("Token Address:", tokenAddress);
 
         const response = await fetch("/api/upload", {
@@ -683,6 +680,7 @@ export default function CreatePage() {
       }
 
       let guCoinId;
+      let guTokenAddress;
       // @ts-ignore
       getTokenIdByAddress(tokenAddress)
         .then((id: string | null) => {
@@ -690,6 +688,8 @@ export default function CreatePage() {
             guCoinId = id;
             console.log(`Found token with ID: ${id}`);
           } else {
+            guTokenAddress = tokenAddress;
+            console.log("guTokenAddress", guTokenAddress)
             console.log(`No token found with address: ${tokenAddress}`);
           }
         });
@@ -706,7 +706,7 @@ export default function CreatePage() {
         adjectives: adjectives.filter((a) => a.trim() !== ""),
         twitter: twitterUsername || "",
         gu: guCoinId || " ",
-        guTokenAddress: guTokenAddress || " ",
+        guTokenAddress: tokenAddress || " ",
         profileImage: cloudinaryUrl,
         owner: address,
         agentProfileId,
@@ -716,6 +716,7 @@ export default function CreatePage() {
         plugins
       };
 
+      console.log("agentData: ", agentData)
       await createAgent(constants.AGENTS_COLLECTION, name, agentData);
 
       toast.dismiss();
