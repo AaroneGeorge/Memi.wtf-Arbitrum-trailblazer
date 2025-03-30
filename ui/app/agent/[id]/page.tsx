@@ -176,56 +176,73 @@ const getDiscordBotDetails = async (DISCORD_APPLICATION_ID: string, DISCORD_API_
 const getSocialLinks = async (agent: Agent) => {
   const links: { type: string; url: string; enabled: boolean; username?: string }[] = [];
 
-  // Check GU trade
-  if (agent.gu) {
-    links.push({
-      type: 'gu',
-      url: `https://gu.exchange/coin/${agent.gu}`,
-      enabled: true,
-      username: agent.gu
-    })
-  }
+  // Check GU trade - make this section async
+  async function setupGuLinks() {
+    if (agent.gu && agent.gu.trim() !== "") {
+      // Only execute if agent.gu exists and is not just whitespace
+      links.push({
+        type: 'gu',
+        url: `https://gu.exchange/coin/${agent.gu}`,
+        enabled: true,
+        username: agent.gu
+      });
+      console.log("Added GU link using agent.gu:", agent.gu);
+    } else if (agent.guTokenAddress && agent.guTokenAddress.trim() !== "") {
+      console.log("Gu Id not found, using token address");
 
-  if (!agent.gu) {
-    async function getTokenIdByAddress(tokenAddress: any) {
       try {
-        const response = await fetch('http://api.gu.exchange/historical');
-        if (!response.ok) {
-          throw new Error(`API request failed with status: ${response.status}`);
-        }
-        const responseData = await response.json();
-        const normalizedTokenAddress = tokenAddress.toLowerCase();
-        const matchingItem = responseData.data.find(
-          (item: any) => item.token.toLowerCase() === normalizedTokenAddress
-        );
-        return matchingItem ? matchingItem.id : null;
+        // Move the function definition outside for clarity
+        const id = await getTokenIdByAddress(agent.guTokenAddress);
 
-      } catch (error) {
-        console.error('Error fetching or filtering token data:', error);
-        return null;
-      }
-    }
-
-    let guCoinId;
-    // @ts-ignore
-    getTokenIdByAddress(agent.guTokenAddress)
-      .then((id: string | null) => {
         if (id) {
-          guCoinId = id;
           links.push({
             type: 'gu',
-            url: `https://gu.exchange/coin/${guCoinId}`,
+            url: `https://gu.exchange/coin/${id}`,
             enabled: true,
-            username: guCoinId
-          })
-
+            username: id
+          });
           console.log(`Found token with ID: ${id}`);
         } else {
-          console.log(`No token found with address: ${agent.guTokenAddress}`);
+          console.log("arb address", agent.guTokenAddress);
+          const tokenAddress = agent.guTokenAddress;
+          links.push({
+            type: 'gu',
+            url: `https://sepolia.arbiscan.io/address/${tokenAddress}`,
+            enabled: true,
+            username: tokenAddress
+          });
+          console.log(`No token found with address: ${tokenAddress}`);
         }
-      });
+      } catch (error) {
+        console.error("Error processing GU token:", error);
+      }
+    } else {
+      console.log("Neither gu nor guTokenAddress has a valid value");
+    }
   }
 
+  // Define this function outside
+  async function getTokenIdByAddress(tokenAddress: string) {
+    try {
+      console.log("getTokenIdByAddress:", tokenAddress);
+      const response = await fetch('http://api.gu.exchange/historical');
+      if (!response.ok) {
+        throw new Error(`API request failed with status: ${response.status}`);
+      }
+      const responseData = await response.json();
+      const normalizedTokenAddress = tokenAddress.toLowerCase();
+      const matchingItem = responseData.data.find(
+        (item: any) => item.token.toLowerCase() === normalizedTokenAddress
+      );
+      return matchingItem ? matchingItem.id : null;
+    } catch (error) {
+      console.error('Error fetching or filtering token data:', error);
+      return null;
+    }
+  }
+
+  // Call the async function
+  await setupGuLinks();
   // Check Twitter
   if (agent.twitter) {
     links.push({
