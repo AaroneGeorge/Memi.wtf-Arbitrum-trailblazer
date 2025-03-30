@@ -171,6 +171,8 @@ export const getAgentDetails = async (agentProfileId: string): Promise<Agent | n
         agentId: processedData.agentId || '',
         agentProfileId: agentProfileId,
         createdAt: data.createdAt || new Date().toISOString(),
+        gu: processedData.gu || " ",
+        guTokenAddress: processedData.guTokenAddress || " ",
         // Add these fields
         clients: Array.isArray(processedData.clients) ? processedData.clients : [],
         secrets: processedData.secrets || {},
@@ -201,7 +203,7 @@ export const createOrUpdateUserProfile = async (wallet_address: string, userData
   try {
     const userRef = doc(db, constants.USERS_COLLECTION || 'users', wallet_address);
     const userSnap = await getDoc(userRef);
-    
+
     if (userSnap.exists()) {
       // Update existing user
       await updateDoc(userRef, {
@@ -229,7 +231,7 @@ export const getUserProfile = async (wallet_address: string): Promise<UserProfil
   try {
     const userRef = doc(db, constants.USERS_COLLECTION || 'users', wallet_address);
     const userSnap = await getDoc(userRef);
-    
+
     if (userSnap.exists()) {
       return userSnap.data() as UserProfile;
     }
@@ -244,7 +246,7 @@ export const getUserProfile = async (wallet_address: string): Promise<UserProfil
 export const getUserProfiles = async (wallet_addresses: string[]): Promise<Record<string, UserProfile>> => {
   try {
     const result: Record<string, UserProfile> = {};
-    
+
     // Use Promise.all to fetch all profiles in parallel
     await Promise.all(
       wallet_addresses.map(async (address) => {
@@ -254,7 +256,7 @@ export const getUserProfiles = async (wallet_addresses: string[]): Promise<Recor
         }
       })
     );
-    
+
     return result;
   } catch (error) {
     console.error("Error fetching multiple user profiles:", error);
@@ -264,20 +266,20 @@ export const getUserProfiles = async (wallet_addresses: string[]): Promise<Recor
 
 // Add/remove favorite agent for a user
 export const toggleFavoriteAgent = async (
-  wallet_address: string, 
+  wallet_address: string,
   agentProfileId: string
 ): Promise<{ isFavorite: boolean }> => {
   try {
     const userRef = doc(db, constants.USERS_COLLECTION || 'users', wallet_address);
     const userSnap = await getDoc(userRef);
-    
+
     if (userSnap.exists()) {
       const userData = userSnap.data();
       const currentFavorites = userData.favourite_agents || [];
-      
+
       const isFavorite = currentFavorites.includes(agentProfileId);
       let updatedFavorites;
-      
+
       if (isFavorite) {
         // Remove from favorites
         updatedFavorites = currentFavorites.filter((id: string) => id !== agentProfileId);
@@ -285,13 +287,13 @@ export const toggleFavoriteAgent = async (
         // Add to favorites
         updatedFavorites = [...currentFavorites, agentProfileId];
       }
-      
+
       // Update user document
       await updateDoc(userRef, {
         favourite_agents: updatedFavorites,
         updatedAt: new Date().toISOString()
       });
-      
+
       return { isFavorite: !isFavorite };
     } else {
       // Create new user with favorite agent
@@ -301,7 +303,7 @@ export const toggleFavoriteAgent = async (
         created_date: new Date().toISOString(),
         updatedAt: new Date().toISOString()
       });
-      
+
       return { isFavorite: true };
     }
   } catch (error) {
@@ -315,7 +317,7 @@ export const getFavoriteAgents = async (wallet_address: string): Promise<string[
   try {
     const userRef = doc(db, constants.USERS_COLLECTION || 'users', wallet_address);
     const userSnap = await getDoc(userRef);
-    
+
     if (userSnap.exists()) {
       const userData = userSnap.data();
       return userData.favourite_agents || [];
@@ -330,17 +332,17 @@ export const getFavoriteAgents = async (wallet_address: string): Promise<string[
 // Get detailed agent info for a list of agent profile IDs
 export const getAgentsByProfileIds = async (agentProfileIds: string[]): Promise<Agent[]> => {
   if (!agentProfileIds.length) return [];
-  
+
   try {
     const agents: Agent[] = [];
     const agentsCollection = collection(db, constants.AGENTS_COLLECTION);
-    
+
     // Use Promise.all to fetch all agents in parallel
     await Promise.all(
       agentProfileIds.map(async (profileId) => {
         const q = query(agentsCollection, where("data.agentProfileId", "==", profileId));
         const querySnapshot = await getDocs(q);
-        
+
         if (!querySnapshot.empty) {
           const agentData = await getAgentDetails(profileId);
           if (agentData) {
@@ -349,7 +351,7 @@ export const getAgentsByProfileIds = async (agentProfileIds: string[]): Promise<
         }
       })
     );
-    
+
     return agents;
   } catch (error) {
     console.error("Error fetching agents by profile IDs:", error);
