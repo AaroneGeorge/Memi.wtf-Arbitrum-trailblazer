@@ -106,7 +106,7 @@ export default function Home() {
               <Search className="absolute left-3 top-3 h-4 w-4 text-zinc-400" />
               <Input
                 placeholder="Search agents..."
-                className="pl-9 bg-zinc-900 border-zinc-800 focus-visible:ring-pink-500 text-zinc-100"
+                className="pl-9 bg-zinc-900 border-zinc-800 focus-visible:text-[#f78da7] text-zinc-100"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
               />
