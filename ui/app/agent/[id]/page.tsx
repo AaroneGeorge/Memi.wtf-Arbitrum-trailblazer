@@ -167,16 +167,17 @@ const getTelegramBotDetails = async (token: string) => {
   }
 };
 
-// Add Discord bot details fetching function
+// Replace the existing getDiscordBotDetails function with this:
 const getDiscordBotDetails = async (
   DISCORD_APPLICATION_ID: string,
   DISCORD_API_TOKEN: string
 ) => {
   try {
-    const response = await fetch(`/api/discord/${DISCORD_APPLICATION_ID}`, {
+    const response = await fetch(`https://discord.com/api/v10/applications/${DISCORD_APPLICATION_ID}`, {
       headers: {
-        Authorization: `Bot ${DISCORD_API_TOKEN}`,
-      },
+        'Accept': '*/*',
+        'Authorization': `Bot ${DISCORD_API_TOKEN}`
+      }
     });
 
     const data = await response.json();

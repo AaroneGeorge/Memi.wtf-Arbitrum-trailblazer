@@ -423,6 +423,9 @@ export default function CreatePage() {
     try {
       setIsSubmitting(true);
       toast.loading("Creating your AI agent...");
+      
+      // Initialize tokenAddress
+      let tokenAddress = "";
 
       // Initialize plugins with web search
       const plugins = ["@elizaos-plugins/plugin-web-search"];
@@ -537,7 +540,6 @@ export default function CreatePage() {
       };
       const formattedBio = formatBio(bios, twitterUsername, telegramUsername);
       console.log("Formatted Bio:", formattedBio);
-      let tokenAddress: string;
 
       // 2. Handle image upload to Cloudinary
       let cloudinaryUrl;
@@ -583,7 +585,7 @@ export default function CreatePage() {
           functionName: "deploy",
           args: [name, ticker, formattedBio, imageHash],
           value: BigInt("6000000000000000"), // 0.006 ETH Mainnet
-          gas: 15_000_000n,
+          gas: BigInt("15000000"),
         });
 
         // Testnet arbitrum sepolia
@@ -659,7 +661,7 @@ export default function CreatePage() {
           functionName: "deploy",
           args: [name, ticker, formattedBio, imageHash],
           value: BigInt("6000000000000000"), // 0.006 ETH mainet
-          gas: 15_000_000n,
+          gas: BigInt("15000000"),
         });
 
         // Testnet arbitrum sepolia

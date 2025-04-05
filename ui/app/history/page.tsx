@@ -40,7 +40,7 @@ export default function HistoryPage() {
     const histories = Object.entries(userChats).map(([botName, summary]) => ({
       user_id: address,
       bot_name: botName,
-      messages: testChatHistory[botName]?.messages || [],
+      messages: testChatHistory[botName as keyof typeof testChatHistory]?.messages || [],
       timestamp: summary.timestamp
     }));
 
