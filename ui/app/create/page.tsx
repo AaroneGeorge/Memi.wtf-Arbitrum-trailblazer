@@ -10,7 +10,8 @@ import {
 import { getTransactionReceipt } from "@wagmi/core";
 import { guABI } from "../../contract/guABI";
 import { simpleguABI } from "@/contract/simpleguABI";
-import { config } from "../../contract/config"; import { Card } from "@/components/ui/card";
+import { config } from "../../contract/config";
+import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
@@ -25,7 +26,18 @@ import { generateRandomUsername } from "@/lib/utils";
 import { createAgent } from "@/lib/firebase/firestore";
 import constants from "@/lib/constants";
 import type { Agent, MessageExample } from "../types";
-import { IconBrandDiscord, IconBrandTelegram, IconBrandTwitter } from "@tabler/icons-react";
+import {
+  IconBrandDiscord,
+  IconBrandTelegram,
+  IconBrandTwitter,
+} from "@tabler/icons-react";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
 
 // First, let's define an interface for our template structure
 interface Template {
@@ -253,7 +265,7 @@ const MessageExampleInput = ({
 };
 
 function generateUUID() {
-  return "xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx".replace(/[xy]/g, function(c) {
+  return "xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx".replace(/[xy]/g, function (c) {
     const r = (Math.random() * 16) | 0;
     const v = c === "x" ? r : (r & 0x3) | 0x8;
     return v.toString(16);
@@ -277,7 +289,7 @@ const waitForReceipt = async (hash: `0x${string}`, maxAttempts = 20) => {
       if (i === maxAttempts - 1) throw error;
     }
     // Wait 2 seconds before next attempt
-    await new Promise(resolve => setTimeout(resolve, 2000));
+    await new Promise((resolve) => setTimeout(resolve, 2000));
   }
   throw new Error("Transaction receipt not found after maximum attempts");
 };
@@ -290,7 +302,7 @@ export default function CreatePage() {
   );
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [ipfsImage, setIpfsImage] = useState<string>("");
-  const { writeContractAsync } = useWriteContract();  // contract
+  const { writeContractAsync } = useWriteContract(); // contract
   const [name, setName] = useState("");
   const [ticker, setTicker] = useState("");
   const [bios, setBios] = useState<string[]>([""]);
@@ -308,6 +320,8 @@ export default function CreatePage() {
   const [discordAppId, setDiscordAppId] = useState("");
   const [discordApiToken, setDiscordApiToken] = useState("");
   const [telegramBotToken, setTelegramBotToken] = useState("");
+  const [isTemplateModalOpen, setIsTemplateModalOpen] = useState(false);
+  const [isSocialModalOpen, setIsSocialModalOpen] = useState(false);
 
   const validateName = (value: string) => {
     return value.replace(/[^a-zA-Z0-9]/g, "");
@@ -491,22 +505,28 @@ export default function CreatePage() {
       // Add this helper function to fetch Telegram bot details
       const getTelegramBotDetails = async (token: string) => {
         try {
-          const response = await fetch(`https://api.telegram.org/bot${token}/getMe`);
+          const response = await fetch(
+            `https://api.telegram.org/bot${token}/getMe`
+          );
           const data = await response.json();
           if (data.ok) {
-            return data.result.username
+            return data.result.username;
           }
           return null;
         } catch (error) {
-          console.error('Error fetching Telegram bot details:', error);
+          console.error("Error fetching Telegram bot details:", error);
           return null;
         }
       };
-      const telegramUsername = await getTelegramBotDetails(telegramBotToken)
+      const telegramUsername = await getTelegramBotDetails(telegramBotToken);
       console.log("telegramBotUsername:", telegramUsername, bios);
 
       // Format bios as a single string with Twitter and Telegram links
-      const formatBio = (biosArray: any, twitterUsername: string, telegramUsername: string) => {
+      const formatBio = (
+        biosArray: any,
+        twitterUsername: string,
+        telegramUsername: string
+      ) => {
         const bioText = biosArray.join(". ");
         let socialLinks = "";
         if (twitterUsername) {
@@ -519,7 +539,7 @@ export default function CreatePage() {
       };
       const formattedBio = formatBio(bios, twitterUsername, telegramUsername);
       console.log("Formatted Bio:", formattedBio);
-      let tokenAddress: string
+      let tokenAddress: string;
 
       // 2. Handle image upload to Cloudinary
       let cloudinaryUrl;
@@ -531,12 +551,12 @@ export default function CreatePage() {
         });
 
         // Uploading image in Gu Factory
-        const guResponse = await fetch('https://api.gu.exchange/upload', {
-          method: 'POST',
+        const guResponse = await fetch("https://api.gu.exchange/upload", {
+          method: "POST",
           body: JSON.stringify({
             name: name,
-            image: base64Data
-          })
+            image: base64Data,
+          }),
         });
         if (!guResponse.ok) {
           const error = await guResponse.json();
@@ -549,17 +569,26 @@ export default function CreatePage() {
         // Smart contract
         const imageHash = `ipfs://${guData.ipfsHash}`;
         //const imageHash = `ipfs://bafkreig7zmost55aziibmk2kbqeo566eolt4jgu23w3dnepb5oe37hrtoa`
-        console.log("name: ", name, "ticker", ticker, "formattedBio", formattedBio, "imageHash", imageHash)
+        console.log(
+          "name: ",
+          name,
+          "ticker",
+          ticker,
+          "formattedBio",
+          formattedBio,
+          "imageHash",
+          imageHash
+        );
         const guHash = await writeContractAsync({
           address: "0x4b76208FdC0eeafA8635021b3BF1cd692a9b8B14", // mainet address
           abi: guABI,
           functionName: "deploy",
           args: [name, ticker, formattedBio, imageHash],
           value: BigInt("6000000000000000"), // 0.006 ETH Mainnet
-          gas: 15_000_000n
+          gas: 15_000_000n,
         });
 
-        // Testnet arbitrum sepolia 
+        // Testnet arbitrum sepolia
         //const guHash = await writeContractAsync({
         //  address: "0x215b2D682fcE0a5366E9d950F1b014c0C6c8511e", // arbitrum sepolia testnet address
         //  abi: guABI,
@@ -568,13 +597,12 @@ export default function CreatePage() {
         //  value: BigInt("1000000000000000") // 0.001 ETH Testnet
         //});
 
-
         console.log("guHash Transaction hash:", guHash);
         // Wait for transaction receipt
         toast.loading("Waiting for transaction confirmation...");
         const receipt = await waitForReceipt(guHash);
         toast.dismiss();
-        console.log("receipt:", receipt)
+        console.log("receipt:", receipt);
         tokenAddress = receipt.logs[0].address;
         console.log("Token Address:", tokenAddress);
 
@@ -597,12 +625,12 @@ export default function CreatePage() {
         });
 
         // Uploading image in Gu Factory
-        const guResponse = await fetch('https://api.gu.exchange/upload', {
-          method: 'POST',
+        const guResponse = await fetch("https://api.gu.exchange/upload", {
+          method: "POST",
           body: JSON.stringify({
             name: name,
-            image: base64Data
-          })
+            image: base64Data,
+          }),
         });
         if (!guResponse.ok) {
           const error = await guResponse.json();
@@ -617,14 +645,23 @@ export default function CreatePage() {
         //const imageHash = `ipfs://bafkreig7zmost55aziibmk2kbqeo566eolt4jgu23w3dnepb5oe37hrtoa`
 
         //Mainnet
-        console.log("name: ", name, "ticker", ticker, "formattedBio", formattedBio, "imageHash", imageHash)
+        console.log(
+          "name: ",
+          name,
+          "ticker",
+          ticker,
+          "formattedBio",
+          formattedBio,
+          "imageHash",
+          imageHash
+        );
         const guHash = await writeContractAsync({
           address: "0x4b76208FdC0eeafA8635021b3BF1cd692a9b8B14", // mainet address
           abi: guABI,
           functionName: "deploy",
           args: [name, ticker, formattedBio, imageHash],
           value: BigInt("6000000000000000"), // 0.006 ETH mainet
-          gas: 15_000_000n
+          gas: 15_000_000n,
         });
 
         // Testnet arbitrum sepolia
@@ -641,7 +678,7 @@ export default function CreatePage() {
         toast.loading("Waiting for transaction confirmation...");
         const receipt = await waitForReceipt(guHash);
         toast.dismiss();
-        console.log("receipt:", receipt)
+        console.log("receipt:", receipt);
         tokenAddress = receipt.logs[0].address;
         console.log("Token Address:", tokenAddress);
 
@@ -662,9 +699,11 @@ export default function CreatePage() {
       // Find id by searching using token address and use the id in `https://gu.exchange/coin/[id]`
       async function getTokenIdByAddress(tokenAddress: any) {
         try {
-          const response = await fetch('http://api.gu.exchange/historical');
+          const response = await fetch("http://api.gu.exchange/historical");
           if (!response.ok) {
-            throw new Error(`API request failed with status: ${response.status}`);
+            throw new Error(
+              `API request failed with status: ${response.status}`
+            );
           }
           const responseData = await response.json();
           const normalizedTokenAddress = tokenAddress.toLowerCase();
@@ -672,9 +711,8 @@ export default function CreatePage() {
             (item: any) => item.token.toLowerCase() === normalizedTokenAddress
           );
           return matchingItem ? matchingItem.id : null;
-
         } catch (error) {
-          console.error('Error fetching or filtering token data:', error);
+          console.error("Error fetching or filtering token data:", error);
           return null;
         }
       }
@@ -682,17 +720,16 @@ export default function CreatePage() {
       let guCoinId;
       let guTokenAddress;
       // @ts-ignore
-      getTokenIdByAddress(tokenAddress)
-        .then((id: string | null) => {
-          if (id) {
-            guCoinId = id;
-            console.log(`Found token with ID: ${id}`);
-          } else {
-            guTokenAddress = tokenAddress;
-            console.log("guTokenAddress", guTokenAddress)
-            console.log(`No token found with address: ${tokenAddress}`);
-          }
-        });
+      getTokenIdByAddress(tokenAddress).then((id: string | null) => {
+        if (id) {
+          guCoinId = id;
+          console.log(`Found token with ID: ${id}`);
+        } else {
+          guTokenAddress = tokenAddress;
+          console.log("guTokenAddress", guTokenAddress);
+          console.log(`No token found with address: ${tokenAddress}`);
+        }
+      });
 
       // 4. Save to Firestore
       const agentData: Omit<Agent, "createdAt" | "id"> = {
@@ -713,10 +750,10 @@ export default function CreatePage() {
         agentId: setupResult.id,
         clients: socialConfig.clients,
         secrets: socialConfig.secrets,
-        plugins
+        plugins,
       };
 
-      console.log("agentData: ", agentData)
+      console.log("agentData: ", agentData);
       await createAgent(constants.AGENTS_COLLECTION, name, agentData);
 
       toast.dismiss();
@@ -744,6 +781,9 @@ export default function CreatePage() {
       setMessageExamples(template.messageExamples || []);
       setTopics(template.topics || []);
       setAdjectives(template.adjectives || []);
+
+      // Close the modal
+      setIsTemplateModalOpen(false);
 
       toast.dismiss();
       toast.success("Template applied successfully!");
@@ -794,87 +834,220 @@ export default function CreatePage() {
       {/* Enhanced Header Section */}
       <div className="text-center mb-12 relative z-10">
         <div className="inline-block mb-6">
-          <div className="text-sm font-semibold text-pink-500 mb-2 tracking-wide">
+          {/* <div className="text-sm font-semibold text-pink-500 mb-2 tracking-wide">
             POWERED BY MEMI
-          </div>
+          </div> */}
           <h1 className="text-5xl font-bold mb-4">
-            <span className="text-transparent bg-clip-text bg-gradient-to-r from-pink-500 via-purple-500 to-indigo-500">
-              Create Your
+            <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#f78da7] via-[#f78da7] to-white">
+              Create Your AI Agent
             </span>
-            <br />
-            <span className="text-white">AI Agent</span>
           </h1>
-          <div className="h-1 w-20 bg-gradient-to-r from-pink-500 to-purple-500 mx-auto rounded-full mb-4" />
+          <div className="relative h-4 mb-6">
+            <svg
+              className="w-32 h-full mx-auto overflow-visible"
+              viewBox="0 0 120 20"
+            >
+              <path
+                d="M5,10 C30,2 50,18 115,8"
+                fill="none"
+                stroke="url(#gradient)"
+                strokeWidth="4.5"
+                strokeLinecap="round"
+                className="svg-path"
+              />
+              <defs>
+                <linearGradient id="gradient" x1="0%" y1="0%" x2="100%" y2="0%">
+                  <stop offset="0%" stopColor="#ffff" />
+                  <stop offset="100%" stopColor="#f78da7" />
+                </linearGradient>
+              </defs>
+            </svg>
+            <style jsx>{`
+              .svg-path {
+                stroke-dasharray: 120;
+                stroke-dashoffset: 120;
+                animation: draw 1.5s ease forwards;
+              }
+              @keyframes draw {
+                to {
+                  stroke-dashoffset: 0;
+                }
+              }
+            `}</style>
+          </div>
           <p className="text-zinc-400 text-lg max-w-xl mx-auto leading-relaxed">
             Design and deploy your personalized AI assistant with custom traits,
             knowledge, and social integrations.
           </p>
         </div>
-
-        <div className="flex items-center justify-center gap-6 mt-6">
-          <div className="flex items-center gap-2 px-4 py-2 bg-zinc-800/50 rounded-full backdrop-blur-sm">
-            <div className="flex items-center gap-1 text-sm text-zinc-300">
-              <IconBrandDiscord className="w-5 h-5 text-[#5865F2]" />
-              <span>Discord</span>
-            </div>
-            <span className="text-zinc-600">•</span>
-            <div className="flex items-center gap-1 text-sm text-zinc-300">
-              <IconBrandTwitter className="w-5 h-5 text-[#1DA1F2]" />
-              <span>Twitter</span>
-            </div>
-            <span className="text-zinc-600">•</span>
-            <div className="flex items-center gap-1 text-sm text-zinc-300">
-              <IconBrandTelegram className="w-5 h-5 text-[#0088cc]" />
-              <span>Telegram</span>
-            </div>
-          </div>
-        </div>
       </div>
 
-      {/* Section 1: Templates */}
-      <Card className="bg-zinc-900/90 backdrop-blur border-zinc-800 p-6 mb-6 relative z-10">
-        <SectionNumber number={1} />
-        <h2 className="text-xl font-bold text-white mb-4">Agent Templates</h2>
-        <p className="text-zinc-400 mb-6">
-          Choose from our pre-configured agent personalities to quickly create
-          specialized AI assistants. Each template comes with optimized traits
-          and knowledge bases.
-        </p>
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          {botTemplates.map((template) => (
-            <Card
-              key={template.name}
-              className="bg-zinc-800 border-zinc-700 p-4 cursor-pointer hover:border-pink-500/50 transition-colors"
-              onClick={() => applyTemplate(template)}
-            >
-              <div className="flex items-center gap-3">
-                <Image
-                  src={template.image}
-                  alt={template.name}
-                  width={48}
-                  height={48}
-                  className="rounded-full"
-                />
-                <div>
-                  <h3 className="font-medium text-white">{template.name}</h3>
-                  <p className="text-sm text-zinc-400">
-                    {Array.isArray(template.bio)
-                      ? template.bio[0]
-                      : template.bio}
-                  </p>
+      {/* Template Modal */}
+      <Dialog open={isTemplateModalOpen} onOpenChange={setIsTemplateModalOpen}>
+        <DialogContent className="bg-zinc-900 border-zinc-800 text-white max-w-3xl max-h-[80vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="text-xl font-bold text-white">
+              Agent Templates
+            </DialogTitle>
+            <p className="text-zinc-400 mt-2">
+              Choose from our pre-configured agent personalities to quickly
+              create specialized AI assistants. Each template comes with
+              optimized traits and knowledge bases.
+            </p>
+          </DialogHeader>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-4">
+            {botTemplates.map((template) => (
+              <Card
+                key={template.name}
+                className="bg-zinc-800 border-zinc-700 p-4 cursor-pointer hover:border-pink-500/50 transition-colors"
+                onClick={() => applyTemplate(template)}
+              >
+                <div className="flex items-center gap-3">
+                  <Image
+                    src={template.image}
+                    alt={template.name}
+                    width={48}
+                    height={48}
+                    className="rounded-full"
+                  />
+                  <div>
+                    <h3 className="font-medium text-white">{template.name}</h3>
+                    <p className="text-sm text-zinc-400">
+                      {Array.isArray(template.bio)
+                        ? template.bio[0]
+                        : template.bio}
+                    </p>
+                  </div>
                 </div>
-              </div>
-            </Card>
-          ))}
-        </div>
-      </Card>
+              </Card>
+            ))}
+          </div>
+        </DialogContent>
+      </Dialog>
 
-      {/* Section 2: Agent Configuration */}
-      <Card className="bg-zinc-900/90 backdrop-blur border-zinc-800 p-6 mb-6 relative">
-        <SectionNumber number={2} />
-        <h2 className="text-xl font-bold text-white mb-4">
-          Agent Configuration
-        </h2>
+      {/* New Social Integrations Modal */}
+      <Dialog open={isSocialModalOpen} onOpenChange={setIsSocialModalOpen}>
+        <DialogContent className="bg-zinc-900 border-zinc-800 text-white max-w-3xl max-h-[80vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="text-xl font-bold text-white">
+              Social Integrations
+            </DialogTitle>
+            <p className="text-zinc-400 mt-2">
+              Connect your AI agent to various social platforms to expand its
+              reach.
+            </p>
+          </DialogHeader>
+
+          {/* Discord Integration */}
+          <div className="mb-8">
+            <div className="flex items-center gap-3 mb-4">
+              <div className="w-10 h-10 bg-zinc-800 rounded-full flex items-center justify-center">
+                <IconBrandDiscord className="w-6 h-6 text-[#5865F2]" />
+              </div>
+              <div>
+                <h3 className="font-medium text-white">Discord Integration</h3>
+                <p className="text-sm text-zinc-400">
+                  Let your agent interact with Discord communities
+                </p>
+              </div>
+            </div>
+            <div className="space-y-4">
+              <Input
+                className="bg-zinc-800 border-zinc-700"
+                placeholder="DISCORD_APPLICATION_ID"
+                value={discordAppId}
+                onChange={(e) => setDiscordAppId(e.target.value)}
+              />
+              <Input
+                className="bg-zinc-800 border-zinc-700"
+                placeholder="DISCORD_API_TOKEN"
+                value={discordApiToken}
+                onChange={(e) => setDiscordApiToken(e.target.value)}
+              />
+            </div>
+          </div>
+
+          {/* Twitter Integration */}
+          <div className="mb-8">
+            <div className="flex items-center gap-3 mb-4">
+              <div className="w-10 h-10 bg-zinc-800 rounded-full flex items-center justify-center">
+                <IconBrandTwitter className="w-6 h-6 text-[#1DA1F2]" />
+              </div>
+              <div>
+                <h3 className="font-medium text-white">Twitter Integration</h3>
+                <p className="text-sm text-zinc-400">
+                  Enable your agent to post and interact on Twitter
+                </p>
+              </div>
+            </div>
+            <div className="space-y-4">
+              <Input
+                className="bg-zinc-800 border-zinc-700"
+                placeholder="TWITTER_USERNAME"
+                value={twitterUsername}
+                onChange={(e) => setTwitterUsername(e.target.value)}
+              />
+              <Input
+                className="bg-zinc-800 border-zinc-700"
+                placeholder="TWITTER_EMAIL"
+                type="email"
+                value={twitterEmail}
+                onChange={(e) => setTwitterEmail(e.target.value)}
+              />
+              <Input
+                className="bg-zinc-800 border-zinc-700"
+                placeholder="TWITTER_PASSWORD"
+                type="password"
+                value={twitterPassword}
+                onChange={(e) => setTwitterPassword(e.target.value)}
+              />
+            </div>
+          </div>
+
+          {/* Telegram Integration */}
+          <div className="mb-4">
+            <div className="flex items-center gap-3 mb-4">
+              <div className="w-10 h-10 bg-zinc-800 rounded-full flex items-center justify-center">
+                <IconBrandTelegram className="w-6 h-6 text-[#0088cc]" />
+              </div>
+              <div>
+                <h3 className="font-medium text-white">Telegram Integration</h3>
+                <p className="text-sm text-zinc-400">
+                  Connect your agent to Telegram for instant messaging
+                </p>
+              </div>
+            </div>
+            <div className="space-y-4">
+              <Input
+                className="bg-zinc-800 border-zinc-700"
+                placeholder="TELEGRAM_BOT_TOKEN"
+                value={telegramBotToken}
+                onChange={(e) => setTelegramBotToken(e.target.value)}
+              />
+            </div>
+          </div>
+
+          <Button
+            onClick={() => setIsSocialModalOpen(false)}
+            className="w-full bg-gradient-to-r from-pink-500 to-purple-600 text-white hover:from-pink-600 hover:to-purple-700 mt-4"
+          >
+            Save Integrations
+          </Button>
+        </DialogContent>
+      </Dialog>
+
+      {/* Section 1: Agent Configuration */}
+      <Card className="bg-zinc-900/90 backdrop-blur border-zinc-800 p-6  relative">
+        <SectionNumber number={1} />
+        <div className="flex justify-between items-center mb-4">
+          <h2 className="text-xl font-bold text-white">Agent Configuration</h2>
+          <Button
+            onClick={() => setIsTemplateModalOpen(true)}
+            className="bg-gradient-to-r from-pink-500 to-purple-600 text-white hover:from-pink-600 hover:to-purple-700"
+          >
+            Use Agent Template
+          </Button>
+        </div>
         <p className="text-zinc-400 mb-6">
           Customize your AI agent's personality, knowledge, and behavior.
         </p>
@@ -1074,136 +1247,56 @@ export default function CreatePage() {
               setExamples={setMessageExamples}
             />
           </div>
+
+          {/* Add Social Integration button at the end of the form */}
+          <Button
+            type="button"
+            onClick={() => setIsSocialModalOpen(true)}
+            className="w-full bg-zinc-700 hover:bg-zinc-600 border border-zinc-600 text-white"
+          >
+            <div className="flex items-center justify-center gap-2">
+              <div className="flex -space-x-2">
+                <div className="w-6 h-6 bg-[#5865F2] rounded-full flex items-center justify-center z-10">
+                  <IconBrandDiscord className="w-3 h-3 text-white" />
+                </div>
+                <div className="w-6 h-6 bg-[#1DA1F2] rounded-full flex items-center justify-center z-20">
+                  <IconBrandTwitter className="w-3 h-3 text-white" />
+                </div>
+                <div className="w-6 h-6 bg-[#0088cc] rounded-full flex items-center justify-center z-30">
+                  <IconBrandTelegram className="w-3 h-3 text-white" />
+                </div>
+              </div>
+              <span>Configure Social Integrations</span>
+            </div>
+          </Button>
         </form>
       </Card>
 
-      {/* Section 3: Social Integrations */}
-      <Card className="bg-zinc-900/90 backdrop-blur border-zinc-800 p-6 mb-6 relative">
-        <SectionNumber number={3} />
-        <h2 className="text-xl font-bold text-white mb-4">
-          Social Integrations [OPTIONAL]
-        </h2>
-        <p className="text-zinc-400 mb-6">
-          Connect your AI agent to various social platforms to expand its reach.
+      {/* Submit Button - Centered and Animated */}
+      <div className="container mx-auto max-w-2xl py-12">
+        <p className="text-zinc-400 mb-4 text-center text-sm">
+          Your AI agent is just one click away
         </p>
-
-        {/* Discord Integration */}
-        <div className="mb-8">
-          <div className="flex items-center gap-3 mb-4">
-            <div className="w-10 h-10 bg-zinc-800 rounded-full flex items-center justify-center">
-              <IconBrandDiscord className="w-6 h-6 text-[#5865F2]" />
-            </div>
-            <div>
-              <h3 className="font-medium text-white">Discord Integration</h3>
-              <p className="text-sm text-zinc-400">
-                Let your agent interact with Discord communities
-              </p>
-            </div>
-          </div>
-          <div className="space-y-4">
-            <Input
-              className="bg-zinc-800 border-zinc-700"
-              placeholder="DISCORD_APPLICATION_ID"
-              value={discordAppId}
-              onChange={(e) => setDiscordAppId(e.target.value)}
-            />
-            <Input
-              className="bg-zinc-800 border-zinc-700"
-              placeholder="DISCORD_API_TOKEN"
-              value={discordApiToken}
-              onChange={(e) => setDiscordApiToken(e.target.value)}
-            />
-          </div>
+        <div className="flex justify-center">
+          <Button
+            type="submit"
+            onClick={handleSubmit}
+            className="w-2/3 bg-gradient-to-r from-[#000] via-[#000] to-[#f78da7]  text-white text-lg py-7 px-12 rounded-xl shadow-lg transform hover:scale-105 transition-all duration-300"
+            disabled={isSubmitting}
+          >
+            {isSubmitting ? (
+              <div className="flex items-center justify-center gap-3">
+                <div className="w-5 h-5 border-3 border-white/50 border-t-white rounded-full animate-spin" />
+                <span className="text-xl">Creating...</span>
+              </div>
+            ) : (
+              <span className="text-xl font-semibold text-center">
+                Create Agent (0.006 ETH)
+              </span>
+            )}
+          </Button>
         </div>
-
-        {/* Twitter Integration */}
-        <div className="mb-8">
-          <div className="flex items-center gap-3 mb-4">
-            <div className="w-10 h-10 bg-zinc-800 rounded-full flex items-center justify-center">
-              <IconBrandTwitter className="w-6 h-6 text-[#1DA1F2]" />
-            </div>
-            <div>
-              <h3 className="font-medium text-white">Twitter Integration</h3>
-              <p className="text-sm text-zinc-400">
-                Enable your agent to post and interact on Twitter
-              </p>
-            </div>
-          </div>
-          <div className="space-y-4">
-            <Input
-              className="bg-zinc-800 border-zinc-700"
-              placeholder="TWITTER_USERNAME"
-              value={twitterUsername}
-              onChange={(e) => setTwitterUsername(e.target.value)}
-            />
-            <Input
-              className="bg-zinc-800 border-zinc-700"
-              placeholder="TWITTER_EMAIL"
-              type="email"
-              value={twitterEmail}
-              onChange={(e) => setTwitterEmail(e.target.value)}
-            />
-            <Input
-              className="bg-zinc-800 border-zinc-700"
-              placeholder="TWITTER_PASSWORD"
-              type="password"
-              value={twitterPassword}
-              onChange={(e) => setTwitterPassword(e.target.value)}
-            />
-          </div>
-        </div>
-
-        {/* Telegram Integration */}
-        <div className="mb-8">
-          <div className="flex items-center gap-3 mb-4">
-            <div className="w-10 h-10 bg-zinc-800 rounded-full flex items-center justify-center">
-              <IconBrandTelegram className="w-6 h-6 text-[#0088cc]" />
-            </div>
-            <div>
-              <h3 className="font-medium text-white">Telegram Integration</h3>
-              <p className="text-sm text-zinc-400">
-                Connect your agent to Telegram for instant messaging
-              </p>
-            </div>
-          </div>
-          <div className="space-y-4">
-            <Input
-              className="bg-zinc-800 border-zinc-700"
-              placeholder="TELEGRAM_BOT_TOKEN"
-              value={telegramBotToken}
-              onChange={(e) => setTelegramBotToken(e.target.value)}
-            />
-          </div>
-        </div>
-      </Card>
-
-      {/* Submit Button Card */}
-      <Card className="bg-gradient-to-r from-pink-500 via-purple-500 to-indigo-500 p-[1px] mb-6 relative overflow-hidden group">
-        <div className="relative bg-zinc-900 p-6">
-          <div className="absolute inset-0 bg-gradient-to-r from-pink-500/20 via-purple-500/20 to-indigo-500/20 opacity-0 group-hover:opacity-100 transition-opacity" />
-          <div className="flex items-center justify-between relative">
-            <div>
-              <h3 className="font-semibold text-white mb-1">Ready to Create?</h3>
-              <p className="text-sm text-zinc-400">Your AI agent is just one click away</p>
-            </div>
-            <Button
-              type="submit"
-              onClick={handleSubmit}
-              className="bg-gradient-to-r from-pink-500 via-purple-500 to-indigo-500 hover:from-pink-600 hover:via-purple-600 hover:to-indigo-600 text-white px-8 transition-all duration-200 transform hover:scale-105"
-              disabled={isSubmitting}
-            >
-              {isSubmitting ? (
-                <div className="flex items-center gap-2">
-                  <div className="w-4 h-4 border-2 border-white/50 border-t-white rounded-full animate-spin" />
-                  Creating...
-                </div>
-              ) : (
-                "Create Agent (0.006 ETH)"
-              )}
-            </Button>
-          </div>
-        </div>
-      </Card>
+      </div>
       <Toaster position="top-right" />
     </div>
   );

@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, Suspense, useEffect } from "react";
+import Image from "next/image";
 import { AgentCard } from "@/components/agent-card";
 import WalletConnectButton from "@/components/wallet-connect-button";
 import { Input } from "@/components/ui/input";
@@ -22,7 +23,9 @@ export default function Home() {
   const [searchQuery, setSearchQuery] = useState("");
   const [agents, setAgents] = useState<Agent[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [userProfiles, setUserProfiles] = useState<Record<string, UserProfile>>({});
+  const [userProfiles, setUserProfiles] = useState<Record<string, UserProfile>>(
+    {}
+  );
 
   useEffect(() => {
     const fetchAgents = async () => {
@@ -36,12 +39,14 @@ export default function Home() {
             const dateB = new Date(b.createdAt || 0).getTime();
             return dateB - dateA;
           });
-        
+
         setAgents(sortedAgents);
-        
+
         // Get unique wallet addresses from agents
-        const ownerAddresses = [...new Set(sortedAgents.map(agent => agent.owner))].filter(Boolean);
-        
+        const ownerAddresses = [
+          ...new Set(sortedAgents.map((agent) => agent.owner)),
+        ].filter(Boolean);
+
         // Fetch user profiles for all agent owners
         if (ownerAddresses.length > 0) {
           const profiles = await getUserProfiles(ownerAddresses);
@@ -60,7 +65,7 @@ export default function Home() {
   // Function to get creator display name (username or address)
   const getCreatorName = (walletAddress: string) => {
     if (!walletAddress) return "Unknown";
-    
+
     const profile = userProfiles[walletAddress];
     if (profile && profile.username) {
       return profile.username;
@@ -118,8 +123,14 @@ export default function Home() {
           />
 
           {isLoading ? (
-            <div className="flex justify-center items-center min-h-[200px]">
-              <p className="text-zinc-400">Loading agents...</p>
+            <div className="flex flex-col justify-center items-center min-h-[200px]">
+              <Image
+                src="https://i.giphy.com/media/v1.Y2lkPTc5MGI3NjExcW5jbzcyMnhleHpteWt0ZWR1eXduNDhoMXB3Nnk4ZTZ3eXZxcm81ayZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9cw/SdvbTgJsHmsZa/giphy.gif"
+                alt="Loading..."
+                width={100}
+                height={100}
+              />
+              <p className="text-zinc-300 mb-4 text-sm">Loading Cats Agents Meow!</p>
             </div>
           ) : filteredAgents.length === 0 ? (
             <div className="flex justify-center items-center min-h-[200px]">
