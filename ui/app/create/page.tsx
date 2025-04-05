@@ -223,7 +223,7 @@ const MessageExampleInput = ({
   return (
     <div className="space-y-4">
       <label className="text-sm font-medium text-zinc-200">
-        Message Examples <span className="text-red-500">*</span>
+        Message Examples <span className="text-[#f78da7]">*</span>
       </label>
       {examples.map((example, exampleIndex) => (
         <div
@@ -297,9 +297,7 @@ const waitForReceipt = async (hash: `0x${string}`, maxAttempts = 20) => {
 export default function CreatePage() {
   const router = useRouter();
   const { isConnected, address } = useAccount();
-  const [previewImage, setPreviewImage] = useState<string>(
-    "/assets/placeholder-wimpy.jpg"
-  );
+  const [previewImage, setPreviewImage] = useState<string>("/assets/ai16z.png");
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [ipfsImage, setIpfsImage] = useState<string>("");
   const { writeContractAsync } = useWriteContract(); // contract
@@ -927,12 +925,12 @@ export default function CreatePage() {
 
       {/* New Social Integrations Modal */}
       <Dialog open={isSocialModalOpen} onOpenChange={setIsSocialModalOpen}>
-        <DialogContent className="bg-zinc-900 border-zinc-800 text-white max-w-3xl max-h-[80vh] overflow-y-auto">
-          <DialogHeader>
-            <DialogTitle className="text-xl font-bold text-white">
+        <DialogContent className="bg-zinc-900 border-zinc-800 text-white max-w-3xl max-h-[80vh] overflow-y-auto ">
+          <DialogHeader className="mb-4">
+            <DialogTitle className="text-3xl font-bold text-white text-center py-2">
               Social Integrations
             </DialogTitle>
-            <p className="text-zinc-400 mt-2">
+            <p className="text-zinc-400 mt-2 text-center">
               Connect your AI agent to various social platforms to expand its
               reach.
             </p>
@@ -1029,7 +1027,7 @@ export default function CreatePage() {
 
           <Button
             onClick={() => setIsSocialModalOpen(false)}
-            className="w-full bg-gradient-to-r from-pink-500 to-purple-600 text-white hover:from-pink-600 hover:to-purple-700 mt-4"
+            className="w-full bg-gradient-to-r from-[#f78da7] to-[#f78da7] text-white hover:from-[#000] hover:to-[#000] mt-4"
           >
             Save Integrations
           </Button>
@@ -1038,12 +1036,11 @@ export default function CreatePage() {
 
       {/* Section 1: Agent Configuration */}
       <Card className="bg-zinc-900/90 backdrop-blur border-zinc-800 p-6  relative">
-        <SectionNumber number={1} />
         <div className="flex justify-between items-center mb-4">
           <h2 className="text-xl font-bold text-white">Agent Configuration</h2>
           <Button
             onClick={() => setIsTemplateModalOpen(true)}
-            className="bg-gradient-to-r from-pink-500 to-purple-600 text-white hover:from-pink-600 hover:to-purple-700"
+            className="bg-gradient-to-r from-[#f78da7] via-[#f78da7] to-[#f78da7] text-white hover:from-[#000] hover:to-[#000]"
           >
             Use Agent Template
           </Button>
@@ -1082,7 +1079,7 @@ export default function CreatePage() {
           <div className="space-y-4">
             <div>
               <label className="text-sm font-medium text-zinc-200">
-                Agent Name <span className="text-red-500">*</span>
+                Agent Name <span className="text-[#f78da7]">*</span>
               </label>
               <Input
                 required
@@ -1094,7 +1091,7 @@ export default function CreatePage() {
             </div>
             <div>
               <label className="text-sm font-medium text-zinc-200">
-                Ticker <span className="text-red-500">*</span>
+                Ticker <span className="text-[#f78da7]">*</span>
               </label>
               <Input
                 required
@@ -1106,7 +1103,7 @@ export default function CreatePage() {
             </div>
             <div>
               <label className="text-sm font-medium text-zinc-200">
-                Bio Entries <span className="text-red-500">*</span>
+                Bio Entries <span className="text-[#f78da7]">*</span>
               </label>
               {bios.map((bio, index) => (
                 <div key={index} className="flex gap-2 mb-2">
@@ -1132,7 +1129,7 @@ export default function CreatePage() {
             </div>
             <div>
               <label className="text-sm font-medium text-zinc-200">
-                Lore <span className="text-red-500">*</span>
+                Lore <span className="text-[#f78da7]">*</span>
               </label>
               {lore.map((item, index) => (
                 <div key={index} className="flex gap-2 mb-2">
@@ -1158,7 +1155,7 @@ export default function CreatePage() {
             </div>
             <div>
               <label className="text-sm font-medium text-zinc-200">
-                Knowledge <span className="text-red-500">*</span>
+                Knowledge <span className="text-[#f78da7]">*</span>
               </label>
               {knowledge.map((item, index) => (
                 <div key={index} className="flex gap-2 mb-2">
@@ -1188,7 +1185,7 @@ export default function CreatePage() {
             </div>
             <div>
               <label className="text-sm font-medium text-zinc-200">
-                Topics <span className="text-red-500">*</span>
+                Topics <span className="text-[#f78da7]">*</span>
               </label>
               {topics.map((topic, index) => (
                 <div key={index} className="flex gap-2 mb-2">
@@ -1214,7 +1211,7 @@ export default function CreatePage() {
             </div>
             <div>
               <label className="text-sm font-medium text-zinc-200">
-                Adjectives <span className="text-red-500">*</span>
+                Adjectives <span className="text-[#f78da7]">*</span>
               </label>
               {adjectives.map((adj, index) => (
                 <div key={index} className="flex gap-2 mb-2">
@@ -1256,13 +1253,13 @@ export default function CreatePage() {
           >
             <div className="flex items-center justify-center gap-2">
               <div className="flex -space-x-2">
-                <div className="w-6 h-6 bg-[#5865F2] rounded-full flex items-center justify-center z-10">
+                <div className="w-6 h-6 bg-zinc-600 rounded-full flex items-center justify-center z-10">
                   <IconBrandDiscord className="w-3 h-3 text-white" />
                 </div>
-                <div className="w-6 h-6 bg-[#1DA1F2] rounded-full flex items-center justify-center z-20">
+                <div className="w-6 h-6 bg-zinc-600 rounded-full flex items-center justify-center z-20">
                   <IconBrandTwitter className="w-3 h-3 text-white" />
                 </div>
-                <div className="w-6 h-6 bg-[#0088cc] rounded-full flex items-center justify-center z-30">
+                <div className="w-6 h-6 bg-zinc-600 rounded-full flex items-center justify-center z-30">
                   <IconBrandTelegram className="w-3 h-3 text-white" />
                 </div>
               </div>
@@ -1273,7 +1270,7 @@ export default function CreatePage() {
       </Card>
 
       {/* Submit Button - Centered and Animated */}
-      <div className="container mx-auto max-w-2xl py-12">
+      <div className="container mx-auto max-w-2xl py-8">
         <p className="text-zinc-400 mb-4 text-center text-sm">
           Your AI agent is just one click away
         </p>
@@ -1281,7 +1278,7 @@ export default function CreatePage() {
           <Button
             type="submit"
             onClick={handleSubmit}
-            className="w-2/3 bg-gradient-to-r from-[#000] via-[#000] to-[#f78da7]  text-white text-lg py-7 px-12 rounded-xl shadow-lg transform hover:scale-105 transition-all duration-300"
+            className="w-2/3 bg-gradient-to-r from-[#f78da7] to-[#f78da7]  text-white text-lg py-7 px-12 rounded-xl shadow-lg transform hover:scale-105 transition-all duration-300"
             disabled={isSubmitting}
           >
             {isSubmitting ? (
@@ -1297,7 +1294,33 @@ export default function CreatePage() {
           </Button>
         </div>
       </div>
-      <Toaster position="top-right" />
+      <Toaster
+        position="top-right"
+        toastOptions={{
+          style: {
+            background: "linear-gradient(to right, #f78da7, #f78da7)",
+            color: "white",
+            border: "1px solid rgba(255, 255, 255, 0.1)",
+            boxShadow: "0 4px 12px rgba(0, 0, 0, 0.15)",
+            fontWeight: 500,
+            padding: "8px 12px",
+            maxWidth: "300px",
+            fontSize: "10px",
+          },
+          success: {
+            iconTheme: {
+              primary: "white",
+              secondary: "#f78da7",
+            },
+          },
+          error: {
+            iconTheme: {
+              primary: "white",
+              secondary: "#f78da7",
+            },
+          },
+        }}
+      />
     </div>
   );
 }
