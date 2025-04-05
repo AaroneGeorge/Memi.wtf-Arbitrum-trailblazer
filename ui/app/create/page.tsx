@@ -819,7 +819,7 @@ export default function CreatePage() {
 
   return (
     <div className="container mx-auto p-6 max-w-2xl">
-      <div className="fixed inset-0">
+      <div className="fixed inset-0 z-0">
         <Squares
           speed={0.5}
           squareSize={40}
@@ -831,7 +831,7 @@ export default function CreatePage() {
 
       {/* Enhanced Header Section */}
       <div className="text-center mb-12 relative z-10">
-        <div className="inline-block mb-6">
+        <div className="inline-block ">
           {/* <div className="text-sm font-semibold text-pink-500 mb-2 tracking-wide">
             POWERED BY MEMI
           </div> */}
@@ -1035,7 +1035,7 @@ export default function CreatePage() {
       </Dialog>
 
       {/* Section 1: Agent Configuration */}
-      <Card className="bg-zinc-900/90 backdrop-blur border-zinc-800 p-6  relative">
+      <Card className="bg-zinc-900/90 backdrop-blur border-zinc-800 p-6 relative z-10">
         <div className="flex justify-between items-center mb-4">
           <h2 className="text-xl font-bold text-white">Agent Configuration</h2>
           <Button
@@ -1270,7 +1270,7 @@ export default function CreatePage() {
       </Card>
 
       {/* Submit Button - Centered and Animated */}
-      <div className="container mx-auto max-w-2xl py-8">
+      <div className="container mx-auto max-w-2xl py-8 z-20 relative">
         <p className="text-zinc-400 mb-4 text-center text-sm">
           Your AI agent is just one click away
         </p>
@@ -1278,7 +1278,11 @@ export default function CreatePage() {
           <Button
             type="submit"
             onClick={handleSubmit}
-            className="w-2/3 bg-gradient-to-r from-[#f78da7] to-[#f78da7]  text-white text-lg py-7 px-12 rounded-xl shadow-lg transform hover:scale-105 transition-all duration-300"
+            className="w-2/3 bg-gradient-to-r from-[#f78da7] to-[#f78da7] text-white text-lg py-7 px-12 rounded-xl shadow-lg 
+            hover:shadow-xl hover:shadow-pink-500/20 
+            hover:from-pink-500 hover:to-[#f78da7] 
+            active:scale-95 active:shadow-inner
+            transition-all duration-300 relative z-20"
             disabled={isSubmitting}
           >
             {isSubmitting ? (

@@ -23,9 +23,11 @@ export function AgentCard({
 }: AgentCardProps) {
   const router = useRouter();
   const { favorites, toggleFavorite, isFavorite } = useFavorites();
-  
+
   // Check if this agent is favorited
-  const isFavorited = isFavorite ? isFavorite(agentProfileId) : favorites.includes(agentProfileId);
+  const isFavorited = isFavorite
+    ? isFavorite(agentProfileId)
+    : favorites.includes(agentProfileId);
 
   // Handle bio formatting
   const formattedBio: ReactNode = Array.isArray(bio)
@@ -35,7 +37,13 @@ export function AgentCard({
     : "No bio available";
 
   // Format the description to show "Created by username" or "Created by wallet address"
-  const formattedDescription = description || (creatorName ? `Created by ${creatorName}` : owner ? `Created by ${owner.slice(0, 6)}...${owner.slice(-4)}` : "Unknown creator");
+  const formattedDescription =
+    description ||
+    (creatorName
+      ? `Created by ${creatorName}`
+      : owner
+      ? `Created by ${owner.slice(0, 6)}...${owner.slice(-4)}`
+      : "Unknown creator");
 
   const handleCardClick = () => {
     router.push(`/agent/${agentProfileId}`);
@@ -45,7 +53,7 @@ export function AgentCard({
     <Card
       onClick={handleCardClick}
       className={cn(
-        "group bg-zinc-900/90 backdrop-blur border-zinc-800 hover:border-pink-500/50 transition-all duration-300 overflow-hidden cursor-pointer hover:shadow-lg hover:shadow-pink-500/10",
+        "group bg-zinc-900/90 backdrop-blur border-zinc-800 hover:border-[#f78da7] transition-all duration-300 overflow-hidden cursor-pointer hover:shadow-lg hover:shadow-[#f78da7]/10",
         className
       )}
     >
@@ -66,16 +74,18 @@ export function AgentCard({
             <h3 className="font-semibold text-white truncate text-lg">
               {name}
             </h3>
-            <p className="text-sm text-zinc-400 truncate">{formattedDescription}</p>
+            <p className="text-sm text-zinc-400 truncate">
+              {formattedDescription}
+            </p>
           </div>
           <Button
             variant="ghost"
             size="icon"
             className={cn(
               "transition-colors",
-              isFavorited 
-                ? "text-pink-500 hover:text-pink-400" 
-                : "text-zinc-400 hover:text-pink-500"
+              isFavorited
+                ? "text-pink-500 hover:text-pink-400"
+                : "text-zinc-400 hover:text-[#f78da7]"
             )}
             onClick={(e) => {
               e.stopPropagation();
@@ -85,10 +95,10 @@ export function AgentCard({
           >
             <Heart
               className={cn(
-                "h-4 w-4 transition-all",
-                isFavorited 
+                "h-4 w-4 transition-all duration-300",
+                isFavorited
                   ? "fill-current animate-pulse" // Add animation for filled heart
-                  : "group-hover:text-pink-500/50"
+                  : "group-hover:text-[#f78da7] hover:scale-150"
               )}
             />
           </Button>
@@ -101,7 +111,7 @@ export function AgentCard({
         <div className="mt-4 flex justify-between items-center">
           {/* Show a small label for favorited agents */}
           {isFavorited && (
-            <span className="text-xs text-pink-500 flex items-center">
+            <span className="text-xs text-[#f78da7] flex items-center">
               <Heart className="h-3 w-3 fill-current mr-1" /> Favorited
             </span>
           )}
@@ -109,7 +119,7 @@ export function AgentCard({
             <Button
               variant="ghost"
               size="sm"
-              className="text-zinc-400 hover:text-pink-500 group-hover:text-zinc-300 transition-colors text-xs"
+              className="text-zinc-400 hover:text-[#f78da7] group-hover:text-zinc-300 transition-colors text-xs"
             >
               Chat Now →
             </Button>
