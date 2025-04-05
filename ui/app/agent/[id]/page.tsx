@@ -491,10 +491,15 @@ export default function AgentPage() {
 
   if (loading) {
     return (
-      <div className="container mx-auto p-6 flex items-center justify-center">
-        <Card className="bg-zinc-900 border-zinc-800 p-6">
-          <p className="text-zinc-400">Loading agent details...</p>
-        </Card>
+      <div className="container mx-auto p-6 flex flex-col items-center justify-center h-screen">
+        <div className="w-32 h-32 rounded-full overflow-hidden mb-4">
+          <img
+            src="https://i.giphy.com/media/v1.Y2lkPTc5MGI3NjExcW5jbzcyMnhleHpteWt0ZWR1eXduNDhoMXB3Nnk4ZTZ3eXZxcm81ayZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9cw/SdvbTgJsHmsZa/giphy.gif"
+            alt="Loading"
+            className="w-full h-full object-cover"
+          />
+        </div>
+        <p className="text-zinc-400 text-sm">Loading agent...!</p>
       </div>
     );
   }

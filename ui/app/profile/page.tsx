@@ -155,7 +155,9 @@ export default function ProfilePage() {
         </div>
         <div className="relative container mx-auto p-6 max-w-2xl h-[80vh] flex items-center justify-center">
           <Card className="bg-zinc-900/90 backdrop-blur border-zinc-800 p-6 text-center relative z-10">
-            <h1 className="text-2xl font-bold text-white mb-6">Profile</h1>
+            <h1 className="text-3xl font-bold text-white mb-6 text-center">
+              Profile
+            </h1>
             <p className="text-zinc-400 mb-6">
               Please connect your wallet to view your profile
             </p>
@@ -168,10 +170,15 @@ export default function ProfilePage() {
 
   if (isLoading) {
     return (
-      <div className="container mx-auto p-6 max-w-2xl h-[80vh] flex items-center justify-center">
-        <Card className="bg-zinc-900 border-zinc-800 p-6 text-center">
-          <p className="text-zinc-400">Loading...</p>
-        </Card>
+      <div className="container mx-auto p-6 max-w-2xl h-[80vh] flex flex-col items-center justify-center">
+        <div className="w-32 h-32 rounded-full overflow-hidden mb-4">
+          <img
+            src="https://i.giphy.com/media/v1.Y2lkPTc5MGI3NjExcW5jbzcyMnhleHpteWt0ZWR1eXduNDhoMXB3Nnk4ZTZ3eXZxcm81ayZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9cw/SdvbTgJsHmsZa/giphy.gif"
+            alt="Loading"
+            className="w-full h-full object-cover"
+          />
+        </div>
+        <p className="text-zinc-400 text-sm">Loading profile...!</p>
       </div>
     );
   }
@@ -188,10 +195,12 @@ export default function ProfilePage() {
         />
       </div>
       <div className="relative z-10">
-        <h1 className="text-2xl font-bold text-zinc-100">Profile</h1>
+        <h1 className="text-4xl font-bold text-white mb-6 text-center">
+          Profile
+        </h1>
 
-        <div className="space-y-4 max-w-3xl">
-          <Card className="bg-zinc-950/90 backdrop-blur border-zinc-800">
+        <div className="space-y-4 max-w-3xl mx-auto">
+          <Card className="bg-zinc-950/90 backdrop-blur border-zinc-800 mb-6">
             <CardHeader className="text-zinc-100 font-semibold flex flex-row items-center justify-between">
               <span>Personal Information</span>
               {!isEditing && (
@@ -258,7 +267,7 @@ export default function ProfilePage() {
             </CardContent>
           </Card>
 
-          <Card className="bg-zinc-950/90 backdrop-blur border-zinc-800">
+          <Card className="bg-zinc-950/90 backdrop-blur border-zinc-800 mb-6">
             <CardHeader className="text-zinc-100 font-semibold">
               Wallet Address
             </CardHeader>

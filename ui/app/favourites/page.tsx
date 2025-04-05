@@ -8,7 +8,10 @@ import WalletConnectButton from "@/components/wallet-connect-button";
 import { getImageSrc } from "@/lib/utils";
 import { Card } from "@/components/ui/card";
 import Squares from "@/components/Squares";
-import { getAgentsByProfileIds, getUserProfiles } from "@/lib/firebase/firestore";
+import {
+  getAgentsByProfileIds,
+  getUserProfiles,
+} from "@/lib/firebase/firestore";
 import type { Agent } from "@/app/types";
 import type { UserProfile } from "@/lib/firebase/firestore";
 
@@ -19,7 +22,9 @@ const truncateAddress = (address: string) => {
 
 export default function FavoritesPage() {
   const [favoriteAgents, setFavoriteAgents] = useState<Agent[]>([]);
-  const [userProfiles, setUserProfiles] = useState<Record<string, UserProfile>>({});
+  const [userProfiles, setUserProfiles] = useState<Record<string, UserProfile>>(
+    {}
+  );
   const { favorites, loading: favoritesLoading } = useFavorites();
   const { address, isConnected } = useAccount();
   const [isLoading, setIsLoading] = useState(true);
@@ -27,7 +32,7 @@ export default function FavoritesPage() {
   // Function to get creator display name (username or address)
   const getCreatorName = (walletAddress: string) => {
     if (!walletAddress) return "Unknown";
-    
+
     const profile = userProfiles[walletAddress];
     if (profile && profile.username) {
       return profile.username;
@@ -54,8 +59,10 @@ export default function FavoritesPage() {
         setFavoriteAgents(agents);
 
         // Get unique wallet addresses from agents
-        const ownerAddresses = [...new Set(agents.map(agent => agent.owner))].filter(Boolean);
-        
+        const ownerAddresses = [
+          ...new Set(agents.map((agent) => agent.owner)),
+        ].filter(Boolean);
+
         // Fetch user profiles for all agent owners
         if (ownerAddresses.length > 0) {
           const profiles = await getUserProfiles(ownerAddresses);
@@ -109,20 +116,30 @@ export default function FavoritesPage() {
           hoverFillColor="#222"
         />
       </div>
-      <div className="container mx-auto p-6 relative z-10">
-        <h1 className="text-2xl font-bold text-white mb-6">
+      <div className="container mx-auto p-12 relative z-10">
+        <h1 className="text-4xl font-bold text-white mb-12 text-center">
           Your Favorite Agents
         </h1>
-        
+
         {isLoading ? (
-          <div className="flex justify-center items-center min-h-[200px]">
-            <p className="text-zinc-400">Loading favorite agents...</p>
+          <div className="flex flex-col justify-center items-center min-h-[200px]">
+            <div className="w-32 h-32 rounded-full overflow-hidden mb-4">
+              <img
+                src="https://i.giphy.com/media/v1.Y2lkPTc5MGI3NjExcW5jbzcyMnhleHpteWt0ZWR1eXduNDhoMXB3Nnk4ZTZ3eXZxcm81ayZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9cw/SdvbTgJsHmsZa/giphy.gif"
+                alt="Loading"
+                className="w-full h-full object-cover"
+              />
+            </div>
+            <p className="text-zinc-400 text-sm">Loading favorites...!</p>
           </div>
         ) : favoriteAgents.length === 0 ? (
           <div className="flex flex-col items-center justify-center min-h-[200px]">
-            <p className="text-zinc-400 mb-4">You haven't favorited any agents yet.</p>
+            <p className="text-zinc-400 mb-4">
+              You haven't favorited any agents yet.
+            </p>
             <p className="text-zinc-500 text-sm">
-              Browse agents and click the heart icon to add them to your favorites.
+              Browse agents and click the heart icon to add them to your
+              favorites.
             </p>
           </div>
         ) : (
