@@ -29,6 +29,7 @@ import { Agent, ChatMessage } from "@/app/types";
 import WalletConnectButton from "@/components/wallet-connect-button";
 import { TypingAnimation } from "@/components/typing-animation";
 import { useAccount } from "wagmi";
+import { getDiscordBotDetailsAction } from "../../../../lib/actions/discordActions";
 
 interface AgentResponse {
   user?: string;
@@ -167,35 +168,6 @@ const getTelegramBotDetails = async (token: string) => {
   }
 };
 
-// Replace the existing getDiscordBotDetails function with this:
-const getDiscordBotDetails = async (
-  DISCORD_APPLICATION_ID: string,
-  DISCORD_API_TOKEN: string
-) => {
-  try {
-    const response = await fetch(`https://discord.com/api/v10/applications/${DISCORD_APPLICATION_ID}`, {
-      headers: {
-        'Accept': '*/*',
-        'Authorization': `Bot ${DISCORD_API_TOKEN}`
-      }
-    });
-
-    const data = await response.json();
-    console.log(data);
-
-    if (response.ok) {
-      return {
-        name: data.name,
-        username: data.bot_public ? data.name : "Private Bot",
-      };
-    }
-    return null;
-  } catch (error) {
-    console.error("Error fetching Discord bot details:", error);
-    return null;
-  }
-};
-
 // Update the getSocialLinks function
 const getSocialLinks = async (agent: Agent) => {
   const links: {
@@ -288,7 +260,7 @@ const getSocialLinks = async (agent: Agent) => {
     agent.secrets?.DISCORD_APPLICATION_ID &&
     agent.secrets?.DISCORD_API_TOKEN
   ) {
-    const botDetails = await getDiscordBotDetails(
+    const botDetails = await getDiscordBotDetailsAction(
       agent.secrets.DISCORD_APPLICATION_ID,
       agent.secrets.DISCORD_API_TOKEN
     );
