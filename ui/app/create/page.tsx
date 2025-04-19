@@ -265,7 +265,7 @@ const MessageExampleInput = ({
 };
 
 function generateUUID() {
-  return "xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx".replace(/[xy]/g, function (c) {
+  return "xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx".replace(/[xy]/g, function(c) {
     const r = (Math.random() * 16) | 0;
     const v = c === "x" ? r : (r & 0x3) | 0x8;
     return v.toString(16);
@@ -423,7 +423,7 @@ export default function CreatePage() {
     try {
       setIsSubmitting(true);
       toast.loading("Creating your AI agent...");
-      
+
       // Initialize tokenAddress
       let tokenAddress = "";
 
@@ -699,7 +699,7 @@ export default function CreatePage() {
       // Find id by searching using token address and use the id in `https://gu.exchange/coin/[id]`
       async function getTokenIdByAddress(tokenAddress: any) {
         try {
-          const response = await fetch("http://api.gu.exchange/historical");
+          const response = await fetch("https://api.gu.exchange/historical");
           if (!response.ok) {
             throw new Error(
               `API request failed with status: ${response.status}`

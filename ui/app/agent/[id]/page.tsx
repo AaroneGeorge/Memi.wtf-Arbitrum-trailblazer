@@ -254,7 +254,7 @@ const getSocialLinks = async (agent: Agent) => {
   async function getTokenIdByAddress(tokenAddress: string) {
     try {
       console.log("getTokenIdByAddress:", tokenAddress);
-      const response = await fetch("http://api.gu.exchange/historical");
+      const response = await fetch("https://api.gu.exchange/historical");
       if (!response.ok) {
         throw new Error(`API request failed with status: ${response.status}`);
       }
@@ -444,11 +444,10 @@ export default function AgentPage() {
         </div>
       )}
       <div
-        className={`rounded-2xl p-3 text-sm max-w-[80%] ${
-          msg.role === "user"
+        className={`rounded-2xl p-3 text-sm max-w-[80%] ${msg.role === "user"
             ? "bg-[#f78da7] text-white ml-12 shadow-md"
             : "bg-white text-black border border-[#f78da7] shadow-md relative"
-        }`}
+          }`}
       >
         {msg.role === "assistant" && (
           <div className="absolute left-[-5px] top-2 w-3 h-3 rotate-45 bg-white border-l border-b border-[#f78da7]/30"></div>
@@ -779,13 +778,12 @@ export default function AgentPage() {
       {/* Update the social connections cards to show enabled status */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-6">
         <Card
-          className={`bg-[#000000] border-zinc-800 p-6 flex flex-col items-center text-center transition-colors cursor-pointer ${
-            agent.clients &&
-            Array.isArray(agent.clients) &&
-            agent.clients.includes("discord")
+          className={`bg-[#000000] border-zinc-800 p-6 flex flex-col items-center text-center transition-colors cursor-pointer ${agent.clients &&
+              Array.isArray(agent.clients) &&
+              agent.clients.includes("discord")
               ? "hover:border-[#f78da7]/50"
               : "hover:border-[#f78da7]/50"
-          }`}
+            }`}
         >
           <div className="w-12 h-12 bg-[#000000] rounded-full flex items-center justify-center mb-4 border border-zinc-800">
             <IconBrandDiscord className="w-6 h-6 text-white" />
@@ -797,8 +795,8 @@ export default function AgentPage() {
             Connect your agent with Discord server
           </p>
           {agent.clients &&
-          Array.isArray(agent.clients) &&
-          agent.clients.includes("discord") ? (
+            Array.isArray(agent.clients) &&
+            agent.clients.includes("discord") ? (
             <span className="text-[#f78da7] text-sm flex items-center gap-1">
               <Check className="w-4 h-4" /> Connected
             </span>
@@ -810,11 +808,10 @@ export default function AgentPage() {
         </Card>
 
         <Card
-          className={`bg-[#000000] border-zinc-800 p-6 flex flex-col items-center text-center transition-colors cursor-pointer ${
-            agent.twitter
+          className={`bg-[#000000] border-zinc-800 p-6 flex flex-col items-center text-center transition-colors cursor-pointer ${agent.twitter
               ? "hover:border-[#f78da7]/50"
               : "hover:border-[#f78da7]/50"
-          }`}
+            }`}
         >
           <div className="w-12 h-12 bg-[#000000] rounded-full flex items-center justify-center mb-4 border border-zinc-800">
             <IconBrandTwitter className="w-6 h-6 text-white" />
@@ -837,13 +834,12 @@ export default function AgentPage() {
         </Card>
 
         <Card
-          className={`bg-[#000000] border-zinc-800 p-6 flex flex-col items-center text-center transition-colors cursor-pointer ${
-            agent.clients &&
-            Array.isArray(agent.clients) &&
-            agent.clients.includes("telegram")
+          className={`bg-[#000000] border-zinc-800 p-6 flex flex-col items-center text-center transition-colors cursor-pointer ${agent.clients &&
+              Array.isArray(agent.clients) &&
+              agent.clients.includes("telegram")
               ? "hover:border-[#f78da7]/50"
               : "hover:border-[#f78da7]/50"
-          }`}
+            }`}
         >
           <div className="w-12 h-12 bg-[#000000] rounded-full flex items-center justify-center mb-4 border border-zinc-800">
             <IconBrandTelegram className="w-6 h-6 text-white" />
@@ -855,8 +851,8 @@ export default function AgentPage() {
             Connect your agent with Telegram
           </p>
           {agent.clients &&
-          Array.isArray(agent.clients) &&
-          agent.clients.includes("telegram") ? (
+            Array.isArray(agent.clients) &&
+            agent.clients.includes("telegram") ? (
             <span className="text-[#f78da7] text-sm flex items-center gap-1">
               <Check className="w-4 h-4" /> Connected
             </span>
